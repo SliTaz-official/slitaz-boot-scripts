@@ -1,0 +1,25 @@
+README for slitaz-boot-scripts                                             2007
+===============================================================================
+
+
+Ce paquet contient les scripts utilisés pour initialiser et configurer le
+système au démarrage, elle fourni aussi les fichiers de configuration
+principaux tels que /etc/rcS.conf ou /etc/inittab spécifiques à SliTaz.
+
+Les boot scripts sont décrits dans le Cookbook, ils ont été écrits spécialement
+pour SliTaz et fonctionnent avec le SHell Ash du projet Busybox.
+
+	http://www.slitaz.org/doc/cookbook/boot-scripts.html
+
+
+English
+-------
+
+This package provide the boot scripts for SliTaz found in /etc/init.d with
+the main config file : /etc/rcS.conf. It provide also the default inittab and
+the network config file used with network.sh. Please check /etc/init.d/README
+for more infomations.
+
+
+===============================================================================
+                                                         http://www.slitaz.org/
