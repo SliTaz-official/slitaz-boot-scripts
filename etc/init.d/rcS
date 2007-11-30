@@ -1,0 +1,130 @@
+#!/bin/sh
+# /etc/init.d/rcS - Initial boot script for SliTaz GNU/Linux. rcS is the main
+# initialisation script used to check fs, mount, clean, run scripts and start
+# daemons.
+#
+# Config file is : /etc/rcS.conf
+#
+. /etc/init.d/rc.functions
+. /etc/rcS.conf
+
+# Start by sleeping a bit.
+echo "Processing /etc/init.d/rcS... "
+sleep 1
+
+# Mount /proc.
+echo -n "Mounting proc filesystem... "
+/bin/mount proc
+status && sleep 1
+
+# Before mounting filesystems we check fs specified in the file
+# /etc/rcS.conf and variable $CHECK_FS.
+if [ ! "$CHECK_FS" = "" ]; then
+	mount -o remount,ro /
+	for i in $CHECK_FS
+	do
+		echo "Checking filesystem on : $i"
+		/sbin/e2fsck -p $i
+		sleep 2
+	done
+fi
+
+# Remount rootfs rw.
+echo "Remounting rootfs read/write... "
+/bin/mount -o remount,rw /
+
+# Mount all stuff from /etc/fstab.
+echo "Mounting all staff from fstab... "
+/bin/mount -a
+
+# Start Udev to populate /dev and handle hotplug events
+if [ "$UDEV" = "yes" ]; then
+	echo -n "Starting udev daemon..."
+	/sbin/udevd --daemon
+	status
+	echo -n "Executing : udevstart..."
+	/sbin/udevstart
+	status
+	echo "/sbin/udevd" > /proc/sys/kernel/hotplug
+fi
+
+# Handle kernel cmdline parameter config=<device>,<path> to source a 
+# disk init script
+if grep -q " config=" /proc/cmdline; then
+	CONFIG=`cat /proc/cmdline | sed 's/.* config=\([^ ]*\).*/\1/'`
+	DEVICE=${CONFIG%,*}
+	SCRIPT=${CONFIG#*,}
+	echo -n "Source $SCRIPT from $DEVICE... "
+	if /bin/mount -r $DEVICE /mnt; then
+		. /mnt/$SCRIPT
+		/bin/umount /mnt
+	fi
+	status 
+fi
+
+# Start syslogd and klogd.
+if [ "$KERNEL_LOG_DAEMONS" = "yes" ]; then
+	echo -n "Starting system log deamon: syslogd... "
+	/sbin/syslogd -s $SYSLOGD_ROTATED_SIZE && status
+	echo -n "Starting kernel log daemon: klogd... "
+	/sbin/klogd && status
+else
+	echo "Kernel log daemons are disabled in /etc/rc.conf... "
+fi
+
+# Creat /dev/cdrom if needed.
+if [ ! "`readlink /dev/cdrom`" ]; then
+	DRIVE_NAME=`cat /proc/sys/dev/cdrom/info | grep "drive name" | cut -f 3`
+	echo -n "Creating symlink : /dev/cdrom..."
+	ln -s /dev/$DRIVE_NAME /dev/cdrom
+	status
+fi
+
+# Clean up the system.
+if [ "$CLEAN_UP_SYSTEM" = "yes" ]; then
+	echo -n "Cleaning up the system... "
+	rm -rf /tmp/*
+	rm -f /var/run/*.pid
+	status
+else
+	echo "System clean up is disabled in /etc/rcS.conf... "
+	echo "Keeping all tmp and pid files... "
+	status
+fi
+
+# Set up tmp X11 and ICE dir.
+echo -n "Setting up tmp X11 and ICE unix dir... "
+/bin/mkdir -p /tmp/.X11-unix
+/bin/mkdir -p /tmp/.ICE-unix
+/bin/chmod 1777 /tmp/.X11-unix
+/bin/chmod 1777 /tmp/.ICE-unix
+status
+
+# Load all modules listed in config file.
+if [ ! "$LOAD_MODULES" = "" ]; then
+	for mod in $LOAD_MODULES
+	do
+		modprobe $mod
+	done
+fi
+
+# Start all scripts specified with $RUN_SCRIPTS.
+echo "Executing all initialisation scripts..."
+for script in $RUN_SCRIPTS
+do
+	/etc/init.d/$script
+done
+
+# Start all daemons specified with $RUN_DAEMONS.
+echo "Starting all daemons specified in /etc/rcS.conf..."
+for daemon in $RUN_DAEMONS
+do
+	/etc/init.d/$daemon start
+done
+
+# Reset screen and display a bold message.
+if [ -n "$MESSAGE" ]; then
+	/usr/bin/reset
+	echo -e "\033[1m$MESSAGE\033[0m"
+fi
+
