@@ -1,0 +1,38 @@
+#!/bin/sh
+# /etc/init.d/rc.shutdown - This script is used by /etc/inittab to stop
+# all demons and shutdown the system.
+#
+. /etc/init.d/rc.functions
+. /etc/rcS.conf
+
+echo ""
+echo "========"
+echo ""
+echo -e "\033[1m        System is going down for reboot or halt.\033[0m"
+echo ""
+echo "========"
+echo ""
+
+# Stop all daemons started at boot time.
+echo "Stoping all demons started at boot time..."
+for daemon in $RUN_DAEMONS
+do
+	if [ -x /etc/init.d/$daemon ]; then
+		/etc/init.d/$daemon stop
+	fi
+done
+
+# Sync all filesystems.
+echo -n "Syncing all filesystems... "
+sync
+status && sleep 2
+
+# Swap off.
+echo -n "Disabling swap space... "
+/sbin/swapoff -a
+status && sleep 2
+
+# Umount filesystems.
+echo -n "Unmounting all filesystems... "
+/bin/umount -a -r
+#status
