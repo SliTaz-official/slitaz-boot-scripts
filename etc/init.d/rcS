@@ -72,14 +72,6 @@ else
 	echo "Kernel log daemons are disabled in /etc/rc.conf... "
 fi
 
-# Creat /dev/cdrom if needed.
-if [ ! "`readlink /dev/cdrom`" ]; then
-	DRIVE_NAME=`cat /proc/sys/dev/cdrom/info | grep "drive name" | cut -f 3`
-	echo -n "Creating symlink : /dev/cdrom..."
-	ln -s /dev/$DRIVE_NAME /dev/cdrom
-	status
-fi
-
 # Clean up the system.
 if [ "$CLEAN_UP_SYSTEM" = "yes" ]; then
 	echo -n "Cleaning up the system... "
