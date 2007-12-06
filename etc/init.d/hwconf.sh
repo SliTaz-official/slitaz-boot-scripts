@@ -1,17 +1,25 @@
 #!/bin/sh
 # /etc/init.d/hwconf.sh - SliTaz hardware autoconfiguration.
 #
+. /etc/init.d/rc.functions
 
 # Sound configuration stuff. First check if sound=no and remoce all sound
 # Kernel modules.
 #
-if grep -q "sound=no" /proc/cmdline; then
+if grep -q -w "sound=no" /proc/cmdline; then
 	echo -n "Removing all sound kernel modules..."
 	rm -rf /lib/modules/`uname -r`/kernel/sound
 	status
+	echo -n "Removing all sound packages..."
+	for i in $(grep -l '^DEPENDS=.*alsa-lib' /var/lib/tazpkg/installed/*/receipt) ; do
+		pkg=${i#/var/lib/tazpkg/installed/}
+		echo 'y' | tazpkg remove ${pkg%/*} >-
+	done
+	echo 'y' | tazpkg remove alsa-lib >-
+	status
 else
 	# Config or not config
-	if grep -q "sound=noconf" /proc/cmdline; then
+	if grep -q -w "sound=noconf" /proc/cmdline; then
 		echo "Sound configuration is disable from cmdline..."
 	elif [ ! -f /var/lib/sound-card-driver ]; then
 		if [ -f /usr/sbin/soundconf ]; then

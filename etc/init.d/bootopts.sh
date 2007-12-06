@@ -8,9 +8,8 @@
 mount_home()
 {
 	echo "Home has been specified to $DEVICE..."
-	echo -n "Sleeping 10 s to let the kernel detect the device... "
+	echo "Sleeping 10 s to let the kernel detect the device... "
 	sleep 10
-	status
 	if grep -q "$DEVICE" /proc/partitions ; then
 		echo "Mounting /home on /dev/$DEVICE... "
 		mv /home/hacker /tmp/hacker-home
