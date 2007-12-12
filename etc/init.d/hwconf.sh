@@ -13,9 +13,9 @@ if grep -q -w "sound=no" /proc/cmdline; then
 	echo -n "Removing all sound packages..."
 	for i in $(grep -l '^DEPENDS=.*alsa-lib' /var/lib/tazpkg/installed/*/receipt) ; do
 		pkg=${i#/var/lib/tazpkg/installed/}
-		echo 'y' | tazpkg remove ${pkg%/*} >-
+		echo 'y' | tazpkg remove ${pkg%/*} > /dev/null
 	done
-	echo 'y' | tazpkg remove alsa-lib >-
+	echo 'y' | tazpkg remove alsa-lib > /dev/null
 	status
 else
 	# Config or not config
