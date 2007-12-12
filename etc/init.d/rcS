@@ -48,6 +48,16 @@ if [ "$UDEV" = "yes" ]; then
 	echo "/sbin/udevd" > /proc/sys/kernel/hotplug
 fi
 
+# Handle kernel cmdline parameter modprobe=<module_list> 
++if grep -q " modprobe=" /proc/cmdline; then
+	MODULES=`sed -e 's/.* modprobe=\([^ ]*\).*/\1/' -e 's/,/\n/g' < /proc/cmdline`
+	for i in $MODULES; do
+		echo -n "Loading kernel module $i"
+		/sbin/modprobe $i
+		status 
+	done
+fi
+
 # Handle kernel cmdline parameter config=<device>,<path> to source a 
 # disk init script
 if grep -q " config=" /proc/cmdline; then
