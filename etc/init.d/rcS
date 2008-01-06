@@ -49,7 +49,7 @@ if [ "$UDEV" = "yes" ]; then
 fi
 
 # Handle kernel cmdline parameter modprobe=<module_list> 
-+if grep -q " modprobe=" /proc/cmdline; then
+if grep -q " modprobe=" /proc/cmdline; then
 	MODULES=`sed -e 's/.* modprobe=\([^ ]*\).*/\1/' -e 's/,/\n/g' < /proc/cmdline`
 	for i in $MODULES; do
 		echo -n "Loading kernel module $i"
