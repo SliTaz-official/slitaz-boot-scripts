@@ -34,12 +34,14 @@ else
 	fi
 fi
 
-# Creat /dev/cdrom if needed (symlink does not exist on LiveCD.
+# Creat /dev/cdrom if needed (symlink does not exist on LiveCD). Chmod hack
+# for Asunder and burnbox allowing all users to burn/rip CD/DVD.
 #
+DRIVE_NAME=`cat /proc/sys/dev/cdrom/info | grep "drive name" | cut -f 3`
 if [ ! "`readlink /dev/cdrom`" ]; then
-	DRIVE_NAME=`cat /proc/sys/dev/cdrom/info | grep "drive name" | cut -f 3`
 	echo -n "Creating symlink : /dev/cdrom..."
 	ln -s /dev/$DRIVE_NAME /dev/cdrom
+	chmod 0666 /dev/cdrom
 	status
 fi
-
+chmod 0666 /dev/$DRIVE_NAME
