@@ -48,6 +48,25 @@ if [ "$UDEV" = "yes" ]; then
 	echo "/sbin/udevd" > /proc/sys/kernel/hotplug
 fi
 
+# Creat /dev/cdrom if needed (symlink does not exist on LiveCD). Chmod
+# hack for Asunder and burnbox allowing all users to burn/rip CD/DVD.
+# Add also /dev/cdrom to fstab in entry dos not exist.
+#
+DRIVE_NAME=`cat /proc/sys/dev/cdrom/info | grep "drive name" | cut -f 3`
+if [ ! "`readlink /dev/cdrom`" ]; then
+	echo -n "Creating symlink : /dev/cdrom..."
+	ln -s /dev/$DRIVE_NAME /dev/cdrom
+	chmod 0666 /dev/cdrom
+	status
+fi
+if ! grep -q "/dev/cdrom" /etc/fstab; then
+	echo -n "Adding /dev/cdrom  to fstab..."
+	echo '/dev/cdrom      /media/cdrom iso9660 user,noauto       0       0' \
+		>> /etc/fstab
+	status
+fi
+chmod 0666 /dev/$DRIVE_NAME
+
 # Handle kernel cmdline parameter modprobe=<module_list> 
 if grep -q " modprobe=" /proc/cmdline; then
 	MODULES=`sed -e 's/.* modprobe=\([^ ]*\).*/\1/' -e 's/,/\n/g' < /proc/cmdline`
