@@ -32,7 +32,14 @@ echo -n "Disabling swap space... "
 /sbin/swapoff -a
 status && sleep 2
 
+# Kill all processes.
+echo -n "Killing all processes..."
+killall5 && sleep 2
+status
+
 # Umount filesystems.
-echo -n "Unmounting all filesystems... "
-/bin/umount -a -r
-#status
+echo -n "Remonting rootfs read only..."
+mount -o remount,ro /
+status
+echo "Unmounting all filesystems... "
+/bin/umount -a
