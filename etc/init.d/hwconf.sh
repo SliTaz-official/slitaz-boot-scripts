@@ -34,7 +34,7 @@ else
 	fi
 fi
 # Restore sound config for installed system.
-if [ ! -f /var/lib/sound-card-driver ]; then
+if [ -f /var/lib/sound-card-driver ]; then
 	echo -n "Restoring last alsa configuration..."
 	alsactl restore
 	status
