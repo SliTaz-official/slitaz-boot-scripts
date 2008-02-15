@@ -1,0 +1,27 @@
+# /etc/init.d/rc.functions: SliTaz boot scripts functions.
+#
+
+# Status functions.
+status()
+{
+	local CHECK=$?
+	echo -en "\\033[70G[ "
+	if [ $CHECK = 0 ]; then
+		echo -en "\\033[1;33mOK"
+	else
+		echo -en "\\033[1;31mFailed"
+	fi
+	echo -e "\\033[0;39m ]"
+}
+
+# An other way to sleep.
+usleep_progress()
+{
+	CHAR='='
+	for i in `seq 80-1`
+	do
+		echo -n "$CHAR"
+		usleep 28000
+	done
+	echo "$CHAR"
+}

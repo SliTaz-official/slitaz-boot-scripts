@@ -5,12 +5,15 @@
 . /etc/init.d/rc.functions
 . /etc/rcS.conf
 
+# Message with progress bar
+echo -e "
+================================================================================
+
+    \033[1mSystem is going down for reboot or halt.\033[0m
+
+    Uptime:`uptime`"
 echo ""
-echo "========"
-echo ""
-echo -e "\033[1m        System is going down for reboot or halt.\033[0m"
-echo ""
-echo "========"
+usleep_progress
 echo ""
 
 # Stop all daemons started at boot time.
@@ -42,4 +45,4 @@ echo -n "Remonting rootfs read only..."
 mount -o remount,ro /
 status
 echo "Unmounting all filesystems... "
-/bin/umount -a
+/bin/umount -a -r
