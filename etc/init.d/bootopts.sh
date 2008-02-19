@@ -10,12 +10,18 @@ mount_home()
 	echo "Home has been specified to $DEVICE..."
 	echo "Sleeping 10 s to let the kernel detect the device... "
 	sleep 10
-	if grep -q "$DEVICE" /proc/partitions ; then
-		echo "Mounting /home on /dev/$DEVICE... "
+
+	DEVID=$DEVICE
+	if [ -x /sbin/blkid ]; then
+		#can be label, uuid or devname
+		DEVID=`/sbin/blkid | grep $DEVICE | cut -d: -f1`
+	fi
+	if [ -n "$DEVID" ] && grep -q "$DEVID" /proc/partitions ; then
+		echo "Mounting /home on /dev/$DEVID... "
 		mv /home/hacker /tmp/hacker-home
-		mount -t ext3 /dev/$DEVICE /home
+		mount -o uid=500,gid=500 /dev/$DEVID /home
 	else
-		echo "Unable to find $DEVICE in /proc/partitions... "
+		echo "Unable to find $DEVID... "
 	fi
 	# Move all hacker dir if needed.
 	if [ ! -d "/home/hacker" ] ; then
