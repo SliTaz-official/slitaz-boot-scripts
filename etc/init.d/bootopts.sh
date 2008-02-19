@@ -21,7 +21,7 @@ mount_home()
 		mv /home/hacker /tmp/hacker-home
 		mount -o uid=500,gid=500 /dev/$DEVID /home
 	else
-		echo "Unable to find $DEVID... "
+		echo "Unable to find $DEVICE... "
 	fi
 	# Move all hacker dir if needed.
 	if [ ! -d "/home/hacker" ] ; then
