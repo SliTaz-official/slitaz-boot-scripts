@@ -37,7 +37,7 @@ mount_home()
 		mount /dev/$DEVID /home
 		gen_home_swap
 	else
-		echo "Unable to find $DEVID... "
+		echo "Unable to find $DEVICE... "
 	fi
 	# Move all hacker dir if needed.
 	if [ ! -d "/home/hacker" ] ; then
