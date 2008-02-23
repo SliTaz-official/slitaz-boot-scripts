@@ -3,37 +3,6 @@
 #
 . /etc/init.d/rc.functions
 
-# Mount /home and check for user hacker home dir.
-#
-mount_home()
-{
-	echo "Home has been specified to $DEVICE..."
-	echo "Sleeping 10 s to let the kernel detect the device... "
-	sleep 10
-
-	DEVID=$DEVICE
-	if [ -x /sbin/blkid ]; then
-		# Can be label, uuid or devname. DEVID give us /dev/name and
-		# DEVICE give us disk name without /dev/.
-		DEVID=`/sbin/blkid | grep $DEVICE | cut -d: -f1`
-		DEVID=${DEVID##*/}
-	fi
-	if [ -n "$DEVID" ] && grep -q "$DEVID" /proc/partitions ; then
-		echo "Mounting /home on /dev/$DEVID... "
-		mv /home/hacker /tmp/hacker-home
-		mount -o uid=500,gid=500 /dev/$DEVID /home
-	else
-		echo "Unable to find $DEVID... "
-	fi
-	# Move all hacker dir if needed.
-	if [ ! -d "/home/hacker" ] ; then
-		mv /tmp/hacker-home /home/hacker
-		chown -R hacker.hacker /home/hacker
-	else
-		rm -rf /tmp/hacker-home
-	fi
-}
-
 # Check if swap file must be generated in /home: swap=size (Mb).
 # This option is used with home=device.
 gen_home_swap()
@@ -48,6 +17,37 @@ gen_home_swap()
 	fi
 }
 
+# Mount /home and check for user hacker home dir.
+#
+mount_home()
+{
+	echo "Home has been specified to $DEVICE..."
+	echo "Sleeping 10 s to let the kernel detect the device... "
+	sleep 10
+
+	DEVID=$DEVICE
+	if [ -x /sbin/blkid ]; then
+		# Can be label, uuid or devname. DEVID give us first: /dev/name.
+		DEVID=`/sbin/blkid | grep $DEVICE | cut -d: -f1`
+		DEVID=${DEVID##*/}
+	fi
+	if [ -n "$DEVID" ] && grep -q "$DEVID" /proc/partitions ; then
+		echo "Mounting /home on /dev/$DEVID... "
+		mv /home/hacker /tmp/hacker-home
+		mount /dev/$DEVID /home
+		gen_home_swap
+	else
+		echo "Unable to find $DEVID... "
+	fi
+	# Move all hacker dir if needed.
+	if [ ! -d "/home/hacker" ] ; then
+		mv /tmp/hacker-home /home/hacker
+		chown -R hacker.hacker /home/hacker
+	else
+		rm -rf /tmp/hacker-home
+	fi
+}
+
 # Parse /proc/cmdline with grep.
 #
 
@@ -58,11 +58,9 @@ echo "Parsing kernel cmdline for SliTaz live options... "
 if grep -q "home=usb" /proc/cmdline; then
 	DEVICE=sda1
 	mount_home
-	gen_home_swap
 elif grep -q "home=" /proc/cmdline; then
 	DEVICE=`cat /proc/cmdline | sed 's/.*home=\([^ ]*\).*/\1/'`
 	mount_home
-	gen_home_swap
 fi
 
 # Active an eventual swap file in /home and on local hd.
