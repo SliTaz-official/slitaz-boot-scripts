@@ -55,7 +55,7 @@ if [ -f "/home/swap" ]; then
 fi
 if [ "`fdisk -l | grep swap`" ]; then
 	for SWAP_DEV in `fdisk -l | grep swap | awk '{ print $1 }'`; do
-		echo "Swap memory detected on : $SWAP_DEV"
+		echo "Swap memory detected on: $SWAP_DEV"
 		swapon $SWAP_DEV
 	done
 fi
@@ -77,5 +77,19 @@ if grep -q "kmap=*" /proc/cmdline; then
 	echo -n "Setting system keymap to: $KMAP..."
 	echo "KMAP=$KMAP.kmap" > /etc/kmap.conf
 	status
+fi
+
+# Check for a specified screen (screen=*).
+#
+if grep -q "screen=*" /proc/cmdline; then
+	SCREEN=`cat /proc/cmdline | sed 's/.*screen=\([^ ]*\).*/\1/'`
+	if [ "$SCREEN" = "text" ];
+		echo -n "Disabling X login manager: slim..."
+		sed -i s/'slim'/''/ /etc/rcS.conf
+		status
+	else
+		echo "Option not yet implemented: screen=$SCREEN"
+		sleep 2
+	fi
 fi
 
