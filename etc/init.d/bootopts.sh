@@ -13,13 +13,14 @@ mount_home()
 
 	DEVID=$DEVICE
 	if [ -x /sbin/blkid ]; then
-		#can be label, uuid or devname
+		# Can be label, uuid or devname. DEVID give us /dev/name and
+		# DEVICE give us disk name without /dev/.
 		DEVID=`/sbin/blkid | grep $DEVICE | cut -d: -f1`
 	fi
 	if [ -n "$DEVID" ] && grep -q "$DEVICE" /proc/partitions ; then
-		echo "Mounting /home on /dev/$DEVID... "
+		echo "Mounting /home on /dev/$DEVICE... "
 		mv /home/hacker /tmp/hacker-home
-		mount -o uid=500,gid=500 /dev/$DEVID /home
+		mount -o uid=500,gid=500 /dev/$DEVICE /home
 	else
 		echo "Unable to find $DEVICE... "
 	fi
