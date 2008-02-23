@@ -53,7 +53,7 @@ if grep -q "swap=[1-9]*" /proc/cmdline; then
 	SWAP_SIZE=`cat /proc/cmdline | sed 's/.*swap=\([^ ]*\).*/\1/'`
 	# DD to gen a virtual disk.
 	echo -n "Generating swap file: /home/swap ($SWAP_SIZE)..."
-	dd if=/dev/zero of=/home/swap bs=1M count=$SIZE 2>/dev/null
+	dd if=/dev/zero of=/home/swap bs=1M count=$SWAP_SIZE 2>/dev/null
 	status
 	# Make the Linux swap filesystem.
 	mkswap /home/swap
@@ -95,7 +95,7 @@ fi
 #
 if grep -q "screen=*" /proc/cmdline; then
 	SCREEN=`cat /proc/cmdline | sed 's/.*screen=\([^ ]*\).*/\1/'`
-	if [ "$SCREEN" = "text" ];
+	if [ "$SCREEN" = "text" ]; then
 		echo -n "Disabling X login manager: slim..."
 		sed -i s/'slim'/''/ /etc/rcS.conf
 		status
@@ -107,11 +107,7 @@ fi
 
 # Laptop option to load ac and battery Kernel modules.
 if grep -q "laptop" /proc/cmdline; then
-	echo -n "Laptop modules: ac battery..."
-	. /etc/rcS.conf
-	sed -i s/"LOAD_MODULES=\"$LOAD_MODULES\""/"LOAD_MODULES=\"$LOAD_MODULES ac battery\""/\
-		/etc/rcS.conf
-	status
+	echo "Loading laptop modules: ac battery..."
 	modprobe ac
 	modprobe battery
 fi
