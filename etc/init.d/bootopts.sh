@@ -47,6 +47,18 @@ elif grep -q "home=" /proc/cmdline; then
 	mount_home
 fi
 
+# Check if swap file must be generated: swap=size (Mb).
+#
+if grep -q "swap=[1-9]*" /proc/cmdline; then
+	SWAP_SIZE=`cat /proc/cmdline | sed 's/.*swap=\([^ ]*\).*/\1/'`
+	# DD to gen a virtual disk.
+	echo -n "Generating swap file: /home/swap ($SWAP_SIZE)..."
+	dd if=/dev/zero of=/home/swap bs=1M count=$SIZE 2>/dev/null
+	status
+	# Make the Linux swap filesystem.
+	mkswap /home/swap
+fi
+
 # Active an eventual swap file in /home and on local hd.
 #
 if [ -f "/home/swap" ]; then
