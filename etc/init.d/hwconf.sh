@@ -26,7 +26,7 @@ else
 			# Start soundconf to config driver and load module for Live mode
 			/usr/sbin/soundconf
 		else
-			echo "Unable to found : /usr/sbin/soundconf"
+			echo "Unable to found: /usr/sbin/soundconf"
 		fi
 	else
 		# /var/lib/sound-card-driver exist so sound is already configured.
@@ -38,4 +38,9 @@ if [ -f /var/lib/sound-card-driver ]; then
 	echo -n "Restoring last alsa configuration..."
 	alsactl restore
 	status
+fi
+
+# Screen size config for slim/Xvesa.
+if [ ! -f /etc/X11/screen.conf -a -e /usr/bin/slim ]; then
+	tazx
 fi

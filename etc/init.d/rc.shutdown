@@ -11,9 +11,9 @@ echo -e "
 
     \033[1mSystem is going down for reboot or halt.\033[0m
 
-    Uptime:`uptime`"
-echo ""
-usleep_progress
+    Uptime:`uptime`
+
+================================================================================"
 echo ""
 
 # Stop all daemons started at boot time.
@@ -33,7 +33,7 @@ status && sleep 2
 # Swap off.
 echo -n "Disabling swap space... "
 /sbin/swapoff -a
-status && sleep 2
+status
 
 # Kill all processes.
 echo -n "Killing all processes..."
@@ -46,3 +46,7 @@ mount -o remount,ro /
 status
 echo "Unmounting all filesystems... "
 /bin/umount -a -r
+
+echo ""
+usleep_progress
+echo ""

@@ -18,7 +18,7 @@ status()
 usleep_progress()
 {
 	CHAR='='
-	for i in `seq 80-1`
+	for i in `seq 79-1`
 	do
 		echo -n "$CHAR"
 		usleep 28000
