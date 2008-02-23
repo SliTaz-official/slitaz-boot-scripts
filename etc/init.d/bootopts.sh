@@ -93,3 +93,13 @@ if grep -q "screen=*" /proc/cmdline; then
 	fi
 fi
 
+# Laptop option to load ac and battery Kernel modules.
+if grep -q "laptop" /proc/cmdline; then
+	echo -n "Laptop modules: ac battery..."
+	. /etc/rcS.conf
+	sed -i s/"LOAD_MODULES=\"$LOAD_MODULES\""/"LOAD_MODULES=\"$LOAD_MODULES ac battery\""/\
+		/etc/rcS.conf
+	status
+	modprobe ac
+	modprobe battery
+fi
