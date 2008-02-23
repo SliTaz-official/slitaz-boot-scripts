@@ -41,6 +41,6 @@ if [ -f /var/lib/sound-card-driver ]; then
 fi
 
 # Screen size config for slim/Xvesa.
-if [ ! -f /etc/X11/screen.conf -a -e /usr/bin/slim ]; then
+if [ ! -f /etc/X11/screen.conf -a -x /usr/bin/slim ]; then
 	tazx
 fi

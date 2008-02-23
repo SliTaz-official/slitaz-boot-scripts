@@ -133,14 +133,22 @@ fi
 echo "Executing all initialisation scripts..."
 for script in $RUN_SCRIPTS
 do
-	/etc/init.d/$script
+	if [ -x /etc/init.d/$daemon ]; then
+		/etc/init.d/$script
+	fi
 done
+
+# Re-source main config file, in Live mode daemons list ca be modified 
+# by boot options.
+. /etc/rcS.conf
 
 # Start all daemons specified with $RUN_DAEMONS.
 echo "Starting all daemons specified in /etc/rcS.conf..."
 for daemon in $RUN_DAEMONS
 do
-	/etc/init.d/$daemon start
+	if [ -x /etc/init.d/$daemon ]; then
+		/etc/init.d/$daemon start
+	fi
 done
 
 # Reset screen and display a bold message.

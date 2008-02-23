@@ -16,7 +16,7 @@ mount_home()
 		#can be label, uuid or devname
 		DEVID=`/sbin/blkid | grep $DEVICE | cut -d: -f1`
 	fi
-	if [ -n "$DEVID" ] && grep -q "$DEVID" /proc/partitions ; then
+	if [ -n "$DEVID" ] && grep -q "$DEVICE" /proc/partitions ; then
 		echo "Mounting /home on /dev/$DEVID... "
 		mv /home/hacker /tmp/hacker-home
 		mount -o uid=500,gid=500 /dev/$DEVID /home
@@ -32,6 +32,20 @@ mount_home()
 	fi
 }
 
+# Check if swap file must be generated in /home: swap=size (Mb).
+# This option is used with home=device.
+gen_home_swap()
+{
+	if grep -q "swap=[1-9]*" /proc/cmdline; then
+		SWAP_SIZE=`cat /proc/cmdline | sed 's/.*swap=\([^ ]*\).*/\1/'`
+		# DD to gen a virtual disk.
+		echo "Generating swap file: /home/swap ($SWAP_SIZE)..."
+		dd if=/dev/zero of=/home/swap bs=1M count=$SWAP_SIZE
+		# Make the Linux swap filesystem.
+		mkswap /home/swap
+	fi
+}
+
 # Parse /proc/cmdline with grep.
 #
 
@@ -42,21 +56,11 @@ echo "Parsing kernel cmdline for SliTaz live options... "
 if grep -q "home=usb" /proc/cmdline; then
 	DEVICE=sda1
 	mount_home
+	gen_home_swap
 elif grep -q "home=" /proc/cmdline; then
 	DEVICE=`cat /proc/cmdline | sed 's/.*home=\([^ ]*\).*/\1/'`
 	mount_home
-fi
-
-# Check if swap file must be generated: swap=size (Mb).
-#
-if grep -q "swap=[1-9]*" /proc/cmdline; then
-	SWAP_SIZE=`cat /proc/cmdline | sed 's/.*swap=\([^ ]*\).*/\1/'`
-	# DD to gen a virtual disk.
-	echo -n "Generating swap file: /home/swap ($SWAP_SIZE)..."
-	dd if=/dev/zero of=/home/swap bs=1M count=$SWAP_SIZE 2>/dev/null
-	status
-	# Make the Linux swap filesystem.
-	mkswap /home/swap
+	gen_home_swap
 fi
 
 # Active an eventual swap file in /home and on local hd.
@@ -99,6 +103,9 @@ if grep -q "screen=*" /proc/cmdline; then
 		echo -n "Disabling X login manager: slim..."
 		sed -i s/'slim'/''/ /etc/rcS.conf
 		status
+		# Creat /etc/X11/screen.conf to avoid tazx execution by hwconf.sh
+		mkdir -p /etc/X11
+		echo 'SCREEN=1024x768x24' > /etc/X11/screen.conf
 	else
 		echo "Option not yet implemented: screen=$SCREEN"
 		sleep 2
