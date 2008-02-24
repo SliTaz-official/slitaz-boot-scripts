@@ -5,7 +5,8 @@
 . /etc/init.d/rc.functions
 . /etc/rcS.conf
 
-# Message with progress bar
+# Bold info message with uptime
+echo ""
 echo -e "
 ================================================================================
 
