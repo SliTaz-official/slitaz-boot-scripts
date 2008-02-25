@@ -106,6 +106,7 @@ if [ "$CLEAN_UP_SYSTEM" = "yes" ]; then
 	echo -n "Cleaning up the system... "
 	rm -rf /tmp/*
 	rm -f /var/run/*.pid
+	rm -f /var/lock/*
 	status
 else
 	echo "System clean up is disabled in /etc/rcS.conf... "
