@@ -42,5 +42,16 @@ fi
 
 # Screen size config for slim/Xvesa.
 if [ ! -f /etc/X11/screen.conf -a -x /usr/bin/slim ]; then
-	tazx
+	if grep -q "screen=*" /proc/cmdline; then
+		export NEW_SCREEN=`cat /proc/cmdline | sed 's/.*screen=\([^ ]*\).*/\1/'`
+		if [ "$NEW_SCREEN" = "text" ]; then
+			echo -n "Disabling X login manager: slim..."
+			sed -i s/'slim'/''/ /etc/rcS.conf
+			status
+		else
+			tazx
+		fi
+	else
+		tazx
+	fi
 fi

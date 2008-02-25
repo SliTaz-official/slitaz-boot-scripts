@@ -95,23 +95,6 @@ if grep -q "kmap=*" /proc/cmdline; then
 	status
 fi
 
-# Check for a specified screen (screen=*).
-#
-if grep -q "screen=*" /proc/cmdline; then
-	SCREEN=`cat /proc/cmdline | sed 's/.*screen=\([^ ]*\).*/\1/'`
-	if [ "$SCREEN" = "text" ]; then
-		echo -n "Disabling X login manager: slim..."
-		sed -i s/'slim'/''/ /etc/rcS.conf
-		status
-		# Creat /etc/X11/screen.conf to avoid tazx execution by hwconf.sh
-		mkdir -p /etc/X11
-		echo 'SCREEN=1024x768x24' > /etc/X11/screen.conf
-	else
-		echo "Option not yet implemented: screen=$SCREEN"
-		sleep 2
-	fi
-fi
-
 # Laptop option to load ac and battery Kernel modules.
 if grep -q "laptop" /proc/cmdline; then
 	echo "Loading laptop modules: ac battery..."
