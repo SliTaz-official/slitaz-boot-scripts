@@ -8,6 +8,8 @@
 . /etc/init.d/rc.functions
 . /etc/rcS.conf
 
+if [ "$1" != "logged" ]; then #logged
+
 # Start by sleeping a bit.
 echo "Processing /etc/init.d/rcS... "
 sleep 1
@@ -47,6 +49,12 @@ if [ "$UDEV" = "yes" ]; then
 	status
 	echo "/sbin/udevd" > /proc/sys/kernel/hotplug
 fi
+
+/bin/dmesg > /var/log/dmesg.log
+/usr/bin/vcsa2txt < /dev/vcsa1 > /var/log/boot.log
+/usr/bin/script -a -q -c '/etc/init.d/rcS logged' /var/log/boot.log
+
+else #logged
 
 # Creat /dev/cdrom if needed (symlink does not exist on LiveCD). Chmod
 # hack for Asunder and burnbox allowing all users to burn/rip CD/DVD.
@@ -158,3 +166,4 @@ if [ -n "$MESSAGE" ]; then
 	echo -e "\033[1m$MESSAGE\033[0m"
 fi
 
+fi #logged
