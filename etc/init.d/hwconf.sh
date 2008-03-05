@@ -23,11 +23,11 @@ if grep -q -w "sound=" /proc/cmdline; then
 	noconf)
 		echo "Sound configuration is disable from cmdline...";;
 	*)
-		echo "Using sound kernel module $DRIVER...";;
+		echo "Using sound kernel module $DRIVER..."
 		echo "snd-$DRIVER" > /var/lib/sound-card-driver;;
 	esac
 elif [ ! -f /var/lib/sound-card-driver ]; then
-	if [ -f /usr/sbin/soundconf ]; then
+	if [ -x /usr/sbin/soundconf ]; then
 		# Start soundconf to config driver and load module for Live mode
 		/usr/sbin/soundconf
 	else
