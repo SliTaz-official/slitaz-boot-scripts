@@ -73,7 +73,7 @@ if ! grep -q "/dev/cdrom" /etc/fstab; then
 		>> /etc/fstab
 	status
 fi
-chmod 0666 /dev/$DRIVE_NAME
+[ -n "$DRIVE_NAME" ] && chmod 0666 /dev/$DRIVE_NAME
 
 # Handle kernel cmdline parameter modprobe=<module_list> 
 if grep -q " modprobe=" /proc/cmdline; then
