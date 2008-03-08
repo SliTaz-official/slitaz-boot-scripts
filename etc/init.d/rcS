@@ -51,8 +51,8 @@ if [ "$UDEV" = "yes" ]; then
 fi
 
 /bin/dmesg > /var/log/dmesg.log
-/usr/bin/vcsa2txt < /dev/vcsa1 > /var/log/boot.log
-/usr/bin/script -a -q -c '/etc/init.d/rcS logged' /var/log/boot.log
+vcsa2txt < /dev/vcsa1 > /var/log/boot.log
+script -a -q -c '/etc/init.d/rcS logged' /var/log/boot.log
 
 else #logged
 
