@@ -6,7 +6,7 @@
 # Sound configuration stuff. First check if sound=no and remoce all sound
 # Kernel modules.
 #
-if grep -q -w "sound=" /proc/cmdline; then
+if grep -q "sound=" /proc/cmdline; then
 	DRIVER=`cat /proc/cmdline | sed 's/.*sound=\([^ ]*\).*/\1/'`
 	case "$DRIVER" in
 	no)
