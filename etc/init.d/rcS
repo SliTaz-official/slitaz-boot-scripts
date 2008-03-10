@@ -56,22 +56,27 @@ script -a -q -c '/etc/init.d/rcS logged' /var/log/boot.log
 
 else #logged
 
-# Creat /dev/cdrom if needed (symlink does not exist on LiveCD). Chmod
-# hack for Asunder and burnbox allowing all users to burn/rip CD/DVD.
+# Creat /dev/cdrom if needed (symlink does not exist on LiveCD).
 # Add also /dev/cdrom to fstab if entry dos not exist.
 #
 DRIVE_NAME=`cat /proc/sys/dev/cdrom/info | grep "drive name" | cut -f 3`
 if [ -n "$DRIVE_NAME" -a ! "`readlink /dev/cdrom`" ]; then
 	echo -n "Creating symlink : /dev/cdrom..."
 	ln -s /dev/$DRIVE_NAME /dev/cdrom
-	chmod 0666 /dev/cdrom
-	chmod 0666 /dev/$DRIVE_NAME
 	status
 fi
 if ! grep -q "/dev/cdrom" /etc/fstab; then
 	echo -n "Adding /dev/cdrom  to fstab..."
 	echo '/dev/cdrom      /media/cdrom iso9660 user,noauto       0       0' \
 		>> /etc/fstab
+	status
+fi
+# Chmod hack on each boot for Asunder and burnbox. Allowing all users
+# to burn/rip CD/DVD.
+if [ -n "$DRIVE_NAME" -a "`readlink /dev/cdrom`" ]; then
+	echo -n "Chmoding cdrom device..."
+	chmod 0666 /dev/cdrom
+	chmod 0666 /dev/$DRIVE_NAME
 	status
 fi
 
