@@ -18,7 +18,9 @@ if grep -q "sound=" /proc/cmdline; then
 			pkg=${i#/var/lib/tazpkg/installed/}
 			echo 'y' | tazpkg remove ${pkg%/*} > /dev/null
 		done
-		echo 'y' | tazpkg remove alsa-lib > /dev/null
+		for i in alsa-lib mhwaveedit asunder libcddb ; do
+			echo 'y' | tazpkg remove $i > /dev/null
+		done
 		status;;
 	noconf)
 		echo "Sound configuration is disable from cmdline...";;
@@ -40,6 +42,11 @@ if [ -f /var/lib/sound-card-driver ]; then
 	echo -n "Restoring last alsa configuration..."
 	alsactl restore
 	status
+else
+	# Remove LXpanel volumealsa if no sound configuration.
+	if [ -f /usr/share/lxpanel/profile/default/config ]; then 
+		sed -i s/'volumealsa'/'space'/ /usr/share/lxpanel/profile/default/config
+	fi
 fi
 
 # Screen size config for slim/Xvesa.
