@@ -104,6 +104,11 @@ if grep -q " config=" /proc/cmdline; then
 	status 
 fi
 
+# Eject option
+if grep -q -w "eject" /proc/cmdline; then
+	eject /dev/cdrom
+fi
+
 # Start syslogd and klogd.
 if [ "$KERNEL_LOG_DAEMONS" = "yes" ]; then
 	echo -n "Starting system log deamon: syslogd... "
@@ -147,7 +152,7 @@ fi
 echo "Executing all initialisation scripts..."
 for script in $RUN_SCRIPTS
 do
-	if [ -x /etc/init.d/$daemon ]; then
+	if [ -x /etc/init.d/$script ]; then
 		/etc/init.d/$script
 	fi
 done
