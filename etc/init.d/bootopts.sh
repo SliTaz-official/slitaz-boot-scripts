@@ -34,7 +34,8 @@ mount_home()
 	if [ -n "$DEVID" ] && grep -q "$DEVID" /proc/partitions ; then
 		echo "Mounting /home on /dev/$DEVID... "
 		mv /home/hacker /tmp/hacker-home
-		mount /dev/$DEVID /home
+		mount /dev/$DEVID /home -o uid=500,gid=500 2>/dev/null \
+			|| mount /dev/$DEVID /home
 		gen_home_swap
 	else
 		echo "Unable to find $DEVICE... "
