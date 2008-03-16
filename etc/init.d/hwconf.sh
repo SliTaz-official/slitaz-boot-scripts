@@ -26,6 +26,7 @@ if grep -q "sound=" /proc/cmdline; then
 		echo "Sound configuration is disable from cmdline...";;
 	*)
 		echo "Using sound kernel module $DRIVER..."
+		modprobe snd-$DRIVER
 		echo "snd-$DRIVER" > /var/lib/sound-card-driver;;
 	esac
 elif [ ! -f /var/lib/sound-card-driver ]; then
