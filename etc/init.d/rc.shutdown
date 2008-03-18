@@ -5,6 +5,8 @@
 . /etc/init.d/rc.functions
 . /etc/rcS.conf
 
+clear && sleep 1
+
 # Bold info message with uptime
 echo ""
 echo -e "
