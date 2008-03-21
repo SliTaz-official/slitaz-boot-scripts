@@ -3,6 +3,9 @@
 #
 . /etc/init.d/rc.functions
 
+# $HOME is not yet set.
+HOME=/root
+
 # Sound configuration stuff. First check if sound=no and remoce all sound
 # Kernel modules.
 #
@@ -46,8 +49,11 @@ if [ -f /var/lib/sound-card-driver ]; then
 	status
 else
 	# Remove LXpanel volumealsa if no sound configuration.
-	if [ -f /usr/share/lxpanel/profile/default/config ]; then 
-		sed -i s/'volumealsa'/'space'/ /usr/share/lxpanel/profile/default/config
+	if [ -f /etc/lxpanel/default/config ]; then 
+		sed -i s/'volumealsa'/'space'/ /etc/lxpanel/default/config
+	fi
+	if [ -f /etc/lxpanel/openbox/config ]; then 
+		sed -i s/'volumealsa'/'space'/ /etc/lxpanel/openbox/config
 	fi
 fi
 
