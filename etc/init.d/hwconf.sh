@@ -66,9 +66,9 @@ if [ ! -f /etc/X11/screen.conf -a -x /usr/bin/slim ]; then
 			sed -i s/'slim'/''/ /etc/rcS.conf
 			status
 		else
-			tazx
+			tazx `cat /etc/X11/wm.default`
 		fi
 	else
-		tazx
+		tazx `cat /etc/X11/wm.default`
 	fi
 fi

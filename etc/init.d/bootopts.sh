@@ -102,3 +102,23 @@ if grep -q "laptop" /proc/cmdline; then
 	modprobe ac
 	modprobe battery
 fi
+
+# Check for a Window Manager (for a flavor, default WM can be changed
+# with boot option or with an addfile in /etc/X11/wm.default.
+if grep -q "wm=" /proc/cmdline; then
+	mkdir -p /etc/X11
+	WM=`cat /proc/cmdline | sed 's/.*wm=\([^ ]*\).*/\1/'`
+	case $WM in
+		jwm)
+			echo "jwm" > /etc/X11/wm.default ;;
+		ob|openbox|openbox-session)
+			echo "openbox" > /etc/X11/wm.default ;;
+		e17|enlightenment|enlightenment_start)
+			echo "enlightenment" > /etc/X11/wm.default ;;
+	esac
+else
+	# If no default WM fallback to JWM.
+	if [ ! -f /etc/X11/wm.default ]; then
+		echo "jwm" > /etc/X11/wm.default
+	fi
+fi
