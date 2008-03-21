@@ -67,7 +67,7 @@ if [ -n "$DRIVE_NAME" -a ! "`readlink /dev/cdrom`" ]; then
 fi
 if ! grep -q "/dev/cdrom" /etc/fstab; then
 	echo -n "Adding /dev/cdrom  to fstab..."
-	echo '/dev/cdrom      /media/cdrom iso9660 user,noauto       0       0' \
+	echo '/dev/cdrom      /media/cdrom iso9660 user,ro,noauto       0       0' \
 		>> /etc/fstab
 	status
 fi
