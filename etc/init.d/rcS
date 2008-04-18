@@ -44,9 +44,6 @@ if [ "$UDEV" = "yes" ]; then
 	echo -n "Starting udev daemon..."
 	/sbin/udevd --daemon
 	status
-	echo -n "Executing : udevstart..."
-	/sbin/udevstart
-	status
 	echo "/sbin/udevd" > /proc/sys/kernel/hotplug
 fi
 
@@ -63,6 +60,7 @@ DRIVE_NAME=`cat /proc/sys/dev/cdrom/info | grep "drive name" | cut -f 3`
 if [ -n "$DRIVE_NAME" -a ! "`readlink /dev/cdrom`" ]; then
 	echo -n "Creating symlink : /dev/cdrom..."
 	ln -s /dev/$DRIVE_NAME /dev/cdrom
+	ln -s /dev/$DRIVE_NAME /dev/dvd
 	status
 fi
 if ! grep -q "/dev/cdrom" /etc/fstab; then
@@ -76,6 +74,7 @@ fi
 if [ -n "$DRIVE_NAME" -a "`readlink /dev/cdrom`" ]; then
 	echo -n "Chmoding cdrom device..."
 	chmod 0666 /dev/cdrom
+	chmod 0666 /dev/dvd
 	chmod 0666 /dev/$DRIVE_NAME
 	status
 fi
