@@ -98,9 +98,11 @@ fi
 
 # Laptop option to load ac and battery Kernel modules.
 if grep -q "laptop" /proc/cmdline; then
-	echo "Loading laptop modules: ac battery..."
+	echo "Loading laptop modules: ac, battery, yenta_socket..."
 	modprobe ac
 	modprobe battery
+	modprobe yenta_socket
+	depmod -a
 fi
 
 # Check for a Window Manager (for a flavor, default WM can be changed

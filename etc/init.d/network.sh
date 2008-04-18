@@ -18,15 +18,22 @@ status
 
 # For a dynamic IP with DHCP.
 if [ "$DHCP" = "yes" ] ; then
-  echo "Starting udhcpc client on: $INTERFACE... "
-  /sbin/udhcpc -b -i $INTERFACE -p /var/run/udhcpc.$INTERFACE.pid
+	echo "Starting udhcpc client on: $INTERFACE... "
+	/sbin/udhcpc -b -i $INTERFACE -p /var/run/udhcpc.$INTERFACE.pid
 fi
 
 # For a static IP.
 if [ "$STATIC" = "yes" ] ; then
-  echo "Configuring static IP on $INTERFACE: $IP... "
-  /sbin/ifconfig $INTERFACE $IP netmask $NETMASK up
-  /sbin/route add default gateway $GATEWAY
-  echo "nameserver $DNS_SERVER" > /etc/resolv.conf
+	echo "Configuring static IP on $INTERFACE: $IP... "
+	/sbin/ifconfig $INTERFACE $IP netmask $NETMASK up
+	/sbin/route add default gateway $GATEWAY
+	echo "nameserver $DNS_SERVER" > /etc/resolv.conf
 fi
 
+# For wifi (experimental).
+if [ "$WIFI" = "yes" -o grep -q "wifi" /proc/cmdline ] ; then
+	iwconfig $WIFI_INTERFACE essid $ESSID
+	echo "Starting udhcpc client on: $INTERFACE... "
+	/sbin/udhcpc -b -i $WIFI_INTERFACE \
+		-p /var/run/udhcpc.$WIFI_INTERFACE.pid
+fi
