@@ -31,7 +31,7 @@ if [ "$STATIC" = "yes" ] ; then
 fi
 
 # For wifi (experimental).
-if [ "$WIFI" = "yes" -o grep -q "wifi" /proc/cmdline ] ; then
+if [ "$WIFI" = "yes" ] || grep -q "wifi" /proc/cmdline; then
 	iwconfig $WIFI_INTERFACE essid $ESSID
 	echo "Starting udhcpc client on: $INTERFACE... "
 	/sbin/udhcpc -b -i $WIFI_INTERFACE \
