@@ -49,6 +49,25 @@ mount_home()
 	fi
 }
 
+# Mount all ext3 partitions found (opt: mount).
+mount_partitions()
+{
+	# Get the list partitions.
+	DEVICES_LIST=`fdisk -l | grep 83 | cut -d " " -f 1`
+	
+	# Mount filesystems rw.
+	for device in $DEVICES_LIST
+	do
+		name=${device#/dev/}
+		# Device can be already used by home=usb.
+		if ! mount | grep ^$device >/dev/null; then
+			echo "Mounting partition: $name on /mnt/$name"
+			mkdir /mnt/$name
+			mount $device /mnt/$name
+		fi
+	done
+}
+
 # Parse /proc/cmdline with grep.
 #
 
@@ -119,8 +138,13 @@ if grep -q "wm=" /proc/cmdline; then
 			echo "enlightenment" > /etc/X11/wm.default ;;
 	esac
 else
-	# If no default WM fallback to JWM.
+	# If no default WM fallback to Openbox.
 	if [ ! -f /etc/X11/wm.default ]; then
-		echo "jwm" > /etc/X11/wm.default
+		echo "openbox" > /etc/X11/wm.default
 	fi
+fi
+
+# Check for option mount.
+if grep -q "mount" /proc/cmdline; then
+	mount_partitions
 fi
