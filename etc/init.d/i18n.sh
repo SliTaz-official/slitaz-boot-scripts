@@ -16,31 +16,29 @@ fi
 
 # Keymap config.
 #
-if [ -f "/etc/kmap.conf" ]; then
-	# Load keymap with Busybox loadkmap.
-	. /etc/kmap.conf
-	echo -n "Loading keymap: $KMAP... "
-	busybox loadkmap < /usr/share/kmap/$KMAP
-	status
+if [ -f "/etc/keymap.conf" ]; then
+	KEYMAP=`cat /etc/keymap.conf`
+	echo "Keymap configuration... "
+	loadkeys $KEYMAP
 else 
-	tazkmap
+	tazkeymap
 fi
 
 # Timezone config. Set timezone using the keymap config for fr, be, fr_CH
 # and ca with Montreal.
 #
 if [ ! -f "/etc/TZ" ]; then
-	. /etc/kmap.conf
-	case "$KMAP" in
-		fr.kmap|be.kmap)
+	KEYMAP=`cat /etc/keymap.conf`
+	case "$KEYMAP" in
+		fr-latin1|be-latin1)
 			echo -n "Setting time zone to Europe/Paris... "
 			echo "Europe/Paris" > /etc/TZ && status
 			;;
-		fr_CH.kmap)
+		fr_CH-latin1|de_CH-latin1)
 			echo -n "Setting time zone to Europe/Zurich... "
 			echo "Europe/Zurich" > /etc/TZ && status
 			;;
-		ca.kmap)
+		cf)
 			echo -n "Setting time zone to America/Montreal... "
 			echo "America/Montreal" > /etc/TZ && status
 			;;

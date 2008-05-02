@@ -109,9 +109,9 @@ fi
 # Check for a specified keymap (kmap=*).
 #
 if grep -q "kmap=*" /proc/cmdline; then
-	KMAP=`cat /proc/cmdline | sed 's/.*kmap=\([^ ]*\).*/\1/'`
-	echo -n "Setting system keymap to: $KMAP..."
-	echo "KMAP=$KMAP.kmap" > /etc/kmap.conf
+	KEYMAP=`cat /proc/cmdline | sed 's/.*kmap=\([^ ]*\).*/\1/'`
+	echo -n "Setting system keymap to: $KEYMAP..."
+	echo "$KEYMAP" > /etc/keymap.conf
 	status
 fi
 
