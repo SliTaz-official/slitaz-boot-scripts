@@ -27,7 +27,12 @@ if [ "$STATIC" = "yes" ] ; then
 	echo "Configuring static IP on $INTERFACE: $IP... "
 	/sbin/ifconfig $INTERFACE $IP netmask $NETMASK up
 	/sbin/route add default gateway $GATEWAY
-	echo "nameserver $DNS_SERVER" > /etc/resolv.conf
+	# Multi-DNS server in $DNS_SERVER.
+	/bin/mv /etc/resolv.conf /tmp/resolv.conf.$$
+	for NS in $DNS_SERVER
+	do
+		echo "nameserver $NS" >> /etc/resolv.conf
+	done
 fi
 
 # For wifi (experimental).
