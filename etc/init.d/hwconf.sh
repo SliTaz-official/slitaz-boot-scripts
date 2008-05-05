@@ -3,12 +3,48 @@
 #
 . /etc/init.d/rc.functions
 
-# $HOME is not yet set.
-HOME=/root
+# Restore sound config for installed system.
+if [ -f /var/lib/sound-card-driver ]; then
+	echo -n "Restoring last alsa configuration..."
+	alsactl restore
+	status
+fi
 
-# Sound configuration stuff. First check if sound=no and remoce all sound
-# Kernel modules.
-#
+# Detect PCI devices and load kernel module only at first boot 
+# or in LiveCD mode.
+if [ ! -f /var/lib/detected-modules ]; then
+	echo "Detecting PCI devices..."
+	MODULES_LIST=`lspci -k | grep "modules" | cut -d ":" -f 2 | sed s/-/_/g`
+	for mod in $MODULES_LIST
+	do
+		if ! `lsmod | grep -q "$mod"`; then
+			modname=`echo "$mod" | sed s/_/-/g`
+			echo "Loading Kernel modules: $modname"
+			detect="$detect $modname"
+			/sbin/modprobe $modname
+		fi
+	done
+	# yenta_socket = laptop
+	if `lsmod | grep -q "yenta_socket"`; then
+		detect="$detect ac battery"
+		modprobe ac
+		modprobe battery
+	fi
+	echo "$detect" > /var/lib/detected-modules
+	# Now add modules to rcS.conf
+	. /etc/rcS.conf
+	load=`echo "$LOAD_MODULES $detect" | sed s/"  "/" "/g`
+	sed -i s/"LOAD_MODULES=\"$LOAD_MODULES\""/"LOAD_MODULES=\"$load\""/ \
+		/etc/rcS.conf
+	# Retry a network connection with DHCP.
+	if ! `ifconfig -a | grep -q "eth0"`; then
+		echo "Starting udhcpc client on: eth0... "
+		/sbin/udhcpc -b -i eth0 -p /var/run/udhcpc.eth0.pid
+	fi
+fi
+
+# Sound configuration stuff. First check if sound=no and remove all 
+# sound Kernel modules.
 if grep -q "sound=" /proc/cmdline; then
 	DRIVER=`cat /proc/cmdline | sed 's/.*sound=\([^ ]*\).*/\1/'`
 	case "$DRIVER" in
@@ -33,32 +69,24 @@ if grep -q "sound=" /proc/cmdline; then
 			/usr/sbin/soundconf -M $DRIVER
 		fi;;
 	esac
+# Sound card my already be detected by PCI-detect.
+elif [ -d /proc/asound ]; then
+	cp /proc/asound/modules /var/lib/sound-card-driver
+	/usr/bin/setmixer
+# Start soundconf to config driver and load module for Live mode
+# if not yet detected.
 elif [ ! -f /var/lib/sound-card-driver ]; then
 	if [ -x /usr/sbin/soundconf ]; then
-		# Start soundconf to config driver and load module for Live mode
 		/usr/sbin/soundconf
 	else
 		echo "Unable to found: /usr/sbin/soundconf"
 	fi
 fi
 
-# Restore sound config for installed system.
-if [ -f /var/lib/sound-card-driver ]; then
-	echo -n "Restoring last alsa configuration..."
-	alsactl restore
-	status
-else
-	# Remove LXpanel volumealsa if no sound configuration.
-	if [ -f /etc/lxpanel/default/config ]; then 
-		sed -i s/'volumealsa'/'space'/ /etc/lxpanel/default/config
-	fi
-	if [ -f /etc/lxpanel/openbox/config ]; then 
-		sed -i s/'volumealsa'/'space'/ /etc/lxpanel/openbox/config
-	fi
-fi
-
-# Screen size config for slim/Xvesa.
+# Screen size config for slim/Xvesa (last config dialog befor login).
 if [ ! -f /etc/X11/screen.conf -a -x /usr/bin/slim ]; then
+	# $HOME is not yet set.
+	HOME=/root
 	if grep -q "screen=*" /proc/cmdline; then
 		export NEW_SCREEN=`cat /proc/cmdline | sed 's/.*screen=\([^ ]*\).*/\1/'`
 		if [ "$NEW_SCREEN" = "text" ]; then
