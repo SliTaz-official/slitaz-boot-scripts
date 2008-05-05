@@ -18,8 +18,12 @@ fi
 #
 if [ -f "/etc/keymap.conf" ]; then
 	KEYMAP=`cat /etc/keymap.conf`
-	echo "Keymap configuration... "
-	loadkeys $KEYMAP
+	echo "Keymap configuration: $KEYMAP"
+	if [ -x /bin/loadkeys ]; then
+		loadkeys $KEYMAP
+	else
+		loadkmap < /usr/share/kmap/$KEYMAP.kmap
+	fi
 else 
 	tazkeymap
 fi
