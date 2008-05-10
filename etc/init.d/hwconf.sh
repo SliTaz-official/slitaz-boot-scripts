@@ -72,7 +72,7 @@ if grep -q "sound=" /proc/cmdline; then
 # Sound card my already be detected by PCI-detect.
 elif [ -d /proc/asound ]; then
 	cp /proc/asound/modules /var/lib/sound-card-driver
-	/usr/bin/setmixer
+	/usr/sbin/setmixer
 # Start soundconf to config driver and load module for Live mode
 # if not yet detected.
 elif [ ! -f /var/lib/sound-card-driver ]; then
