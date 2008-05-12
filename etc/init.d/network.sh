@@ -35,10 +35,11 @@ if [ "$STATIC" = "yes" ] ; then
 	done
 fi
 
-# For wifi (experimental).
+# For wifi. Users just have to enable it throught yes and usually
+# essid any will work and interafce is wlan0.
 if [ "$WIFI" = "yes" ] || grep -q "wifi" /proc/cmdline; then
 	iwconfig $WIFI_INTERFACE essid $ESSID
-	echo "Starting udhcpc client on: $INTERFACE... "
+	echo "Starting udhcpc client on: $WIFI_INTERFACE... "
 	/sbin/udhcpc -b -i $WIFI_INTERFACE \
 		-p /var/run/udhcpc.$WIFI_INTERFACE.pid
 fi
