@@ -7,7 +7,7 @@
 # Locale config.
 #
 echo "Cheking if /etc/locale.conf exist... "
-if [ -f "/etc/locale.conf" ]; then
+if [ -s "/etc/locale.conf" ]; then
 	echo -n "Locale configuration file exist... "
 	status
 else
@@ -16,7 +16,7 @@ fi
 
 # Keymap config.
 #
-if [ -f "/etc/keymap.conf" ]; then
+if [ -s "/etc/keymap.conf" ]; then
 	KEYMAP=`cat /etc/keymap.conf`
 	echo "Keymap configuration: $KEYMAP"
 	if [ -x /bin/loadkeys ]; then
@@ -31,7 +31,7 @@ fi
 # Timezone config. Set timezone using the keymap config for fr, be, fr_CH
 # and ca with Montreal.
 #
-if [ ! -f "/etc/TZ" ]; then
+if [ ! -s "/etc/TZ" ]; then
 	KEYMAP=`cat /etc/keymap.conf`
 	case "$KEYMAP" in
 		fr-latin1|be-latin1)
@@ -66,7 +66,7 @@ fi
 
 # Gen a motd in french if fr_* or in English by default.
 #
-if [ ! -f "/etc/motd" ]; then
+if [ ! -s "/etc/motd" ]; then
 if grep -q "fr_*" /etc/locale.conf; then
 		# FR
 		cat > /etc/motd << "EOF"

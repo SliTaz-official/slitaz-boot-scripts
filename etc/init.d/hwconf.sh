@@ -4,7 +4,7 @@
 . /etc/init.d/rc.functions
 
 # Restore sound config for installed system.
-if [ -f /var/lib/sound-card-driver ]; then
+if [ -s /var/lib/sound-card-driver ]; then
 	echo -n "Restoring last alsa configuration..."
 	alsactl restore
 	status
@@ -12,7 +12,7 @@ fi
 
 # Detect PCI devices and load kernel module only at first boot 
 # or in LiveCD mode.
-if [ ! -f /var/lib/detected-modules ]; then
+if [ ! -s /var/lib/detected-modules ]; then
 	echo "Detecting PCI devices..."
 	MODULES_LIST=`lspci -k | grep "modules" | cut -d ":" -f 2 | sed s/-/_/g`
 	for mod in $MODULES_LIST
@@ -75,7 +75,7 @@ elif [ -d /proc/asound ]; then
 	/usr/sbin/setmixer
 # Start soundconf to config driver and load module for Live mode
 # if not yet detected.
-elif [ ! -f /var/lib/sound-card-driver ]; then
+elif [ ! -s /var/lib/sound-card-driver ]; then
 	if [ -x /usr/sbin/soundconf ]; then
 		/usr/sbin/soundconf
 	else
@@ -84,7 +84,7 @@ elif [ ! -f /var/lib/sound-card-driver ]; then
 fi
 
 # Screen size config for slim/Xvesa (last config dialog befor login).
-if [ ! -f /etc/X11/screen.conf -a -x /usr/bin/slim ]; then
+if [ ! -s /etc/X11/screen.conf -a -x /usr/bin/slim ]; then
 	# $HOME is not yet set.
 	HOME=/root
 	if grep -q "screen=*" /proc/cmdline; then
