@@ -10,7 +10,7 @@ if [ -s /var/lib/sound-card-driver ]; then
 	status
 fi
 
-# Detect PCI devices and load kernel module only at first boot 
+# Detect PCI devices and load kernel module only at first boot
 # or in LiveCD mode.
 if [ ! -s /var/lib/detected-modules ]; then
 	echo "Detecting PCI devices..."
@@ -43,7 +43,7 @@ if [ ! -s /var/lib/detected-modules ]; then
 	fi
 fi
 
-# Sound configuration stuff. First check if sound=no and remove all 
+# Sound configuration stuff. First check if sound=no and remove all
 # sound Kernel modules.
 if grep -q "sound=" /proc/cmdline; then
 	DRIVER=`cat /proc/cmdline | sed 's/.*sound=\([^ ]*\).*/\1/'`
@@ -73,6 +73,9 @@ if grep -q "sound=" /proc/cmdline; then
 elif [ -d /proc/asound ]; then
 	cp /proc/asound/modules /var/lib/sound-card-driver
 	/usr/sbin/setmixer
+	if /usr/sbin/setmixer | grep -q "error"; then
+		/usr/sbin/soundconf
+	fi
 # Start soundconf to config driver and load module for Live mode
 # if not yet detected.
 elif [ ! -s /var/lib/sound-card-driver ]; then
