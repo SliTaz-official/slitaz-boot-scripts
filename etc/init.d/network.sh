@@ -38,7 +38,12 @@ fi
 # For wifi. Users just have to enable it throught yes and usually
 # essid any will work and interafce is wlan0.
 if [ "$WIFI" = "yes" ] || grep -q "wifi" /proc/cmdline; then
-	iwconfig $WIFI_INTERFACE essid $ESSID
+	IWCONFIG_ARGS=""
+	[ -n "$WIFI_MODE" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS mode $WIFI_MODE"
+	[ -n "$WIFI_KEY" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS key $WIFI_KEY"
+	[ -n "$WIFI_CHANNEL" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS channel $WIFI_CHANNEL"
+	ifconfig $WIFI_INTERFACE up
+	iwconfig $WIFI_INTERFACE essid $WIFI_ESSID $IWCONFIG_ARGS
 	echo "Starting udhcpc client on: $WIFI_INTERFACE... "
 	/sbin/udhcpc -b -i $WIFI_INTERFACE \
 		-p /var/run/udhcpc.$WIFI_INTERFACE.pid
