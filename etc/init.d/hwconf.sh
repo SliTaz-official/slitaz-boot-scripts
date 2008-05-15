@@ -37,7 +37,8 @@ if [ ! -s /var/lib/detected-modules ]; then
 	sed -i s/"LOAD_MODULES=\"$LOAD_MODULES\""/"LOAD_MODULES=\"$load\""/ \
 		/etc/rcS.conf
 	# Retry a network connection with DHCP.
-	if ! `ifconfig -a | grep -q "eth0"`; then
+	if ifconfig -a | grep -q "eth0"; then
+		killall udhcpc
 		echo "Starting udhcpc client on: eth0... "
 		/sbin/udhcpc -b -i eth0 -p /var/run/udhcpc.eth0.pid
 	fi
