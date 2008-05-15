@@ -38,9 +38,10 @@ if [ ! -s /var/lib/detected-modules ]; then
 		/etc/rcS.conf
 	# Retry a network connection with DHCP.
 	if ifconfig -a | grep -q "eth0"; then
-		killall udhcpc
-		echo "Starting udhcpc client on: eth0... "
-		/sbin/udhcpc -b -i eth0 -p /var/run/udhcpc.eth0.pid
+		if [ ! -f /var/run/udhcpc.eth0.pid ]; then
+			echo "Starting udhcpc client on: eth0... "
+			/sbin/udhcpc -b -i eth0 -p /var/run/udhcpc.eth0.pid
+		fi
 	fi
 fi
 
