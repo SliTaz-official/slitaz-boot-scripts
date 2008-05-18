@@ -24,7 +24,7 @@ if [ -s "/etc/keymap.conf" ]; then
 	else
 		loadkmap < /usr/share/kmap/$KEYMAP.kmap
 	fi
-else 
+else
 	tazkeymap
 fi
 
@@ -59,8 +59,7 @@ if grep -q "fr_*" /etc/locale.conf; then
 	# But is the fox installed ?
 	if [ -f "/var/lib/tazpkg/installed/firefox/receipt" ]; then
 		. /var/lib/tazpkg/installed/firefox/receipt
-		sed -i 's/en-US/fr/' \
-		/usr/lib/firefox-$VERSION/defaults/pref/firefox-l10n.js
+		sed -i 's/en-US/fr/' /etc/firefox/pref/firefox-l10n.js
 	fi
 fi
 
@@ -76,10 +75,10 @@ if grep -q "fr_*" /etc/locale.conf; then
   //\    lire des fichiers et 'clex' pour les gérer, devenir root avec 'su',
   v_/_   éditer avec 'nano'. Taper 'startx' pour lancer une session X. }
 
-  SliTaz GNU/Linux est distribuée dans l'espoir qu'elle sera utile, mais 
+  SliTaz GNU/Linux est distribuée dans l'espoir qu'elle sera utile, mais
   alors SANS AUCUNE GARANTIE.
 
-	
+
 EOF
 	else
 		# EN
