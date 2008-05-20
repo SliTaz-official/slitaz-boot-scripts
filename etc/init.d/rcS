@@ -57,6 +57,9 @@ else #logged
 # Add also /dev/cdrom to fstab if entry dos not exist.
 #
 DRIVE_NAME=`cat /proc/sys/dev/cdrom/info | grep "drive name" | cut -f 3`
+if grep -q " cdrom=" /proc/cmdline; then
+	DRIVE_NAME=`cat /proc/cmdline | sed 's/.* cdrom=\([^ ]*\).*/\1/'`
+fi
 if [ -n "$DRIVE_NAME" -a ! "`readlink /dev/cdrom`" ]; then
 	echo -n "Creating symlink : /dev/cdrom..."
 	ln -s /dev/$DRIVE_NAME /dev/cdrom
