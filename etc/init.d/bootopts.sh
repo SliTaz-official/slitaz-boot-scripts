@@ -121,7 +121,6 @@ if grep -q "laptop" /proc/cmdline; then
 	modprobe ac
 	modprobe battery
 	modprobe yenta_socket
-	depmod -a
 fi
 
 # Check for a Window Manager (for a flavor, default WM can be changed
