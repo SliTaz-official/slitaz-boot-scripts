@@ -13,11 +13,14 @@ fi
 # Detect PCI devices and load kernel module only at first boot
 # or in LiveCD mode.
 if [ ! -s /var/lib/detected-modules ]; then
+
+	. /etc/rcS.conf
+	
 	echo "Detecting PCI devices..."
 	MODULES_LIST=`lspci -k | grep "modules" | cut -d ":" -f 2 | sed s/-/_/g`
 	for mod in $MODULES_LIST
 	do
-		if ! `lsmod | grep -q "$mod"`; then
+		if ! `lsmod | grep -q "$mod"` && ! `echo  $BLACKLIST_MODULES | grep -q "$mod"`; then
 			modname=`echo "$mod" | sed s/_/-/g`
 			echo "Loading Kernel modules: $modname"
 			detect="$detect $modname"
@@ -32,7 +35,7 @@ if [ ! -s /var/lib/detected-modules ]; then
 	fi
 	echo "$detect" > /var/lib/detected-modules
 	# Now add modules to rcS.conf
-	. /etc/rcS.conf
+	
 	load=`echo "$LOAD_MODULES $detect" | sed s/"  "/" "/g`
 	sed -i s/"LOAD_MODULES=\"$LOAD_MODULES\""/"LOAD_MODULES=\"$load\""/ \
 		/etc/rcS.conf
