@@ -124,8 +124,8 @@ fi
 # Clean up the system.
 if [ "$CLEAN_UP_SYSTEM" = "yes" ]; then
 	echo -n "Cleaning up the system... "
-	rm -rf /tmp/*
-	rm -f /var/run/*.pid
+	rm -rf /tmp/* /tmp/.*
+	rm -f /var/run/*.pid /var/run/dbus/* /var/run/hald/pid
 	rm -f /var/lock/*
 	status
 else
