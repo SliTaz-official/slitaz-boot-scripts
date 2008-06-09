@@ -24,7 +24,7 @@ mount_home()
 	echo "Home has been specified to $DEVICE..."
 	echo "Sleeping 10 s to let the kernel detect the device... "
 	sleep 10
-
+	USER=`cat /etc/passwd | grep 1000 | cut -d ":" -f 1`
 	DEVID=$DEVICE
 	if [ -x /sbin/blkid ]; then
 		# Can be label, uuid or devname. DEVID give us first: /dev/name.
@@ -33,19 +33,19 @@ mount_home()
 	fi
 	if [ -n "$DEVID" ] && grep -q "$DEVID" /proc/partitions ; then
 		echo "Mounting /home on /dev/$DEVID... "
-		mv /home/hacker /tmp/hacker-home
-		mount /dev/$DEVID /home -o uid=500,gid=500 2>/dev/null \
+		mv /home/$USER /tmp/$USER-files
+		mount /dev/$DEVID /home -o uid=1000,gid=1000 2>/dev/null \
 			|| mount /dev/$DEVID /home
 		gen_home_swap
 	else
 		echo "Unable to find $DEVICE... "
 	fi
 	# Move all hacker dir if needed.
-	if [ ! -d "/home/hacker" ] ; then
-		mv /tmp/hacker-home /home/hacker
-		chown -R hacker.hacker /home/hacker
+	if [ ! -d "/home/$USER" ] ; then
+		mv /tmp/$USER-files /home/$USER
+		chown -R $USER.$USER /home/$USER
 	else
-		rm -rf /tmp/hacker-home
+		rm -rf /tmp/$USER-files
 	fi
 }
 
@@ -54,7 +54,6 @@ mount_partitions()
 {
 	# Get the list partitions.
 	DEVICES_LIST=`fdisk -l | grep 83 | cut -d " " -f 1`
-	
 	# Mount filesystems rw.
 	for device in $DEVICES_LIST
 	do
@@ -72,6 +71,37 @@ mount_partitions()
 #
 
 echo "Parsing kernel cmdline for SliTaz live options... "
+
+# user=name: Default user account witout password (uid=1000).
+#
+if ! grep -q "1000:1000" /etc/passwd; then
+	if grep -q "user=" /proc/cmdline; then
+		USER=`cat /proc/cmdline | sed 's/.*user=\([^ ]*\).*/\1/'`
+	else
+		USER=linux
+	fi
+	echo -n "Configuring user and group: $USER..."
+	echo "$USER:x:1000:1000:SliTaz User,,,:/home/$USER:/bin/sh" >> /etc/passwd
+	echo "$USER::14035:0:99999:7:::" >> /etc/shadow
+	echo "$USER:x:1000:" >> /etc/group
+	echo "$USER:!::" >> /etc/gshadow
+	status
+	# Audio group.
+	sed -i s/"audio:x:20:"/"audio:x:20:$USER"/ /etc/group
+	# /home/$USER files from /etc/skel.
+	if [ -d /etc/skel ]; then
+		cp -a /etc/skel /home/$USER
+	else
+		mkdir -p /home/$USER
+	fi
+	# set permissions.
+	chown -R $USER.$USER /home/$USER
+	# Slim default user.
+	if [ -f /etc/slim.conf ]; then
+		sed -i s/"default_user        hacker"/"default_user        $USER"/\
+			/etc/slim.conf
+	fi
+fi
 
 # Check for a specified home directory on cmdline (home=*).
 #
