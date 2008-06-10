@@ -77,6 +77,10 @@ echo "Parsing kernel cmdline for SliTaz live options... "
 if ! grep -q "1000:1000" /etc/passwd; then
 	if grep -q "user=" /proc/cmdline; then
 		USER=`cat /proc/cmdline | sed 's/.*user=\([^ ]*\).*/\1/'`
+		# Avoid usage of an existing system user or root.
+		if grep -q ^$USER /etc/passwd; then
+			USER=linux
+		fi
 	else
 		USER=linux
 	fi
