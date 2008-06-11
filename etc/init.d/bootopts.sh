@@ -95,6 +95,11 @@ if ! grep -q "1000:1000" /etc/passwd; then
 	# /home/$USER files from /etc/skel.
 	if [ -d /etc/skel ]; then
 		cp -a /etc/skel /home/$USER
+		# Path for user dektop files.
+		for i in /home/$USER/.local/share/applications/*.desktop
+		do
+			sed -i s/"user_name"/"$USER"/g $i
+		done
 	else
 		mkdir -p /home/$USER
 	fi
