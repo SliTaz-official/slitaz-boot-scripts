@@ -38,7 +38,7 @@ fi
 # For wifi. Users just have to enable it throught yes and usually
 # essid any will work and interafce is wlan0.
 if [ "$WIFI" = "yes" ] || grep -q "wifi" /proc/cmdline; then
-	if [ -n "NDISWRAPPER_DRIVERS" -a -x /usr/sbin/ndiswrapper ]; then
+	if [ -n "$NDISWRAPPER_DRIVERS" -a -x /usr/sbin/ndiswrapper ]; then
 		for i in $NDISWRAPPER_DRIVERS; do
 			ndiswrapper -i $i
 		done
