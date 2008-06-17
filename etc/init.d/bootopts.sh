@@ -79,10 +79,10 @@ if ! grep -q "1000:1000" /etc/passwd; then
 		USER=`cat /proc/cmdline | sed 's/.*user=\([^ ]*\).*/\1/'`
 		# Avoid usage of an existing system user or root.
 		if grep -q ^$USER /etc/passwd; then
-			USER=linux
+			USER=tux
 		fi
 	else
-		USER=linux
+		USER=tux
 	fi
 	echo -n "Configuring user and group: $USER..."
 	echo "$USER:x:1000:1000:SliTaz User,,,:/home/$USER:/bin/sh" >> /etc/passwd
