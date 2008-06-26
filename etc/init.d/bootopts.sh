@@ -90,6 +90,9 @@ if ! grep -q "1000:1000" /etc/passwd; then
 	echo "$USER:x:1000:" >> /etc/group
 	echo "$USER:!::" >> /etc/gshadow
 	status
+	# slitaz-base-files are now modified
+	echo "slitaz-boot-scripts" > \
+		/var/lib/tazpkg/installed/slitaz-base-files/modifiers
 	# Audio group.
 	sed -i s/"audio:x:20:"/"audio:x:20:$USER"/ /etc/group
 	# /home/$USER files from /etc/skel.
