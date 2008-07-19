@@ -33,7 +33,7 @@ if [ "$WIFI" = "yes" ] || grep -q "wifi" /proc/cmdline; then
                 [ -n "$WIFI_INTERFACE" ] && sed -i "s/^WIFI_INTERFACE=.*/WIFI_INTERFACE=\"$WIFI_INTERFACE\"/" /etc/network.conf
         fi
         [ -n "$WPA_DRIVER" ] && WPA_DRIVER="wext"
-	if ! iwconfig $WIFI_INTERFACE 2>&1 | grep -iq "essid"; then
+	if iwconfig $WIFI_INTERFACE 2>&1 | grep -iq "essid"; then
 		IWCONFIG_ARGS=""
 		[ -n "$WIFI_MODE" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS mode $WIFI_MODE"
 		[ -n "$WIFI_KEY" ] && case "$WIFI_KEY_TYPE" in
