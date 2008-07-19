@@ -14,7 +14,7 @@ status()
 	echo -e "\\033[0;39m ]"
 }
 
-# An other way to sleep.
+# Another way to sleep.
 usleep_progress()
 {
 	CHAR='='

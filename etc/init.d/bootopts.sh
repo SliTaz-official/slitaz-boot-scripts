@@ -52,7 +52,7 @@ mount_home()
 # Mount all ext3 partitions found (opt: mount).
 mount_partitions()
 {
-	# Get the list partitions.
+	# Get the list of partitions.
 	DEVICES_LIST=`fdisk -l | grep 83 | cut -d " " -f 1`
 	# Mount filesystems rw.
 	for device in $DEVICES_LIST
@@ -72,7 +72,7 @@ mount_partitions()
 
 echo "Parsing kernel cmdline for SliTaz live options... "
 
-# user=name: Default user account witout password (uid=1000).
+# user=name: Default user account without password (uid=1000).
 #
 if ! grep -q "1000:1000" /etc/passwd; then
 	if grep -q "user=" /proc/cmdline; then
@@ -95,7 +95,7 @@ if ! grep -q "1000:1000" /etc/passwd; then
 	# /home/$USER files from /etc/skel.
 	if [ -d /etc/skel ]; then
 		cp -a /etc/skel /home/$USER
-		# Path for user dektop files.
+		# Path for user desktop files.
 		for i in /home/$USER/.local/share/applications/*.desktop
 		do
 			sed -i s/"user_name"/"$USER"/g $i
@@ -122,10 +122,10 @@ elif grep -q "home=" /proc/cmdline; then
 	mount_home
 fi
 
-# Active an eventual swap file in /home and on local hd.
+# Activate an eventual swap file in /home and on local HD.
 #
 if [ -f "/home/swap" ]; then
-	echo "Activing swap (/home/swap) memory..."
+	echo "Activating swap (/home/swap) memory..."
 	swapon /home/swap
 fi
 if [ "`fdisk -l | grep swap`" ]; then

@@ -16,9 +16,9 @@ English
 -------
 
 This package provide the boot scripts for SliTaz found in /etc/init.d with
-the main config file : /etc/rcS.conf. It provide also the default inittab and
+the main config file : /etc/rcS.conf. It also provides the default inittab and
 the network config file used with network.sh. Please check /etc/init.d/README
-for more infomations.
+for more infomation.
 
 
 ===============================================================================

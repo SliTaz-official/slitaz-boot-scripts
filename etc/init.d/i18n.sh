@@ -8,7 +8,7 @@
 #
 echo "Cheking if /etc/locale.conf exist... "
 if [ -s "/etc/locale.conf" ]; then
-	echo -n "Locale configuration file exist... "
+	echo -n "Locale configuration file exists... "
 	status
 else
 	tazlocale
@@ -35,19 +35,19 @@ if [ ! -s "/etc/TZ" ]; then
 	KEYMAP=`cat /etc/keymap.conf`
 	case "$KEYMAP" in
 		fr-latin1|be-latin1)
-			echo -n "Setting time zone to Europe/Paris... "
+			echo -n "Setting timezone to Europe/Paris... "
 			echo "Europe/Paris" > /etc/TZ && status
 			;;
 		fr_CH-latin1|de_CH-latin1)
-			echo -n "Setting time zone to Europe/Zurich... "
+			echo -n "Setting timezone to Europe/Zurich... "
 			echo "Europe/Zurich" > /etc/TZ && status
 			;;
 		cf)
-			echo -n "Setting time zone to America/Montreal... "
+			echo -n "Setting timezone to America/Montreal... "
 			echo "America/Montreal" > /etc/TZ && status
 			;;
 		*)
-			echo -n "Setting default time zone to UTC... "
+			echo -n "Setting default timezone to UTC... "
 			echo "UTC" > /etc/TZ && status
 			;;
 	esac

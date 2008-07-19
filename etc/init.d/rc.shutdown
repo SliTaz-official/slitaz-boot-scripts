@@ -1,6 +1,6 @@
 #!/bin/sh
 # /etc/init.d/rc.shutdown - This script is used by /etc/inittab to stop
-# all demons and shutdown the system.
+# all daemons and shutdown the system.
 #
 . /etc/init.d/rc.functions
 . /etc/rcS.conf

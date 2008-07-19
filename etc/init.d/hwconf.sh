@@ -67,14 +67,14 @@ if grep -q "sound=" /proc/cmdline; then
 		done
 		status;;
 	noconf)
-		echo "Sound configuration is disable from cmdline...";;
+		echo "Sound configuration was disabled from cmdline...";;
 	*)
 		if [ -x /usr/sbin/soundconf ]; then
 			echo "Using sound kernel module $DRIVER..."
 			/usr/sbin/soundconf -M $DRIVER
 		fi;;
 	esac
-# Sound card my already be detected by PCI-detect.
+# Sound card may already be detected by PCI-detect.
 elif [ -d /proc/asound ]; then
 	cp /proc/asound/modules /var/lib/sound-card-driver
 	/usr/bin/amixer >/dev/null || /usr/sbin/soundconf
@@ -85,11 +85,11 @@ elif [ ! -s /var/lib/sound-card-driver ]; then
 	if [ -x /usr/sbin/soundconf ]; then
 		/usr/sbin/soundconf
 	else
-		echo "Unable to found: /usr/sbin/soundconf"
+		echo "Unable to find: /usr/sbin/soundconf"
 	fi
 fi
 
-# Screen size config for slim/Xvesa (last config dialog befor login).
+# Screen size config for slim/Xvesa (last config dialog before login).
 if [ ! -s /etc/X11/screen.conf -a -x /usr/bin/slim ]; then
 	# $HOME is not yet set.
 	HOME=/root

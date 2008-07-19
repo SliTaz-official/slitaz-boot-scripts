@@ -1,5 +1,5 @@
 #!/bin/sh
-# /etc/init.d/network.sh - Network initialisation boot script.
+# /etc/init.d/network.sh - Network initialization boot script.
 # Config file is: /etc/network.conf
 #
 . /etc/init.d/rc.functions
@@ -11,7 +11,7 @@ echo -n "Setting hostname... "
 status
 
 # Configure loopback interface.
-echo -n "Configure loopback... "
+echo -n "Configuring loopback... "
 /sbin/ifconfig lo 127.0.0.1 up
 /sbin/route add 127.0.0.1 lo
 status

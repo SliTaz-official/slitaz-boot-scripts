@@ -1,6 +1,6 @@
 #!/bin/sh
 # /etc/init.d/rcS - Initial boot script for SliTaz GNU/Linux. rcS is the main
-# initialisation script used to check fs, mount, clean, run scripts and start
+# initialization script used to check fs, mount, clean, run scripts and start
 # daemons.
 #
 # Config file is : /etc/rcS.conf
@@ -35,8 +35,8 @@ fi
 echo "Remounting rootfs read/write... "
 /bin/mount -o remount,rw /
 
-# Mount all stuff from /etc/fstab.
-echo "Mounting all staff from fstab... "
+# Mount filesystems in /etc/fstab.
+echo "Mounting filesystems in fstab... "
 /bin/mount -a
 
 # Start Udev to populate /dev and handle hotplug events
@@ -53,8 +53,8 @@ script -a -q -c '/etc/init.d/rcS logged' /var/log/boot.log
 
 else #logged
 
-# Creat /dev/cdrom if needed (symlink does not exist on LiveCD).
-# Add also /dev/cdrom to fstab if entry dos not exist.
+# Create /dev/cdrom if needed (symlink does not exist on LiveCD).
+# Also add /dev/cdrom to fstab if entry does not exist.
 #
 DRIVE_NAME=`cat /proc/sys/dev/cdrom/info | grep "drive name" | cut -f 3`
 if grep -q " cdrom=" /proc/cmdline; then
@@ -151,7 +151,7 @@ if [ ! "$LOAD_MODULES" = "" ]; then
 fi
 
 # Start all scripts specified with $RUN_SCRIPTS.
-echo "Executing all initialisation scripts..."
+echo "Executing all initialization scripts..."
 for script in $RUN_SCRIPTS
 do
 	if [ -x /etc/init.d/$script ]; then
@@ -159,7 +159,7 @@ do
 	fi
 done
 
-# Re-source main config file, in Live mode daemons list ca be modified 
+# Re-source main config file. In Live mode, daemons list can be modified 
 # by boot options.
 . /etc/rcS.conf
 
