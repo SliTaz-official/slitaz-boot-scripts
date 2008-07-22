@@ -5,6 +5,9 @@
 . /etc/init.d/rc.functions
 . /etc/network.conf
 
+# Only configure hostname and loopback at boot time
+if [ -n "$1" ]; then
+
 # Set hostname.
 echo -n "Setting hostname... "
 /bin/hostname -F /etc/hostname
@@ -16,6 +19,8 @@ echo -n "Configuring loopback... "
 /sbin/route add 127.0.0.1 lo
 status
 
+fi
+
 # For wifi. Users just have to enable it throught yes and usually
 # essid any will work and interface is autodetected.
 if [ "$WIFI" = "yes" ] || grep -q "wifi" /proc/cmdline; then
@@ -23,17 +28,20 @@ if [ "$WIFI" = "yes" ] || grep -q "wifi" /proc/cmdline; then
 		for i in $NDISWRAPPER_DRIVERS; do
 			ndiswrapper -i $i
 		done
+		echo -n "Loading ndiswrapper module..."
 		modprobe ndiswrapper
+		status
 	fi
-	if ! iwconfig $WIFI_INTERFACE 2>&1 | grep -iq "essid"; then
+	if [ ! -d /sys/class/net/$WIFI_INTERFACE/wireless ]; then
+		echo "$WIFI_INTERFACE is not a wifi interface, changing it."
 		WIFI_INTERFACE=$(grep : /proc/net/dev | cut -d: -f1 | \
 			while read dev; do iwconfig $dev 2>&1 | \
 			grep -iq "essid" && { echo $dev ; break; }; \
                         done)
                 [ -n "$WIFI_INTERFACE" ] && sed -i "s/^WIFI_INTERFACE=.*/WIFI_INTERFACE=\"$WIFI_INTERFACE\"/" /etc/network.conf
         fi
-        [ -n "$WPA_DRIVER" ] && WPA_DRIVER="wext"
-	if iwconfig $WIFI_INTERFACE 2>&1 | grep -iq "essid"; then
+        [ -n "$WPA_DRIVER" ] || WPA_DRIVER="wext"
+        if iwconfig $WIFI_INTERFACE 2>&1 | grep -iq "unassociated"; then
 		IWCONFIG_ARGS=""
 		[ -n "$WIFI_MODE" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS mode $WIFI_MODE"
 		[ -n "$WIFI_KEY" ] && case "$WIFI_KEY_TYPE" in
@@ -49,7 +57,8 @@ network={
 	priority=5
 }
 EOF
-			wpa_supplicant -B -w -c/tmp/wpa.conf -D$DRIVER -i$WIFI_INTERFACE
+			echo -n "starting wpa_supplicant, for WPA-PSK"
+			wpa_supplicant -B -w -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE
 			;;
 		any|ANY) cat > /tmp/wpa.conf <<EOF
 ap_scan=1
@@ -63,13 +72,17 @@ network={
 	priority=5
 }
 EOF
+			echo -n "starting wpa_supplicant for any key type"
 			wpa_supplicant -B -w -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE
 			;;
 		esac
+		rm -f /tmp/wpa.conf
 		[ -n "$WIFI_CHANNEL" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS channel $WIFI_CHANNEL"
+		echo -n "configuring $WIFI_INTERFACE..."
 		ifconfig $WIFI_INTERFACE up
 		iwconfig $WIFI_INTERFACE txpower on
 		iwconfig $WIFI_INTERFACE essid $WIFI_ESSID $IWCONFIG_ARGS
+		status
 		INTERFACE=$WIFI_INTERFACE
         fi
 fi
