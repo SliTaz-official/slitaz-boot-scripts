@@ -98,8 +98,20 @@ if grep -q " config=" /proc/cmdline; then
 	CONFIG=`cat /proc/cmdline | sed 's/.* config=\([^ ]*\).*/\1/'`
 	DEVICE=${CONFIG%,*}
 	SCRIPT=${CONFIG#*,}
+	echo "Probing $DEVICE... "
+	if ! /bin/mount -r $DEVICE /mnt; then
+		if echo $DEVICE | grep -q "/dev/sd"; then
+			USBDELAY=`cat /sys/module/usb_storage/parameters/delay_use`
+			USBDELAY=$((1+$USBDELAY))
+			echo "$DEVICE is potentially a USB device: sleep for $USBDELAY seconds"
+			sleep $USBDELAY
+		fi
+		if ! /bin/mount -r $DEVICE /mnt; then
+			CONFIG=""
+		fi
+	fi
 	echo -n "Source $SCRIPT from $DEVICE... "
-	if /bin/mount -r $DEVICE /mnt; then
+	if [ -n "$CONFIG" ]; then
 		. /mnt/$SCRIPT
 		/bin/umount /mnt
 	fi
