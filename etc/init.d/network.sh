@@ -6,7 +6,7 @@
 . /etc/network.conf
 
 # Only configure hostname and loopback at boot time
-if [ -n "$1" ]; then
+if [ -z "$1" ]; then
 
 # Set hostname.
 echo -n "Setting hostname... "
