@@ -53,6 +53,9 @@ script -a -q -c '/etc/init.d/rcS logged' /var/log/boot.log
 
 else #logged
 
+# Create missing devices
+mdev -s 2> /dev/null
+
 # Create /dev/cdrom if needed (symlink does not exist on LiveCD).
 # Also add /dev/cdrom to fstab if entry does not exist.
 #
