@@ -54,15 +54,14 @@ Start() {
 			echo "$WIFI_INTERFACE is not a wifi interface, changing it."
 			WIFI_INTERFACE=$(grep : /proc/net/dev | cut -d: -f1 | \
 				while read dev; do iwconfig $dev 2>&1 | \
-				grep -iq "essid" && { echo $dev ; break; }; \
-							done)
-					[ -n "$WIFI_INTERFACE" ] && sed -i "s/^WIFI_INTERFACE=.*/WIFI_INTERFACE=\"$WIFI_INTERFACE\"/" /etc/network.conf
-			fi
-			[ -n "$WPA_DRIVER" ] || WPA_DRIVER="wext"
-			if iwconfig $WIFI_INTERFACE 2>&1 | grep -iq "unassociated"; then
-			IWCONFIG_ARGS=""
-			[ -n "$WIFI_MODE" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS mode $WIFI_MODE"
-			[ -n "$WIFI_KEY" ] && case "$WIFI_KEY_TYPE" in
+					grep -iq "essid" && { echo $dev ; break; }; \
+				done)
+			[ -n "$WIFI_INTERFACE" ] && sed -i "s/^WIFI_INTERFACE=.*/WIFI_INTERFACE=\"$WIFI_INTERFACE\"/" /etc/network.conf
+		fi
+		[ -n "$WPA_DRIVER" ] || WPA_DRIVER="wext"
+		IWCONFIG_ARGS=""
+		[ -n "$WIFI_MODE" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS mode $WIFI_MODE"
+		[ -n "$WIFI_KEY" ] && case "$WIFI_KEY_TYPE" in
 			wep|WEP) IWCONFIG_ARGS="$IWCONFIG_ARGS key $WIFI_KEY";;
 			wpa|WPA) cat > /tmp/wpa.conf <<EOF
 ap_scan=1
@@ -93,16 +92,15 @@ EOF
 				echo "starting wpa_supplicant for any key type"
 				wpa_supplicant -B -w -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE
 				;;
-			esac
-			rm -f /tmp/wpa.conf
-			[ -n "$WIFI_CHANNEL" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS channel $WIFI_CHANNEL"
-			echo -n "configuring $WIFI_INTERFACE..."
-			ifconfig $WIFI_INTERFACE up
-			iwconfig $WIFI_INTERFACE txpower on
-			iwconfig $WIFI_INTERFACE essid $WIFI_ESSID $IWCONFIG_ARGS
-			status
-			INTERFACE=$WIFI_INTERFACE
-			fi
+		esac
+		rm -f /tmp/wpa.conf
+		[ -n "$WIFI_CHANNEL" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS channel $WIFI_CHANNEL"
+		echo -n "configuring $WIFI_INTERFACE..."
+		ifconfig $WIFI_INTERFACE up
+		iwconfig $WIFI_INTERFACE txpower on
+		iwconfig $WIFI_INTERFACE essid $WIFI_ESSID $IWCONFIG_ARGS
+		status
+		INTERFACE=$WIFI_INTERFACE
 	fi
 
 	# For a dynamic IP with DHCP.
