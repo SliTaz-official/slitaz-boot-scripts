@@ -112,6 +112,11 @@ if ! grep -q "1000:1000" /etc/passwd; then
 	fi
 fi
 
+# Autologin option to skip first graphic login prompt.
+if grep -q "autologin" /proc/cmdline; then
+        echo "auto_login        yes" >> /etc/slim.conf
+fi
+
 # Check for a specified home directory on cmdline (home=*).
 #
 if grep -q "home=usb" /proc/cmdline; then
