@@ -107,7 +107,7 @@ if ! grep -q "1000:1000" /etc/passwd; then
 	chown -R $USER.$USER /home/$USER
 	# Slim default user.
 	if [ -f /etc/slim.conf ]; then
-		sed -i s/"default_user        hacker"/"default_user        $USER"/\
+		sed -i s/"default_user .*"/"default_user        $USER"/\
 			/etc/slim.conf
 	fi
 fi
