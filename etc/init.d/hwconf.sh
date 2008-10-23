@@ -22,9 +22,11 @@ if [ ! -s /var/lib/detected-modules ]; then
 	do
 		if ! `lsmod | grep -q "$mod"` && ! `echo  $BLACKLIST_MODULES | grep -q "$mod"`; then
 			modname=`echo "$mod" | sed s/_/-/g`
-			echo "Loading Kernel modules: $modname"
-			detect="$detect $modname"
-			/sbin/modprobe $modname
+			if [ -n "$(modprobe -l $modname") ]; then
+				echo "Loading Kernel modules: $modname"
+				detect="$detect $modname"
+				/sbin/modprobe $modname
+			fi
 		fi
 	done
 	# yenta_socket = laptop
