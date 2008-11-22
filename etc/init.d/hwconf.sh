@@ -22,7 +22,7 @@ if [ ! -s /var/lib/detected-modules ]; then
 	do
 		if ! `lsmod | grep -q "$mod"` && ! `echo  $BLACKLIST_MODULES | grep -q "$mod"`; then
 			modname=`echo "$mod" | sed s/_/-/g`
-			if [ -n "$(modprobe -l $modname") ]; then
+			if [ -f "$(modprobe -l $modname)" ]; then
 				echo "Loading Kernel modules: $modname"
 				detect="$detect $modname"
 				/sbin/modprobe $modname
