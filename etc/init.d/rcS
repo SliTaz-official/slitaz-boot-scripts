@@ -126,6 +126,13 @@ if grep -q -w "eject" /proc/cmdline; then
 	eject /dev/cdrom
 fi
 
+# Mount /proc/bus/usb.
+if [ -d /proc/bus/usb ]; then
+	echo -n "Mounting /proc/bus/usb filesystem... "
+	/bin/mount -t usbfs usbfs /proc/bus/usb
+	status
+fi
+
 # Start syslogd and klogd.
 if [ "$KERNEL_LOG_DAEMONS" = "yes" ]; then
 	echo -n "Starting system log deamon: syslogd... "
