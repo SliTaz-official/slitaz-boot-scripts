@@ -29,10 +29,12 @@ usleep_progress()
 # Check daemon with pidfile: usage check_pidfile $PIDFILE $DAEMON
 active_pidfile()
 {
-	if grep -qs "Name:.$(basename $2)$" /proc/$(cat $1)/status ; then
+	if [ ! -e $1 ]; then
+		return 1
+	elif grep -qs "Name:.$(basename $2)$" /proc/$(cat $1)/status ; then
 		return 0
 	else
 		rm -f $1
-		return 1
+		return 2
 	fi
 }
