@@ -42,14 +42,6 @@ Start() {
 	# For wifi. Users just have to enable it throught yes and usually
 	# essid any will work and interface is autodetected.
 	if [ "$WIFI" = "yes" ] || grep -q "wifi" /proc/cmdline; then
-		if [ -n "$NDISWRAPPER_DRIVERS" -a -x /usr/sbin/ndiswrapper ]; then
-			for i in $NDISWRAPPER_DRIVERS; do
-				ndiswrapper -i $i
-			done
-			echo -n "Loading ndiswrapper module..."
-			modprobe ndiswrapper
-			status
-		fi
 		if [ ! -d /sys/class/net/$WIFI_INTERFACE/wireless ]; then
 			echo "$WIFI_INTERFACE is not a wifi interface, changing it."
 			WIFI_INTERFACE=$(grep : /proc/net/dev | cut -d: -f1 | \
