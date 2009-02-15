@@ -90,7 +90,7 @@ EOF
 		echo -n "configuring $WIFI_INTERFACE..."
 		ifconfig $WIFI_INTERFACE up
 		iwconfig $WIFI_INTERFACE txpower on
-		iwconfig $WIFI_INTERFACE essid $WIFI_ESSID $IWCONFIG_ARGS
+		iwconfig $WIFI_INTERFACE essid "$WIFI_ESSID" $IWCONFIG_ARGS
 		status
 		INTERFACE=$WIFI_INTERFACE
 	fi
