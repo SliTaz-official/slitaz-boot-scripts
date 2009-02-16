@@ -34,6 +34,8 @@ if [ ! -s /var/lib/detected-modules ]; then
 		detect="$detect ac battery"
 		modprobe ac
 		modprobe battery
+		sed -i 's/= cpu/= batt\n}\n\nPlugin {\n    type = cpu/' \
+			/etc/lxpanel/default/panels/panel 2> /dev/null
 	fi
 	echo "$detect" > /var/lib/detected-modules
 	# Now add modules to rcS.conf
