@@ -3,6 +3,14 @@
 #
 . /etc/init.d/rc.functions
 
+# Update fstab for swapon/swapoff 
+add_swap_in_fstab()
+{
+		grep -q "$1	" /etc/fstab || cat >> /etc/fstab <<EOT
+$1	swap	swap	default	0 0
+EOT
+}
+
 # Check if swap file must be generated in /home: swap=size (Mb).
 # This option is used with home=device.
 gen_home_swap()
@@ -14,6 +22,7 @@ gen_home_swap()
 		dd if=/dev/zero of=/home/swap bs=1M count=$SWAP_SIZE
 		# Make the Linux swap filesystem.
 		mkswap /home/swap
+		add_swap_in_fstab /home/swap
 	fi
 }
 
@@ -129,15 +138,15 @@ fi
 
 # Activate an eventual swap file in /home and on local HD.
 #
-if [ -f "/home/swap" ]; then
-	echo "Activating swap (/home/swap) memory..."
-	swapon /home/swap
-fi
 if [ "`fdisk -l | grep swap`" ]; then
 	for SWAP_DEV in `fdisk -l | grep swap | awk '{ print $1 }'`; do
 		echo "Swap memory detected on: $SWAP_DEV"
-		swapon $SWAP_DEV
+		add_swap_in_fstab $SWAP_DEV
 	done
+fi
+if grep -q swap /etc/fstab; then
+	echo "Activating swap memory..."
+	swapon -a
 fi
 
 # Check for a specified locale (lang=*).
