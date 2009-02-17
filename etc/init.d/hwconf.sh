@@ -24,7 +24,7 @@ if [ ! -s /var/lib/detected-modules ]; then
 		if ! lsmod | grep -q "$mod" && [ -f "$(modprobe -l $mod)" ]; then
 			echo "Loading Kernel modules: $mod"
 			detect="$detect $mod"
-			/sbin/modprobe $modname
+			/sbin/modprobe $mod
 		fi
 	done
 	# yenta_socket = laptop
