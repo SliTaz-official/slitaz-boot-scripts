@@ -3,13 +3,6 @@
 #
 . /etc/init.d/rc.functions
 
-# Restore sound config for installed system.
-if [ -s /var/lib/sound-card-driver ]; then
-	echo -n "Restoring last alsa configuration..."
-	alsactl restore
-	status
-fi
-
 # Detect PCI devices and load kernel module only at first boot
 # or in LiveCD mode.
 if [ ! -s /var/lib/detected-modules ]; then
@@ -79,7 +72,14 @@ if grep -q "sound=" /proc/cmdline; then
 elif [ -d /proc/asound ]; then
 	cp /proc/asound/modules /var/lib/sound-card-driver
 	/usr/bin/amixer >/dev/null || /usr/sbin/soundconf
-	/usr/sbin/setmixer
+	# Restore sound config for installed system.
+	if [ -s /etc/asound.state ]; then
+		echo -n "Restoring last alsa configuration..."
+		alsactl restore
+		status
+	else
+		/usr/sbin/setmixer
+	fi
 # Start soundconf to config driver and load module for Live mode
 # if not yet detected.
 elif [ ! -s /var/lib/sound-card-driver ]; then
