@@ -16,17 +16,15 @@ if [ ! -s /var/lib/detected-modules ]; then
 
 	. /etc/rcS.conf
 	
+	# We need module_name to match output of lsmod.
 	echo "Detecting PCI devices..."
 	MODULES_LIST=`lspci -k | grep "modules" | cut -d ":" -f 2 | sed s/-/_/g`
 	for mod in $MODULES_LIST
 	do
-		if ! `lsmod | grep -q "$mod"` && ! `echo  $BLACKLIST_MODULES | grep -q "$mod"`; then
-			modname=`echo "$mod" | sed s/_/-/g`
-			if [ -f "$(modprobe -l $modname)" ]; then
-				echo "Loading Kernel modules: $modname"
-				detect="$detect $modname"
-				/sbin/modprobe $modname
-			fi
+		if ! lsmod | grep -q "$mod" && [ -f "$(modprobe -l $mod)" ]; then
+			echo "Loading Kernel modules: $mod"
+			detect="$detect $mod"
+			/sbin/modprobe $modname
 		fi
 	done
 	# yenta_socket = laptop
@@ -39,7 +37,6 @@ if [ ! -s /var/lib/detected-modules ]; then
 	fi
 	echo "$detect" > /var/lib/detected-modules
 	# Now add modules to rcS.conf
-	
 	load=`echo "$LOAD_MODULES $detect" | sed s/"  "/" "/g`
 	sed -i s/"LOAD_MODULES=\"$LOAD_MODULES\""/"LOAD_MODULES=\"$load\""/ \
 		/etc/rcS.conf
