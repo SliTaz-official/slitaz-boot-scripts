@@ -14,10 +14,14 @@ if [ ! -s /var/lib/detected-modules ]; then
 	MODULES_LIST=`lspci -k | grep "modules" | cut -d ":" -f 2 | sed s/-/_/g`
 	for mod in $MODULES_LIST
 	do
-		if ! lsmod | grep -q "$mod" && [ -f "$(modprobe -l $mod)" ]; then
-			echo "Loading Kernel modules: $mod"
-			detect="$detect $mod"
-			/sbin/modprobe $mod
+		if ! lsmod | grep -q "$mod"; then
+			if [ -f "$(modprobe -l $mod)" ]; then
+				echo "Loading Kernel modules: $mod"
+				detect="$detect $mod"
+				/sbin/modprobe $mod
+			else
+				echo "Missing module: $mod"
+			fi
 		fi
 	done
 	# yenta_socket = laptop
