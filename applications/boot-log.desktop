@@ -1,7 +1,7 @@
 [Desktop Entry]
 Encoding=UTF-8
 Name=Show Boot Log
-Exec=xterm -hold -title 'boot.log (shift-pgup/pgdn to scroll)' -e 'si=`cat /var/log/dmesg.log /var/log/boot.log | wc -l`; cat /var/log/dmesg.log /var/log/boot.log | head -$(($si-1))'
+Exec=xterm -hold -title 'boot.log (shift-pgup/pgdn to scroll)' -e 'cat /var/log/dmesg.log /var/log/boot.log | sed "s/.\[3g.*\]R//"'
 Icon=other.png
 Type=Application
 Categories=System;
