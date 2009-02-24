@@ -3,47 +3,10 @@
 #
 . /etc/init.d/rc.functions
 
-# Detect PCI devices and load kernel module only at first boot
-# or in LiveCD mode.
+# Detect PCI and USB devices with Tazhw from slitaz-tools. We load
+# kernel module only at first boot or in LiveCD mode.
 if [ ! -s /var/lib/detected-modules ]; then
-
-	. /etc/rcS.conf
-	
-	# We need module_name to match output of lsmod.
-	echo "Detecting PCI devices..."
-	MODULES_LIST=`lspci -k | grep "modules" | cut -d ":" -f 2 | sed s/-/_/g`
-	for mod in $MODULES_LIST
-	do
-		if ! lsmod | grep -q "$mod"; then
-			if [ -f "$(modprobe -l $mod)" ]; then
-				echo "Loading Kernel modules: $mod"
-				detect="$detect $mod"
-				/sbin/modprobe $mod
-			else
-				echo "Missing module: $mod"
-			fi
-		fi
-	done
-	# yenta_socket = laptop
-	if `lsmod | grep -q "yenta_socket"`; then
-		detect="$detect ac battery"
-		modprobe ac
-		modprobe battery
-		sed -i 's/= cpu/= batt\n}\n\nPlugin {\n    type = cpu/' \
-			/etc/lxpanel/default/panels/panel 2> /dev/null
-	fi
-	echo "$detect" > /var/lib/detected-modules
-	# Now add modules to rcS.conf
-	load=`echo "$LOAD_MODULES $detect" | sed s/"  "/" "/g`
-	sed -i s/"LOAD_MODULES=\"$LOAD_MODULES\""/"LOAD_MODULES=\"$load\""/ \
-		/etc/rcS.conf
-	# Retry a network connection with DHCP.
-	if ifconfig -a | grep -q "eth0"; then
-		if [ ! -f /var/run/udhcpc.eth0.pid ]; then
-			echo "Starting udhcpc client on: eth0... "
-			/sbin/udhcpc -b -i eth0 -p /var/run/udhcpc.eth0.pid
-		fi
-	fi
+	/sbin/tazhw init
 fi
 
 # Sound configuration stuff. First check if sound=no and remove all
