@@ -37,8 +37,6 @@ if grep -q "sound=" /proc/cmdline; then
 	esac
 # Sound card may already be detected by PCI-detect.
 elif [ -d /proc/asound ]; then
-	cp /proc/asound/modules /var/lib/sound-card-driver
-	/usr/bin/amixer >/dev/null || /usr/sbin/soundconf
 	# Restore sound config for installed system.
 	if [ -s /etc/asound.state ]; then
 		echo -n "Restoring last alsa configuration..."
@@ -47,14 +45,11 @@ elif [ -d /proc/asound ]; then
 	else
 		/usr/sbin/setmixer
 	fi
-# Start soundconf to config driver and load module for Live mode
-# if not yet detected.
-elif [ ! -s /var/lib/sound-card-driver ]; then
-	if [ -x /usr/sbin/soundconf ]; then
-		/usr/sbin/soundconf
-	else
-		echo "Unable to find: /usr/sbin/soundconf"
-	fi
+	# Start soundconf to config driver and load module for Live mode
+	# if not yet detected.
+	/usr/bin/amixer >/dev/null || /usr/sbin/soundconf
+else
+	echo "Unable to configure sound card."
 fi
 
 # Screen size config for slim/Xvesa (last config dialog before login).
