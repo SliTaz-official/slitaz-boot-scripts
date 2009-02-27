@@ -31,11 +31,12 @@ Stop() {
 
 	echo "Killing all daemons"
 	killall udhcpc
-	killall wpa_supplicant
-
-	echo "Shutting down wifi card"
-	iwconfig $WIFI_INTERFACE txpower off
-
+	killall wpa_supplicant 2>/dev/null
+	
+	if iwconfig $WIFI_INTERFACE | grep -q "Tx-Power"; then
+		echo "Shutting down wifi card"
+		iwconfig $WIFI_INTERFACE txpower off
+	fi
 }
 
 Start() {
@@ -89,7 +90,9 @@ EOF
 		[ -n "$WIFI_CHANNEL" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS channel $WIFI_CHANNEL"
 		echo -n "configuring $WIFI_INTERFACE..."
 		ifconfig $WIFI_INTERFACE up
-		iwconfig $WIFI_INTERFACE txpower on
+		if iwconfig $WIFI_INTERFACE | grep -q "Tx-Power"; then
+			iwconfig $WIFI_INTERFACE txpower on
+		fi
 		iwconfig $WIFI_INTERFACE essid "$WIFI_ESSID" $IWCONFIG_ARGS
 		status
 		INTERFACE=$WIFI_INTERFACE
