@@ -10,14 +10,12 @@
 
 if [ "$1" != "logged" ]; then #logged
 
-# Start by sleeping a bit.
 echo "Processing /etc/init.d/rcS... "
-sleep 1
 
 # Mount /proc.
 echo -n "Mounting proc filesystem... "
 /bin/mount proc
-status && sleep 1
+status
 
 # Before mounting filesystems we check fs specified in the file
 # /etc/rcS.conf and variable $CHECK_FS.
@@ -27,7 +25,6 @@ if [ ! "$CHECK_FS" = "" ]; then
 	do
 		echo "Checking filesystem on : $i"
 		/sbin/e2fsck -p $i
-		sleep 2
 	done
 fi
 
@@ -44,6 +41,12 @@ if [ "$UDEV" = "yes" ]; then
 	echo -n "Starting udev daemon..."
 	/sbin/udevd --daemon
 	status
+	echo -n "Udevadm requesting events from the Kernel..."
+	udevadm trigger
+	status
+	echo -n "Udevadm waiting for the event queu to finish..."
+	udevadm settle
+	status
 	echo "/sbin/udevd" > /proc/sys/kernel/hotplug
 fi
 
@@ -52,9 +55,6 @@ vcsa2txt < /dev/vcsa1 | awk 'BEGIN {s=0} /^Processing|^.witching/ {s=1} { if (s)
 script -a -q -c '/etc/init.d/rcS logged' /var/log/boot.log
 
 else #logged
-
-# Create missing devices
-mdev -s 2> /dev/null
 
 # Create /dev/cdrom if needed (symlink does not exist on LiveCD).
 # Also add /dev/cdrom to fstab if entry does not exist.
@@ -172,6 +172,9 @@ if [ ! "$LOAD_MODULES" = "" ]; then
 	done
 fi
 
+# Be quit on configuration to avoid message overwriting ncrurses dialog
+echo "0 0 0 0" > /proc/sys/kernel/printk
+
 # Start all scripts specified with $RUN_SCRIPTS.
 echo "Executing all initialization scripts..."
 for script in $RUN_SCRIPTS
@@ -193,6 +196,9 @@ do
 		/etc/init.d/$daemon start
 	fi
 done
+
+# Back to a verbose mode.
+echo "7 4 1 7" > /proc/sys/kernel/printk
 
 # Reset screen and display a bold message.
 if [ -n "$MESSAGE" ]; then
