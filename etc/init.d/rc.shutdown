@@ -19,6 +19,13 @@ echo -e "
 ================================================================================"
 echo ""
 
+# Store last alsa settings.
+if [ -x /usr/sbin/alsactl ]; then
+	echo -n "Storing alsa sound settings..."
+	alsactl store
+	status
+fi
+
 # Stop all daemons started at boot time.
 echo "Stoping all demons started at boot time..."
 for daemon in $RUN_DAEMONS
@@ -31,7 +38,7 @@ done
 # Sync all filesystems.
 echo -n "Syncing all filesystems... "
 sync
-status && sleep 2
+status && sleep 1
 
 # Swap off.
 echo -n "Disabling swap space... "
@@ -40,8 +47,7 @@ status
 
 # Kill all processes.
 echo -n "Killing all processes..."
-killall5 && sleep 2
-status
+killall5
 
 # Umount filesystems.
 echo -n "Remonting rootfs read only..."
