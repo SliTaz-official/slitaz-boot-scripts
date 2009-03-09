@@ -56,6 +56,11 @@ fi
 if [ ! -s /etc/X11/screen.conf -a -x /usr/bin/slim ]; then
 	# $HOME is not yet set.
 	HOME=/root
+	if grep -q "xarg=*" /proc/cmdline; then
+		# Add an extra argument to xserver_arguments (xarg=-2button)
+		XARG=`cat /proc/cmdline | sed 's/.*xarg=\([^ ]*\).*/\1/'`
+		sed -i "s|-screen|$XARG -screen|" /etc/slim.conf
+	fi
 	if grep -q "screen=*" /proc/cmdline; then
 		export NEW_SCREEN=`cat /proc/cmdline | sed 's/.*screen=\([^ ]*\).*/\1/'`
 		if [ "$NEW_SCREEN" = "text" ]; then
