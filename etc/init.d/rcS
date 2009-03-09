@@ -44,7 +44,7 @@ if [ "$UDEV" = "yes" ]; then
 	echo -n "Udevadm requesting events from the Kernel..."
 	udevadm trigger
 	status
-	echo -n "Udevadm waiting for the event queu to finish..."
+	echo -n "Udevadm waiting for the event queue to finish..."
 	udevadm settle
 	status
 	echo "/sbin/udevd" > /proc/sys/kernel/hotplug
@@ -172,7 +172,7 @@ if [ ! "$LOAD_MODULES" = "" ]; then
 	done
 fi
 
-# Be quit on configuration to avoid message overwriting ncrurses dialog
+# Be quiet on configuration to avoid message overwriting ncurses dialog
 echo "0 0 0 0" > /proc/sys/kernel/printk
 
 # Start all scripts specified with $RUN_SCRIPTS.
