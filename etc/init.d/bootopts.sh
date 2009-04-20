@@ -1,12 +1,14 @@
 #!/bin/sh
 # /etc/init.d/bootopts.sh - SliTaz boot options from the cmdline.
 #
+# Earlier boot options are in rcS: config= and modprobe=
+#
 . /etc/init.d/rc.functions
 
 # Update fstab for swapon/swapoff 
 add_swap_in_fstab()
 {
-		grep -q "$1	" /etc/fstab || cat >> /etc/fstab <<EOT
+	grep -q "$1	" /etc/fstab || cat >> /etc/fstab <<EOT
 $1	swap	swap	default	0 0
 EOT
 }
@@ -80,6 +82,11 @@ mount_partitions()
 #
 
 echo "Parsing kernel cmdline for SliTaz live options... "
+
+# eject: Eject cdrom
+if grep -q -w "eject" /proc/cmdline; then
+	eject /dev/cdrom
+fi
 
 # user=name: Default user account without password (uid=1000).
 #

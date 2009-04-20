@@ -1,11 +1,11 @@
 #!/bin/sh
-# /etc/init.d/i18n.sh - Internalisation initialisation.
-# This script configure SliTaz default keymap, locale and timezone.
+# /etc/init.d/i18n.sh - Internationalization initialisation.
+#
+# This script configure SliTaz default keymap, locale, timezone.
 #
 . /etc/init.d/rc.functions
 
 # Locale config.
-#
 echo "Cheking if /etc/locale.conf exist... "
 if [ -s "/etc/locale.conf" ]; then
 	echo -n "Locale configuration file exists... "
@@ -15,7 +15,6 @@ else
 fi
 
 # Keymap config.
-#
 if [ -s "/etc/keymap.conf" ]; then
 	KEYMAP=`cat /etc/keymap.conf`
 	echo "Keymap configuration: $KEYMAP"
@@ -30,7 +29,6 @@ fi
 
 # Timezone config. Set timezone using the keymap config for fr, be, fr_CH
 # and ca with Montreal.
-#
 if [ ! -s "/etc/TZ" ]; then
 	KEYMAP=`cat /etc/keymap.conf`
 	case "$KEYMAP" in
@@ -54,7 +52,6 @@ if [ ! -s "/etc/TZ" ]; then
 fi
 
 # Firefox hack to get the right locale.
-#
 if grep -q "fr_*" /etc/locale.conf; then
 	# But is the fox installed ?
 	if [ -f "/var/lib/tazpkg/installed/firefox/receipt" ]; then
@@ -64,16 +61,15 @@ if grep -q "fr_*" /etc/locale.conf; then
 fi
 
 # Gen a motd in french if fr_* or in English by default.
-#
 if [ ! -s "/etc/motd" ]; then
 if grep -q "fr_*" /etc/locale.conf; then
 		# FR
 		cat > /etc/motd << "EOF"
 
 
-  (°-  { La documentation est dans /usr/share/doc. Utiliser 'less -EM' pour,
-  //\    lire des fichiers et 'clex' pour les gérer, devenir root avec 'su',
-  v_/_   éditer avec 'nano'. Taper 'startx' pour lancer une session X. }
+  (°-  { Documentation dans /usr/share/doc. Utiliser 'less -EM' pour,
+  //\    lire des fichiers, devenir root avec 'su' et éditer avec 'nano'.
+  v_/_   Taper 'startx' pour lancer une session X. }
 
   SliTaz GNU/Linux est distribuée dans l'espoir qu'elle sera utile, mais
   alors SANS AUCUNE GARANTIE.
@@ -85,8 +81,8 @@ EOF
 		cat > /etc/motd << "EOF"
 
 
-  (°-  { Get documentation in /usr/share/doc. Use 'less -EM' to read files,
-  //\    become root with 'su', manage files with 'clex', edit using 'nano'.
+  (°-  { Documentation in /usr/share/doc. Use 'less -EM' to read files,
+  //\    become root with 'su' and edit using 'nano'.
   v_/_   Type 'startx' to start a X window session. }
 
   SliTaz GNU/Linux is distributed in the hope that it will be useful, but

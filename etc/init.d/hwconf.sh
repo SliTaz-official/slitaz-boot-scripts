@@ -1,13 +1,10 @@
 #!/bin/sh
-# /etc/init.d/hwconf.sh - SliTaz hardware autoconfiguration.
+# /etc/init.d/hwconf.sh - SliTaz hardware configuration.
+#
+# This script configure the sound card and screen. Tazhw is used earlier
+# at boot time to autoconfigure PCI and USB devices.
 #
 . /etc/init.d/rc.functions
-
-# Detect PCI and USB devices with Tazhw from slitaz-tools. We load
-# kernel module only at first boot or in LiveCD mode.
-if [ ! -s /var/lib/detected-modules ]; then
-	/sbin/tazhw init
-fi
 
 # Sound configuration stuff. First check if sound=no and remove all
 # sound Kernel modules.
