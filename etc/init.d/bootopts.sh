@@ -207,3 +207,17 @@ fi
 if grep -q "mount" /proc/cmdline; then
 	mount_partitions
 fi
+
+# Mount and install packages-XXX.iso (usefull without Internet connection)
+if grep -q " mount-packages" /proc/cmdline; then
+	PKGSIGN="LABEL=\"packages-$(cat /etc/slitaz-release)\" TYPE=\"iso9660\""
+	PKGDEV=$(blkid | grep "$PKGSIGN" | cut -d: -f1)
+	[ -z "$PKGDEV" -a -L /dev/cdrom ] && PKGDEV=$(blkid /dev/cdrom | grep "$PKGSIGN" | cut -d: -f1)
+	if [ -n "$PKGDEV" ]; then
+		echo -n "Mounting packages archive from $PKGDEV..."
+		mkdir /packages && mount -t iso9660 -o ro $PKGDEV /packages
+		status
+		/packages/install.sh
+	fi
+fi
+
