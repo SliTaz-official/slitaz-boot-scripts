@@ -101,7 +101,7 @@ EOF
 	# For a dynamic IP with DHCP.
 	if [ "$DHCP" = "yes" ] ; then
 		echo "Starting udhcpc client on: $INTERFACE... "
-		/sbin/udhcpc -b -i $INTERFACE -p /var/run/udhcpc.$INTERFACE.pid
+		/sbin/udhcpc -b -T 1 -A 12 -i $INTERFACE -p /var/run/udhcpc.$INTERFACE.pid
 	fi
 
 	# For a static IP.
