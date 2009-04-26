@@ -180,7 +180,7 @@ do
 					echo "openbox" > /etc/X11/wm.default ;;
 				e17|enlightenment|enlightenment_start)
 					echo "enlightenment" > /etc/X11/wm.default ;;
-			esac
+			esac ;;
 		*)
 			continue ;;
 	esac

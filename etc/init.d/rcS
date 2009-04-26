@@ -10,7 +10,7 @@
 
 # Parse cmdline args for earlier boot options. All other boot options
 # are in /etc/init./bootopts.sh.
-for opt in `cat cmdline`
+for opt in `cat /proc/cmdline`
 do
 	case $opt in
 		fastbootx|fbx)
