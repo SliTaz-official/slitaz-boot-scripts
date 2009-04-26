@@ -17,7 +17,7 @@ EOT
 # user=name can be used, but user must be add before home= to have home dir.
 # This option is not handled by a loop and case like other and without
 # effect on a installed system.
-if ! grep -q "1000:1000" /etc/passwd; then
+if ! grep -q "100[0-9]:100[0-9]" /etc/passwd; then
 	if grep -q "user=" /proc/cmdline; then
 		USER=`cat /proc/cmdline | sed 's/.*user=\([^ ]*\).*/\1/'`
 		# Avoid usage of an existing system user or root.
@@ -123,6 +123,15 @@ do
 				chown -R $USER.$USER /home/$USER
 			else
 				rm -rf /tmp/$USER-files
+			fi
+			# Install all packages in /home/boot/packages. In live (CD and USB) mode
+			# the option home= mount the device on /home, so we already have a boot 
+			# directory with the Kernel and rootfs.
+			if [ -d "/home/boot/packages" ]; then
+				for pkg in /home/boot/packages/*.tazpkg
+				do
+					tazpkg install $pkg
+				done
 			fi ;;
 		laptop)
 			# Laptop option to load ac and battery Kernel modules.
@@ -192,14 +201,4 @@ fi
 if grep -q swap /etc/fstab; then
 	echo "Activating swap memory..."
 	swapon -a
-fi
-
-# Install all packages in /home/boot/packages. In live (CD and USB) mode
-# the option home= will mount the device on /home, so we already have
-# a boot directory with the Kernel and rootfs.
-if [ -d "/home/boot/packages" ]; then
-	for pkg in /home/boot/packages/*.tazpkg
-	do
-		tazpkg install $pkg
-	done
 fi
