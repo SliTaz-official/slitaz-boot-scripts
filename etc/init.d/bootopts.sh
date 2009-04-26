@@ -124,9 +124,9 @@ do
 			else
 				rm -rf /tmp/$USER-files
 			fi
-			# Install all packages in /home/boot/packages. In live (CD and USB) mode
-			# the option home= mount the device on /home, so we already have a boot 
-			# directory with the Kernel and rootfs.
+			# Install all packages in /home/boot/packages. In live CD and 
+			# USB mode the option home= mount the device on /home, so we 
+			# already have a boot directory with the Kernel and rootfs.
 			if [ -d "/home/boot/packages" ]; then
 				for pkg in /home/boot/packages/*.tazpkg
 				do
@@ -134,7 +134,7 @@ do
 				done
 			fi ;;
 		laptop)
-			# Laptop option to load ac and battery Kernel modules.
+			# Laptop option to load related Kernel modules.
 			echo "Loading laptop modules: ac, battery, fan, yenta_socket..."
 			for mod in ac battery fan yenta_socket
 			do
