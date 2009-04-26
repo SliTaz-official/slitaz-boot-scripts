@@ -13,54 +13,6 @@ $1	swap	swap	default	0 0
 EOT
 }
 
-# Check if swap file must be generated in /home: swap=size (Mb).
-# This option is used with home=device.
-gen_home_swap()
-{
-	if grep -q "swap=[1-9]*" /proc/cmdline; then
-		SWAP_SIZE=`cat /proc/cmdline | sed 's/.*swap=\([^ ]*\).*/\1/'`
-		# DD to gen a virtual disk.
-		echo "Generating swap file: /home/swap ($SWAP_SIZE)..."
-		dd if=/dev/zero of=/home/swap bs=1M count=$SWAP_SIZE
-		# Make the Linux swap filesystem.
-		mkswap /home/swap
-		add_swap_in_fstab /home/swap
-	fi
-}
-
-# Mount /home and check for user home dir.
-mount_home()
-{
-	echo "Home has been specified to $DEVICE..."
-	USBDELAY=`cat /sys/module/usb_storage/parameters/delay_use`
-	USBDELAY=$((1+$USBDELAY))
-	echo "Sleeping $USBDELAY s to let the kernel detect the device... "
-	sleep $USBDELAY
-	USER=`cat /etc/passwd | grep 1000 | cut -d ":" -f 1`
-	DEVID=$DEVICE
-	if [ -x /sbin/blkid ]; then
-		# Can be label, uuid or devname. DEVID give us first: /dev/name.
-		DEVID=`/sbin/blkid | grep $DEVICE | cut -d: -f1`
-		DEVID=${DEVID##*/}
-	fi
-	if [ -n "$DEVID" ] && grep -q "$DEVID" /proc/partitions ; then
-		echo "Mounting /home on /dev/$DEVID... "
-		mv /home/$USER /tmp/$USER-files
-		mount /dev/$DEVID /home -o uid=1000,gid=1000 2>/dev/null \
-			|| mount /dev/$DEVID /home
-		gen_home_swap
-	else
-		echo "Unable to find $DEVICE... "
-	fi
-	# Move all user dir if needed.
-	if [ ! -d "/home/$USER" ] ; then
-		mv /tmp/$USER-files /home/$USER
-		chown -R $USER.$USER /home/$USER
-	else
-		rm -rf /tmp/$USER-files
-	fi
-}
-
 # Default user account without password (uid=1000). In live mode the option
 # user=name can be used, but user must be add before home= to have home dir.
 # This option is not handled by a loop and case like other and without
@@ -115,12 +67,6 @@ do
 		autologin)
 			# Autologin option to skip first graphic login prompt.
 			echo "auto_login        yes" >> /etc/slim.conf ;;
-		home=*)
-			# Check for a specified home directory (home=*). Note:
-			# home=usb is a shoter and easy way to have home=/dev/sda1.
-			DEVICE=${opt#home=}
-			[ "$DEVICE" = "usb" ] && DEVICE=sda1
-			mount_home ;;
 		lang=*)
 			# Check for a specified locale (lang=*).
 			LANG=${opt#lang=}
@@ -134,6 +80,50 @@ do
 			echo -n "Setting system keymap to: $KEYMAP..."
 			echo "$KEYMAP" > /etc/keymap.conf
 			status ;;
+		home=*)
+			# Check for a specified home partition (home=*) and check for 
+			# user home dir. Note: home=usb is a shoter and easier way to
+			# have home=/dev/sda1.
+			DEVICE=${opt#home=}
+			[ "$DEVICE" = "usb" ] && DEVICE=sda1
+			echo "Home has been specified to $DEVICE..."
+			USBDELAY=`cat /sys/module/usb_storage/parameters/delay_use`
+			USBDELAY=$((1+$USBDELAY))
+			echo "Sleeping $USBDELAY s to let the kernel detect the device... "
+			sleep $USBDELAY
+			USER=`cat /etc/passwd | grep 1000 | cut -d ":" -f 1`
+			DEVID=$DEVICE
+			if [ -x /sbin/blkid ]; then
+				# Can be label, uuid or devname. DEVID give us first: /dev/name.
+				DEVID=`/sbin/blkid | grep $DEVICE | cut -d: -f1`
+				DEVID=${DEVID##*/}
+			fi
+			if [ -n "$DEVID" ] && grep -q "$DEVID" /proc/partitions ; then
+				echo "Mounting /home on /dev/$DEVID... "
+				mv /home/$USER /tmp/$USER-files
+				mount /dev/$DEVID /home -o uid=1000,gid=1000 2>/dev/null \
+					|| mount /dev/$DEVID /home
+				# Check if swap file must be generated in /home: swap=size (Mb).
+				# This option is only used within home=device.
+				if grep -q "swap=[1-9]*" /proc/cmdline; then
+					SWAP_SIZE=`cat /proc/cmdline | sed 's/.*swap=\([^ ]*\).*/\1/'`
+					# DD to gen a virtual disk.
+					echo "Generating swap file: /home/swap ($SWAP_SIZE)..."
+					dd if=/dev/zero of=/home/swap bs=1M count=$SWAP_SIZE
+					# Make the Linux swap filesystem.
+					mkswap /home/swap
+					add_swap_in_fstab /home/swap
+				fi
+			else
+				echo "Unable to find $DEVICE... "
+			fi
+			# Move all user dir if needed.
+			if [ ! -d "/home/$USER" ] ; then
+				mv /tmp/$USER-files /home/$USER
+				chown -R $USER.$USER /home/$USER
+			else
+				rm -rf /tmp/$USER-files
+			fi ;;
 		laptop)
 			# Laptop option to load ac and battery Kernel modules.
 			echo "Loading laptop modules: ac, battery, fan, yenta_socket..."
