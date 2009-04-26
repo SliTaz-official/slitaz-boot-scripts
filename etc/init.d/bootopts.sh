@@ -29,7 +29,6 @@ gen_home_swap()
 }
 
 # Mount /home and check for user hacker home dir.
-#
 mount_home()
 {
 	echo "Home has been specified to $DEVICE..."
@@ -53,7 +52,7 @@ mount_home()
 	else
 		echo "Unable to find $DEVICE... "
 	fi
-	# Move all hacker dir if needed.
+	# Move all user dir if needed.
 	if [ ! -d "/home/$USER" ] ; then
 		mv /tmp/$USER-files /home/$USER
 		chown -R $USER.$USER /home/$USER
@@ -64,6 +63,8 @@ mount_home()
 
 # Default user account without password (uid=1000). In live mode the option
 # user=name can be used, but user must be add before home= to have home dir.
+# This option is not handled by a loop and case like other and without
+# effect on a installed system.
 if ! grep -q "1000:1000" /etc/passwd; then
 	if grep -q "user=" /proc/cmdline; then
 		USER=`cat /proc/cmdline | sed 's/.*user=\([^ ]*\).*/\1/'`
@@ -104,6 +105,7 @@ fi
 
 # Parse /proc/cmdline for boot options.
 echo "Parsing kernel cmdline for SliTaz live options... "
+
 for opt in `cat /proc/cmdline`
 do
 	case $opt in
@@ -136,10 +138,11 @@ do
 			status ;;
 		laptop)
 			# Laptop option to load ac and battery Kernel modules.
-			echo "Loading laptop modules: ac, battery, yenta_socket..."
-			modprobe ac
-			modprobe battery
-			modprobe yenta_socket ;;
+			echo "Loading laptop modules: ac, battery, fan, yenta_socket..."
+			for mod in ac battery fan yenta_socket
+			do
+				modprobe $mod
+			done ;;
 		mount)
 			# Mount all ext3 partitions found (opt: mount).
 			# Get the list of partitions.
