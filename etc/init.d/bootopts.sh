@@ -28,7 +28,7 @@ gen_home_swap()
 	fi
 }
 
-# Mount /home and check for user hacker home dir.
+# Mount /home and check for user home dir.
 mount_home()
 {
 	echo "Home has been specified to $DEVICE..."
@@ -115,13 +115,11 @@ do
 		autologin)
 			# Autologin option to skip first graphic login prompt.
 			echo "auto_login        yes" >> /etc/slim.conf ;;
-		home=usb)
-			# home=usb is a shoter and easy way to have home=/dev/sda1.
-			DEVICE=sda1
-			mount_home ;;
 		home=*)
-			# Check for a specified home directory (home=*).
+			# Check for a specified home directory (home=*). Note:
+			# home=usb is a shoter and easy way to have home=/dev/sda1.
 			DEVICE=${opt#home=}
+			[ "$DEVICE" = "usb" ] && DEVICE=sda1
 			mount_home ;;
 		lang=*)
 			# Check for a specified locale (lang=*).
