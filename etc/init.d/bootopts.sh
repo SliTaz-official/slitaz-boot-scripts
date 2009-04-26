@@ -1,7 +1,7 @@
 #!/bin/sh
 # /etc/init.d/bootopts.sh - SliTaz boot options from the cmdline.
 #
-# Earlier boot options are in rcS: config= and modprobe=
+# Earlier boot options are in rcS, ex: config= and modprobe=
 #
 . /etc/init.d/rc.functions
 
@@ -62,36 +62,8 @@ mount_home()
 	fi
 }
 
-# Mount all ext3 partitions found (opt: mount).
-mount_partitions()
-{
-	# Get the list of partitions.
-	DEVICES_LIST=`fdisk -l | grep 83 | cut -d " " -f 1`
-	# Mount filesystems rw.
-	for device in $DEVICES_LIST
-	do
-		name=${device#/dev/}
-		# Device can be already used by home=usb.
-		if ! mount | grep ^$device >/dev/null; then
-			echo "Mounting partition: $name on /mnt/$name"
-			mkdir /mnt/$name
-			mount $device /mnt/$name
-		fi
-	done
-}
-
-# Parse /proc/cmdline with grep.
-#
-
-echo "Parsing kernel cmdline for SliTaz live options... "
-
-# eject: Eject cdrom
-if grep -q -w "eject" /proc/cmdline; then
-	eject /dev/cdrom
-fi
-
-# user=name: Default user account without password (uid=1000).
-#
+# Default user account without password (uid=1000). In live mode the option
+# user=name can be used, but user must be add before home= to have home dir.
 if ! grep -q "1000:1000" /etc/passwd; then
 	if grep -q "user=" /proc/cmdline; then
 		USER=`cat /proc/cmdline | sed 's/.*user=\([^ ]*\).*/\1/'`
@@ -130,23 +102,96 @@ if ! grep -q "1000:1000" /etc/passwd; then
 	fi
 fi
 
-# Autologin option to skip first graphic login prompt.
-if grep -q "autologin" /proc/cmdline; then
-        echo "auto_login        yes" >> /etc/slim.conf
+# Parse /proc/cmdline for boot options.
+echo "Parsing kernel cmdline for SliTaz live options... "
+for opt in `cat /proc/cmdline`
+do
+	case $opt in
+		eject)
+			# Eject cdrom.
+			eject /dev/cdrom ;;
+		autologin)
+			# Autologin option to skip first graphic login prompt.
+			echo "auto_login        yes" >> /etc/slim.conf ;;
+		home=usb)
+			# home=usb is a shoter and easy way to have home=/dev/sda1.
+			DEVICE=sda1
+			mount_home ;;
+		home=*)
+			# Check for a specified home directory (home=*).
+			DEVICE=${opt#home=}
+			mount_home ;;
+		lang=*)
+			# Check for a specified locale (lang=*).
+			LANG=${opt#lang=}
+			echo -n "Setting system locale to: $LANG... "
+			echo "LANG=$LANG" > /etc/locale.conf
+			echo "LC_ALL=$LANG" >> /etc/locale.conf
+			status ;;
+		kmap=*)
+			# Check for a specified keymap (kmap=*).
+			KEYMAP=${opt#kmap=}
+			echo -n "Setting system keymap to: $KEYMAP..."
+			echo "$KEYMAP" > /etc/keymap.conf
+			status ;;
+		laptop)
+			# Laptop option to load ac and battery Kernel modules.
+			echo "Loading laptop modules: ac, battery, yenta_socket..."
+			modprobe ac
+			modprobe battery
+			modprobe yenta_socket ;;
+		mount)
+			# Mount all ext3 partitions found (opt: mount).
+			# Get the list of partitions.
+			DEVICES_LIST=`fdisk -l | grep 83 | cut -d " " -f 1`
+			# Mount filesystems rw.
+			for device in $DEVICES_LIST
+			do
+				name=${device#/dev/}
+				# Device can be already used by home=usb.
+				if ! mount | grep ^$device >/dev/null; then
+					echo "Mounting partition: $name on /mnt/$name"
+					mkdir /mnt/$name
+					mount $device /mnt/$name
+				fi
+			done ;;
+		mount-packages)
+			# Mount and install packages-XXX.iso (usefull without Internet 
+			# connection).
+			PKGSIGN="LABEL=\"packages-$(cat /etc/slitaz-release)\" TYPE=\"iso9660\""
+			PKGDEV=$(blkid | grep "$PKGSIGN" | cut -d: -f1)
+			[ -z "$PKGDEV" -a -L /dev/cdrom ] && \
+				PKGDEV=$(blkid /dev/cdrom | grep "$PKGSIGN" | cut -d: -f1)
+			if [ -n "$PKGDEV" ]; then
+				echo -n "Mounting packages archive from $PKGDEV..."
+				mkdir /packages && mount -t iso9660 -o ro $PKGDEV /packages
+				status
+				/packages/install.sh
+			fi ;;
+		wm=*)
+			# Check for a Window Manager (for a flavor, default WM can be changed
+			# with boot option or with an addfile in /etc/X11/wm.default.
+			WM=${opt#wm=}
+			mkdir -p /etc/X11
+			case $WM in
+				jwm)
+					echo "jwm" > /etc/X11/wm.default ;;
+				ob|openbox|openbox-session)
+					echo "openbox" > /etc/X11/wm.default ;;
+				e17|enlightenment|enlightenment_start)
+					echo "enlightenment" > /etc/X11/wm.default ;;
+			esac
+		*)
+			continue ;;
+	esac
+done
+
+# If no default WM fallback to Openbox (we never know).
+if [ ! -f /etc/X11/wm.default ]; then
+	echo "openbox" > /etc/X11/wm.default
 fi
 
-# Check for a specified home directory on cmdline (home=*).
-#
-if grep -q "home=usb" /proc/cmdline; then
-	DEVICE=sda1
-	mount_home
-elif grep -q "home=" /proc/cmdline; then
-	DEVICE=`cat /proc/cmdline | sed 's/.*home=\([^ ]*\).*/\1/'`
-	mount_home
-fi
-
-# Activate an eventual swap file in /home and on local HD.
-#
+# Activate an eventual swap file or partition.
 if [ "`fdisk -l | grep swap`" ]; then
 	for SWAP_DEV in `fdisk -l | grep swap | awk '{ print $1 }'`; do
 		echo "Swap memory detected on: $SWAP_DEV"
@@ -157,69 +202,3 @@ if grep -q swap /etc/fstab; then
 	echo "Activating swap memory..."
 	swapon -a
 fi
-
-# Check for a specified locale (lang=*).
-#
-if grep -q "lang=*" /proc/cmdline; then
-	LANG=`cat /proc/cmdline | sed 's/.*lang=\([^ ]*\).*/\1/'`
-	echo -n "Setting system locale to: $LANG... "
-	echo "LANG=$LANG" > /etc/locale.conf
-	echo "LC_ALL=$LANG" >> /etc/locale.conf
-	status
-fi
-
-# Check for a specified keymap (kmap=*).
-#
-if grep -q "kmap=*" /proc/cmdline; then
-	KEYMAP=`cat /proc/cmdline | sed 's/.*kmap=\([^ ]*\).*/\1/'`
-	echo -n "Setting system keymap to: $KEYMAP..."
-	echo "$KEYMAP" > /etc/keymap.conf
-	status
-fi
-
-# Laptop option to load ac and battery Kernel modules.
-if grep -q "laptop" /proc/cmdline; then
-	echo "Loading laptop modules: ac, battery, yenta_socket..."
-	modprobe ac
-	modprobe battery
-	modprobe yenta_socket
-fi
-
-# Check for a Window Manager (for a flavor, default WM can be changed
-# with boot option or with an addfile in /etc/X11/wm.default.
-if grep -q "wm=" /proc/cmdline; then
-	mkdir -p /etc/X11
-	WM=`cat /proc/cmdline | sed 's/.*wm=\([^ ]*\).*/\1/'`
-	case $WM in
-		jwm)
-			echo "jwm" > /etc/X11/wm.default ;;
-		ob|openbox|openbox-session)
-			echo "openbox" > /etc/X11/wm.default ;;
-		e17|enlightenment|enlightenment_start)
-			echo "enlightenment" > /etc/X11/wm.default ;;
-	esac
-else
-	# If no default WM fallback to Openbox.
-	if [ ! -f /etc/X11/wm.default ]; then
-		echo "openbox" > /etc/X11/wm.default
-	fi
-fi
-
-# Check for option mount.
-if grep -q "mount" /proc/cmdline; then
-	mount_partitions
-fi
-
-# Mount and install packages-XXX.iso (usefull without Internet connection)
-if grep -q " mount-packages" /proc/cmdline; then
-	PKGSIGN="LABEL=\"packages-$(cat /etc/slitaz-release)\" TYPE=\"iso9660\""
-	PKGDEV=$(blkid | grep "$PKGSIGN" | cut -d: -f1)
-	[ -z "$PKGDEV" -a -L /dev/cdrom ] && PKGDEV=$(blkid /dev/cdrom | grep "$PKGSIGN" | cut -d: -f1)
-	if [ -n "$PKGDEV" ]; then
-		echo -n "Mounting packages archive from $PKGDEV..."
-		mkdir /packages && mount -t iso9660 -o ro $PKGDEV /packages
-		status
-		/packages/install.sh
-	fi
-fi
-
