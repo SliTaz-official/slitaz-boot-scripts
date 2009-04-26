@@ -8,6 +8,24 @@
 . /etc/init.d/rc.functions
 . /etc/rcS.conf
 
+# Parse cmdline args for earlier boot options. All other boot options
+# are in /etc/init./bootopts.sh.
+for opt in `cat cmdline`
+do
+	case $opt in
+		*fastbootx*|*fbx*)
+			FAST_BOOT_X="yes" ;;
+		*cdrom=*)
+			CDROM=${opt#cdrom=} ;;
+		*modprobe=*)
+			MODPROBE="yes" ;;
+		*config=*)
+			CONFIG=${opt#config=} ;;
+		*)
+			continue ;;
+	esac
+done
+
 if [ "$1" != "logged" ]; then # logged
 
 echo "Processing /etc/init.d/rcS... "
@@ -80,7 +98,7 @@ status
 # keymap settings since Xvesa dump the console mapping and a correct
 # slim configuration for screen resolution. DBUS and HAL must also start
 # befor X session (manual login or autologin) to have devices in PCmanFM.
-if [ "$FAST_BOOT_X" = "yes" ] || grep -q -w "fastbootx" /proc/cmdline; then
+if [ "$FAST_BOOT_X" = "yes" ]; then
 	/etc/init.d/i18n.sh
 	/etc/init.d/dbus start
 	/etc/init.d/hald start
@@ -89,8 +107,8 @@ fi
 
 # Create /dev/cdrom if needed (symlink does not exist on LiveCD).
 # Also add /dev/cdrom to fstab if entry does not exist.
-if grep -q " cdrom=" /proc/cmdline; then
-	DRIVE_NAME=`cat /proc/cmdline | sed 's/.* cdrom=\([^ ]*\).*/\1/'`
+if [ -n "$CDROM" ]; then
+	DRIVE_NAME=${CDROM#/dev/}
 else
 	DRIVE_NAME=`cat /proc/sys/dev/cdrom/info | grep "drive name" | cut -f 3`
 fi
@@ -117,7 +135,7 @@ if [ -n "$DRIVE_NAME" -a "`readlink /dev/cdrom`" ]; then
 fi
 
 # Handle kernel cmdline parameter modprobe=<module_list> 
-if grep -q " modprobe=" /proc/cmdline; then
+if [ -n "$MODPROBE" ]; then
 	MODULES=`sed -e 's/.* modprobe=\([^ ]*\).*/\1/' -e 's/,/\n/g' < /proc/cmdline`
 	for i in $MODULES; do
 		echo -n "Loading kernel module $i"
@@ -128,8 +146,7 @@ fi
 
 # Handle kernel cmdline parameter config=<device>,<path> to source a 
 # disk init script
-if grep -q " config=" /proc/cmdline; then
-	CONFIG=`cat /proc/cmdline | sed 's/.* config=\([^ ]*\).*/\1/'`
+if [ -n "$CONFIG" ]; then
 	DEVICE=${CONFIG%,*}
 	SCRIPT=${CONFIG#*,}
 	echo "Probing $DEVICE... "

@@ -33,8 +33,10 @@ gen_home_swap()
 mount_home()
 {
 	echo "Home has been specified to $DEVICE..."
-	echo "Sleeping 10 s to let the kernel detect the device... "
-	sleep 10
+	USBDELAY=`cat /sys/module/usb_storage/parameters/delay_use`
+	USBDELAY=$((1+$USBDELAY))
+	echo "Sleeping $USBDELAY s to let the kernel detect the device... "
+	sleep $USBDELAY
 	USER=`cat /etc/passwd | grep 1000 | cut -d ":" -f 1`
 	DEVID=$DEVICE
 	if [ -x /sbin/blkid ]; then
