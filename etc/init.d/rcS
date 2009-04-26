@@ -13,13 +13,13 @@
 for opt in `cat cmdline`
 do
 	case $opt in
-		*fastbootx*|*fbx*)
+		fastbootx|fbx)
 			FAST_BOOT_X="yes" ;;
-		*cdrom=*)
+		cdrom=*)
 			CDROM=${opt#cdrom=} ;;
-		*modprobe=*)
+		modprobe=*)
 			MODPROBE="yes" ;;
-		*config=*)
+		config=*)
 			CONFIG=${opt#config=} ;;
 		*)
 			continue ;;
