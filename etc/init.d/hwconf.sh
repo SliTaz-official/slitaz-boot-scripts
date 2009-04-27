@@ -6,10 +6,24 @@
 #
 . /etc/init.d/rc.functions
 
+# Parse cmdline args for boot options (See also rcS and bootopts.sh).
+for opt in `cat /proc/cmdline`
+do
+	case $opt in
+		sound=*)
+			DRIVER=${opt#sound=} ;;
+		xargs=*)
+			XARGS=${opt#xargs=} ;;
+		screen=*)
+			SCREEN=${opt#screen=} ;;
+		*)
+			continue ;;
+	esac
+done
+
 # Sound configuration stuff. First check if sound=no and remove all
 # sound Kernel modules.
-if grep -q "sound=" /proc/cmdline; then
-	DRIVER=`cat /proc/cmdline | sed 's/.*sound=\([^ ]*\).*/\1/'`
+if [ -n "$DRIVER" ]; then
 	case "$DRIVER" in
 	no)
 		echo -n "Removing all sound kernel modules..."
@@ -23,14 +37,14 @@ if grep -q "sound=" /proc/cmdline; then
 		for i in alsa-lib mhwaveedit asunder libcddb ; do
 			echo 'y' | tazpkg remove $i > /dev/null
 		done
-		status;;
+		status ;;
 	noconf)
-		echo "Sound configuration was disabled from cmdline...";;
+		echo "Sound configuration was disabled from cmdline..." ;;
 	*)
 		if [ -x /usr/sbin/soundconf ]; then
 			echo "Using sound kernel module $DRIVER..."
 			/usr/sbin/soundconf -M $DRIVER
-		fi;;
+		fi ;;
 	esac
 # Sound card may already be detected by PCI-detect.
 elif [ -d /proc/asound ]; then
@@ -53,13 +67,12 @@ fi
 if [ ! -s /etc/X11/screen.conf -a -x /usr/bin/slim ]; then
 	# $HOME is not yet set.
 	HOME=/root
-	if grep -q "xarg=*" /proc/cmdline; then
+	if [ -n "$XARGS" ]; then
 		# Add an extra argument to xserver_arguments (xarg=-2button)
-		XARG=`cat /proc/cmdline | sed 's/.*xarg=\([^ ]*\).*/\1/'`
 		sed -i "s|-screen|$XARG -screen|" /etc/slim.conf
 	fi
-	if grep -q "screen=*" /proc/cmdline; then
-		export NEW_SCREEN=`cat /proc/cmdline | sed 's/.*screen=\([^ ]*\).*/\1/'`
+	if [ -n "$SCREEN" ]; then
+		export NEW_SCREEN=$SCREEN
 		if [ "$NEW_SCREEN" = "text" ]; then
 			echo -n "Disabling X login manager: slim..."
 			. /etc/rcS.conf
