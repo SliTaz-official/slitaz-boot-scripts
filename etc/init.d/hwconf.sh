@@ -62,7 +62,9 @@ if [ ! -s /etc/X11/screen.conf -a -x /usr/bin/slim ]; then
 		export NEW_SCREEN=`cat /proc/cmdline | sed 's/.*screen=\([^ ]*\).*/\1/'`
 		if [ "$NEW_SCREEN" = "text" ]; then
 			echo -n "Disabling X login manager: slim..."
-			sed -i s/'slim'/''/ /etc/rcS.conf
+			. /etc/rcS.conf
+			RUN_DAEMONS=`echo $RUN_DAEMONS | sed s/' slim'/''/`
+			sed -i s/"RUN_DAEMONS.*"/"RUN_DAEMONS=\"$RUN_DAEMONS\"/" /etc/rcS.conf
 			status
 		else
 			tazx `cat /etc/X11/wm.default`
