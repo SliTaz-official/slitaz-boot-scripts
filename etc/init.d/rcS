@@ -8,8 +8,18 @@
 . /etc/init.d/rc.functions
 . /etc/rcS.conf
 
+if [ "$1" != "logged" ]; then # logged
+
+echo "Processing /etc/init.d/rcS..."
+
+# Mount /proc.
+echo -n "Mounting proc filesystem..."
+/bin/mount proc
+status
+
 # Parse cmdline args for earlier boot options. All other boot options
 # are in /etc/init./bootopts.sh.
+echo -n "Searching for early boot options..."
 for opt in `cat /proc/cmdline`
 do
 	case $opt in
@@ -25,14 +35,6 @@ do
 			continue ;;
 	esac
 done
-
-if [ "$1" != "logged" ]; then # logged
-
-echo "Processing /etc/init.d/rcS... "
-
-# Mount /proc.
-echo -n "Mounting proc filesystem... "
-/bin/mount proc
 status
 
 # Start Udev to populate /dev and handle hotplug events
@@ -61,11 +63,11 @@ if [ -n "$CHECK_FS" ]; then
 fi
 
 # Remount rootfs rw.
-echo "Remounting rootfs read/write... "
+echo "Remounting rootfs read/write..."
 /bin/mount -o remount,rw /
 
 # Mount filesystems in /etc/fstab.
-echo "Mounting filesystems in fstab... "
+echo "Mounting filesystems in fstab..."
 /bin/mount -a
 
 # Store boot messages to log files.
@@ -77,19 +79,19 @@ else # logged
 
 # Clean up the system.
 if [ "$CLEAN_UP_SYSTEM" = "yes" ]; then
-	echo -n "Cleaning up the system... "
+	echo -n "Cleaning up the system..."
 	/bin/rm -rf /tmp /var/run/*.pid /var/run/dbus/* \
 		/var/run/hald/pid /var/lock/*
 	/bin/mkdir -p /tmp && /bin/chmod 1777 /tmp
 	status
 else
-	echo "System clean up is disabled in /etc/rcS.conf... "
-	echo -n "Keeping all tmp and pid files... "
+	echo "System clean up is disabled in /etc/rcS.conf..."
+	echo -n "Keeping all tmp and pid files..."
 	status
 fi
 
 # Set up tmp X11 and ICE dir.
-echo -n "Setting up tmp X11 and ICE unix dir... "
+echo -n "Setting up tmp X11 and ICE unix dir..."
 /bin/mkdir -p /tmp/.X11-unix /tmp/.ICE-unix
 /bin/chmod 1777 /tmp/.X11-unix /tmp/.ICE-unix
 status
@@ -161,7 +163,7 @@ if [ -n "$CONFIG" ]; then
 			CONFIG=""
 		fi
 	fi
-	echo -n "Source $SCRIPT from $DEVICE... "
+	echo -n "Source $SCRIPT from $DEVICE..."
 	if [ -n "$CONFIG" ]; then
 		. /mnt/$SCRIPT
 		/bin/umount /mnt
@@ -171,19 +173,19 @@ fi
 
 # Mount /proc/bus/usb.
 if [ -d /proc/bus/usb ]; then
-	echo -n "Mounting /proc/bus/usb filesystem... "
+	echo -n "Mounting /proc/bus/usb filesystem..."
 	/bin/mount -t usbfs usbfs /proc/bus/usb
 	status
 fi
 
 # Start syslogd and klogd.
 if [ "$KERNEL_LOG_DAEMONS" = "yes" ]; then
-	echo -n "Starting system log deamon: syslogd... "
+	echo -n "Starting system log deamon: syslogd..."
 	/sbin/syslogd -s $SYSLOGD_ROTATED_SIZE && status
-	echo -n "Starting kernel log daemon: klogd... "
+	echo -n "Starting kernel log daemon: klogd..."
 	/sbin/klogd && status
 else
-	echo "Kernel log daemons are disabled in /etc/rc.conf... "
+	echo "Kernel log daemons are disabled in /etc/rc.conf..."
 fi
 
 # Load all modules listed in config file.

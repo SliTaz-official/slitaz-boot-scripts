@@ -139,7 +139,9 @@ do
 			for mod in ac battery fan yenta_socket
 			do
 				modprobe $mod
-			done ;;
+			done
+			# Enable Kernel Laptop mode.
+			echo "5" > /proc/sys/vm/laptop_mode ;;
 		mount)
 			# Mount all ext3 partitions found (opt: mount).
 			# Get the list of partitions.
