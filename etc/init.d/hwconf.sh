@@ -72,16 +72,25 @@ if [ ! -s /etc/X11/screen.conf -a -x /usr/bin/slim ]; then
 		sed -i "s|-screen|$XARG -screen|" /etc/slim.conf
 	fi
 	if [ -n "$SCREEN" ]; then
-		export NEW_SCREEN=$SCREEN
-		if [ "$NEW_SCREEN" = "text" ]; then
-			echo -n "Disabling X login manager: slim..."
-			. /etc/rcS.conf
-			RUN_DAEMONS=`echo $RUN_DAEMONS | sed s/' slim'/''/`
-			sed -i s/"RUN_DAEMONS.*"/"RUN_DAEMONS=\"$RUN_DAEMONS\"/" /etc/rcS.conf
-			status
-		else
-			tazx `cat /etc/X11/wm.default`
-		fi
+		case "$SCREEN" in
+			text)
+				# Disable X.
+				echo -n "Disabling X login manager: slim..."
+				. /etc/rcS.conf
+				RUN_DAEMONS=`echo $RUN_DAEMONS | sed s/' slim'/''/`
+				sed -i s/"RUN_DAEMONS.*"/"RUN_DAEMONS=\"$RUN_DAEMONS\"/" /etc/rcS.conf
+				status ;;
+			auto)
+				# Auto detect screen resolution.
+				export NEW_SCREEN=`Xvesa -listmodes 2>&1 | grep ^0x | \
+					awk '{ printf "%s %s\n",$2 }' \
+					| sort -nr | grep x[1-2][4-6] | head -n 1`
+				tazx `cat /etc/X11/wm.default` ;;
+			*)
+				# Use specified screen resolution.
+				export NEW_SCREEN=$SCREEN
+				tazx `cat /etc/X11/wm.default` ;;
+		esac
 	else
 		tazx `cat /etc/X11/wm.default`
 	fi
