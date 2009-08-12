@@ -80,8 +80,8 @@ else # logged
 # Clean up the system.
 if [ "$CLEAN_UP_SYSTEM" = "yes" ]; then
 	echo -n "Cleaning up the system..."
-	/bin/rm -rf /tmp /var/run/*.pid /var/run/dbus/* \
-		/var/run/hald/pid /var/lock/*
+	find /var/run -name "*.pid" -type f | xargs /bin/rm -f
+	/bin/rm -rf /tmp /var/run/dbus/* /var/run/hald/pid /var/lock/*
 	/bin/mkdir -p /tmp && /bin/chmod 1777 /tmp
 	status
 else
