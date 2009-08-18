@@ -166,7 +166,7 @@ if [ -n "$CONFIG" ]; then
 	echo -n "Source $SCRIPT from $DEVICE..."
 	if [ -n "$CONFIG" ]; then
 		. /mnt/$SCRIPT
-		/bin/umount /mnt
+		/bin/umount /mnt 2> /dev/null || true
 	fi
 	status 
 fi
