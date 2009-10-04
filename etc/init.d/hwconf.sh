@@ -7,13 +7,14 @@
 . /etc/init.d/rc.functions
 
 # Parse cmdline args for boot options (See also rcS and bootopts.sh).
+XARG=""
 for opt in `cat /proc/cmdline`
 do
 	case $opt in
 		sound=*)
 			DRIVER=${opt#sound=} ;;
-		xargs=*)
-			XARGS=${opt#xargs=} ;;
+		xarg=*)
+			XARG="$XARG ${opt#xarg=}" ;;
 		screen=*)
 			SCREEN=${opt#screen=} ;;
 		*)
@@ -67,9 +68,9 @@ fi
 if [ ! -s /etc/X11/screen.conf -a -x /usr/bin/slim ]; then
 	# $HOME is not yet set.
 	HOME=/root
-	if [ -n "$XARGS" ]; then
+	if [ -n "$XARG" ]; then
 		# Add an extra argument to xserver_arguments (xarg=-2button)
-		sed -i "s|-screen|$XARG -screen|" /etc/slim.conf
+		sed -i "s| -screen|$XARG -screen|" /etc/slim.conf
 	fi
 	if [ -n "$SCREEN" ]; then
 		case "$SCREEN" in
