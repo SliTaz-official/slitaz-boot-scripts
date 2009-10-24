@@ -97,9 +97,9 @@ echo -n "Setting up tmp X11 and ICE unix dir..."
 status
 
 # Fast boot into X for HD install or custom Live system. We need 
-# keymap settings since Xvesa dump the console mapping and a correct
+# keymap settings since Xvesa dumps the console mapping and a correct
 # slim configuration for screen resolution. DBUS and HAL must also start
-# befor X session (manual login or autologin) to have devices in PCmanFM.
+# before X session (manual login or autologin) to have devices in PCmanFM.
 if [ "$FAST_BOOT_X" = "yes" ]; then
 	/etc/init.d/i18n.sh
 	/etc/init.d/dbus start
@@ -196,11 +196,11 @@ if [ -n "$LOAD_MODULES" ]; then
 	done
 fi
 
-# Be quiet on configuration to avoid message overwriting ncurses dialog
+# Be quiet on configuration to avoid messages overwriting ncurses dialog
 echo "0 0 0 0" > /proc/sys/kernel/printk
 
 # Detect PCI and USB devices with Tazhw from slitaz-tools. We load
-# kernel module only at first boot or in LiveCD mode.
+# kernel modules only at first boot or in LiveCD mode.
 if [ ! -s /var/lib/detected-modules ]; then
 	/sbin/tazhw init
 fi

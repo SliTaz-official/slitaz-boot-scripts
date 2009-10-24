@@ -14,9 +14,9 @@ EOT
 }
 
 # Default user account without password (uid=1000). In live mode the option
-# user=name can be used, but user must be add before home= to have home dir.
-# This option is not handled by a loop and case like other and without
-# effect on a installed system.
+# user=name can be used, but user must be added before home= to have home dir.
+# This option is not handled by a loop and case like others and has no
+# effect on an installed system.
 if ! grep -q "100[0-9]:100[0-9]" /etc/passwd; then
 	if grep -q "user=" /proc/cmdline; then
 		USER=`cat /proc/cmdline | sed 's/.*user=\([^ ]*\).*/\1/'`
@@ -46,7 +46,7 @@ if ! grep -q "100[0-9]:100[0-9]" /etc/passwd; then
 	else
 		mkdir -p /home/$USER
 	fi
-	# set permissions.
+	# Set permissions.
 	chown -R $USER.$USER /home/$USER
 	# Slim default user.
 	if [ -f /etc/slim.conf ]; then
@@ -82,7 +82,7 @@ do
 			status ;;
 		home=*)
 			# Check for a specified home partition (home=*) and check for 
-			# user home dir. Note: home=usb is a shoter and easier way to
+			# user home dir. Note: home=usb is a shorter and easier way to
 			# have home=/dev/sda1.
 			DEVICE=${opt#home=}
 			[ "$DEVICE" = "usb" ] && DEVICE=sda1
@@ -94,7 +94,7 @@ do
 			USER=`cat /etc/passwd | grep 1000 | cut -d ":" -f 1`
 			DEVID=$DEVICE
 			if [ -x /sbin/blkid ]; then
-				# Can be label, uuid or devname. DEVID give us first: /dev/name.
+				# Can be a label, uuid or devname. DEVID gives us first: /dev/name.
 				DEVID=`/sbin/blkid | grep $DEVICE | cut -d: -f1`
 				DEVID=${DEVID##*/}
 			fi
@@ -125,7 +125,7 @@ do
 				rm -rf /tmp/$USER-files
 			fi
 			# Install all packages in /home/boot/packages. In live CD and 
-			# USB mode the option home= mount the device on /home, so we 
+			# USB mode the option home= mounts the device on /home, so we 
 			# already have a boot directory with the Kernel and rootfs.
 			if [ -d "/home/boot/packages" ]; then
 				for pkg in /home/boot/packages/*.tazpkg
@@ -158,7 +158,7 @@ do
 				fi
 			done ;;
 		mount-packages)
-			# Mount and install packages-XXX.iso (usefull without Internet 
+			# Mount and install packages-XXX.iso (useful without Internet 
 			# connection).
 			PKGSIGN="LABEL=\"packages-$(cat /etc/slitaz-release)\" TYPE=\"iso9660\""
 			PKGDEV=$(blkid | grep "$PKGSIGN" | cut -d: -f1)
@@ -172,7 +172,7 @@ do
 			fi ;;
 		wm=*)
 			# Check for a Window Manager (for a flavor, default WM can be changed
-			# with boot option or with an addfile in /etc/X11/wm.default.
+			# with boot options or with an addfile in /etc/X11/wm.default.
 			WM=${opt#wm=}
 			mkdir -p /etc/X11
 			case $WM in

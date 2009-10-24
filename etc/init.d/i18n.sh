@@ -1,12 +1,12 @@
 #!/bin/sh
-# /etc/init.d/i18n.sh - Internationalization initialisation.
+# /etc/init.d/i18n.sh - Internationalization initialization.
 #
-# This script configure SliTaz default keymap, locale, timezone.
+# This script configures SliTaz default keymap, locale, timezone.
 #
 . /etc/init.d/rc.functions
 
 # Locale config.
-echo "Cheking if /etc/locale.conf exist... "
+echo "Checking if /etc/locale.conf exists... "
 if [ -s "/etc/locale.conf" ]; then
 	echo -n "Locale configuration file exists... "
 	status

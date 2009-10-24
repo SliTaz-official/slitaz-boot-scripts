@@ -1,7 +1,7 @@
 #!/bin/sh
 # /etc/init.d/hwconf.sh - SliTaz hardware configuration.
 #
-# This script configure the sound card and screen. Tazhw is used earlier
+# This script configures the sound card and screen. Tazhw is used earlier
 # at boot time to autoconfigure PCI and USB devices.
 #
 . /etc/init.d/rc.functions

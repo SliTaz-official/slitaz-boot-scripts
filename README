@@ -15,8 +15,8 @@ pour SliTaz et fonctionnent avec le SHell Ash du projet Busybox.
 English
 -------
 
-This package provide the boot scripts for SliTaz found in /etc/init.d with
-the main config file : /etc/rcS.conf. It also provides the default inittab and
+This package provides the boot scripts for SliTaz found in /etc/init.d with
+the main config file /etc/rcS.conf. It also provides the default inittab and
 the network config file used with network.sh. Please check /etc/init.d/README
 for more infomation.
 

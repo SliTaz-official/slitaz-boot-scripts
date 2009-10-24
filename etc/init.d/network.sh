@@ -40,7 +40,7 @@ Stop() {
 }
 
 Start() {
-	# For wifi. Users just have to enable it throught yes and usually
+	# For wifi. Users just have to enable it through yes and usually
 	# essid any will work and interface is autodetected.
 	if [ "$WIFI" = "yes" ] || grep -q "wifi" /proc/cmdline; then
 		if [ ! -d /sys/class/net/$WIFI_INTERFACE/wireless ]; then
@@ -67,7 +67,7 @@ network={
 	priority=5
 }
 EOF
-				echo "starting wpa_supplicant, for WPA-PSK"
+				echo "Starting wpa_supplicant for WPA-PSK"
 				wpa_supplicant -B -w -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE
 				;;
 			any|ANY) cat > /tmp/wpa.conf <<EOF
@@ -82,13 +82,13 @@ network={
 	priority=5
 }
 EOF
-				echo "starting wpa_supplicant for any key type"
+				echo "Starting wpa_supplicant for any key type"
 				wpa_supplicant -B -w -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE
 				;;
 		esac
 		rm -f /tmp/wpa.conf
 		[ -n "$WIFI_CHANNEL" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS channel $WIFI_CHANNEL"
-		echo -n "configuring $WIFI_INTERFACE..."
+		echo -n "Configuring $WIFI_INTERFACE..."
 		ifconfig $WIFI_INTERFACE up
 		if iwconfig $WIFI_INTERFACE | grep -q "Tx-Power"; then
 			iwconfig $WIFI_INTERFACE txpower on
@@ -119,7 +119,7 @@ EOF
 }
 
 
-# looking for arguments:
+# Looking for arguments:
 if [ -z "$1" ]; then
 	Boot
 	Start
