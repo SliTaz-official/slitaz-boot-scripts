@@ -140,6 +140,9 @@ do
 			do
 				modprobe $mod
 			done
+			grep -qs batt /etc/lxpanel/default/panels/panel || 
+			sed -i 's/= cpu/= batt\n}\n\nPlugin {\n    type = cpu/' \
+				/etc/lxpanel/default/panels/panel 2> /dev/null
 			# Enable Kernel Laptop mode.
 			echo "5" > /proc/sys/vm/laptop_mode ;;
 		mount)

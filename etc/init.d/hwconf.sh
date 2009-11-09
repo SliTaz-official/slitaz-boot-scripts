@@ -87,6 +87,14 @@ if [ ! -s /etc/X11/screen.conf -a -x /usr/bin/slim ]; then
 					awk '{ printf "%s %s\n",$2 }' \
 					| sort -nr | grep x[1-2][4-6] | head -n 1`
 				tazx `cat /etc/X11/wm.default` ;;
+			1024x600*|800x480*)
+				set -- $(echo $SCREEN | sed 's/x/ /g')
+				915resolution -l 2>/dev/null | \
+				grep " ${1}x" | awk -v h=$1 -v v=$2 \
+				'END {system("915resolution " $2 " " h " " v)}'
+				# Use specified screen resolution.
+				export NEW_SCREEN=$SCREEN
+				tazx `cat /etc/X11/wm.default` ;;
 			*)
 				# Use specified screen resolution.
 				export NEW_SCREEN=$SCREEN
