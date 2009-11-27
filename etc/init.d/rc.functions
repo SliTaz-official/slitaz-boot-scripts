@@ -32,7 +32,7 @@ active_pidfile()
 	if [ ! -e $1 ]; then
 		return 1
 	elif grep -qs "Name:.$(basename $2)$" \
-			/proc/$(cat $1 | sed 's/[^0-9]//g')/status ; then
+			/proc/$(sed 's/[^0-9]//g' < $1 | head -1)/status ; then
 		return 0
 	else
 		rm -f $1
