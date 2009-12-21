@@ -68,7 +68,7 @@ network={
 }
 EOF
 				echo "Starting wpa_supplicant for WPA-PSK"
-				wpa_supplicant -B -w -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE
+				wpa_supplicant -B -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE
 				;;
 			any|ANY) cat > /tmp/wpa.conf <<EOF
 ap_scan=1
@@ -83,7 +83,7 @@ network={
 }
 EOF
 				echo "Starting wpa_supplicant for any key type"
-				wpa_supplicant -B -w -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE
+				wpa_supplicant -B -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE
 				;;
 		esac
 		rm -f /tmp/wpa.conf
