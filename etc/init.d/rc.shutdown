@@ -46,7 +46,7 @@ echo -n "Disabling swap space... "
 status
 
 # Kill all processes.
-echo -n "Killing all processes..."
+echo "Killing all processes..."
 killall5
 
 # Umount filesystems.

@@ -21,7 +21,7 @@ usleep_progress()
 	for i in `seq 79-1`
 	do
 		echo -n "$CHAR"
-		usleep 28000
+		usleep 18000
 	done
 	echo "$CHAR"
 }
