@@ -205,6 +205,14 @@ if [ ! -s /var/lib/detected-modules ]; then
 	/sbin/tazhw init
 fi
 
+# Call udevadm trigger to ensure /dev is fully populate now that all 
+# modules are loaded.
+if [ "$UDEV" = "yes" ]; then
+	echo -n "Requesting events from the Kernel..."
+	udevadm trigger
+	status
+fi
+
 # Start all scripts specified with $RUN_SCRIPTS.
 echo "Executing all initialization scripts..."
 for script in $RUN_SCRIPTS
