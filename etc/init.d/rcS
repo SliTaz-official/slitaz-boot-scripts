@@ -8,6 +8,9 @@
 . /etc/init.d/rc.functions
 . /etc/rcS.conf
 
+# Boot time.
+bootdate=`date +%s`
+
 if [ "$1" != "logged" ]; then # logged
 
 echo "Processing /etc/init.d/rcS..."
@@ -243,5 +246,10 @@ if [ -n "$MESSAGE" ]; then
 	/usr/bin/reset
 	echo -e "\033[1m$MESSAGE\033[0m"
 fi
+
+# Display and log boot time.
+time=$((`date +%s` - $bootdate))
+echo $time > /var/log/boot-time
+echo "SliTaz boot time: ${time}s"
 
 fi # logged
