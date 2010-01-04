@@ -10,6 +10,7 @@ else
 	. $2 
 fi
 
+
 Boot() {
 	# Set hostname.
 	echo -n "Setting hostname... "
@@ -20,7 +21,143 @@ Boot() {
 	echo -n "Configuring loopback... "
 	/sbin/ifconfig lo 127.0.0.1 up
 	/sbin/route add 127.0.0.1 lo
-	status
+	status	
+}
+
+
+eth() {
+#  use ethernet
+	   	ifconfig $INTERFACE up	
+}
+
+wifi() {
+		# For wifi. Users just have to enable it throught yes and usually
+	# essid any will work and interface is autodetected.
+	if [ "$WIFI" = "yes" ] || grep -q "wifi" /proc/cmdline; then
+	    ifconfig $INTERFACE down
+		
+		# Confirm if $WIFI_INTERFACE is the wifi interface
+		if [ ! -d /sys/class/net/$WIFI_INTERFACE/wireless ]; then
+			echo "$WIFI_INTERFACE is not a wifi interface, changing it."
+			WIFI_INTERFACE=$(grep : /proc/net/dev | cut -d: -f1 | \
+				while read dev; do iwconfig $dev 2>&1 | \
+					grep -iq "essid" && { echo $dev ; break; }; \
+				done)
+			[ -n "$WIFI_INTERFACE" ] && sed -i "s/^WIFI_INTERFACE=.*/WIFI_INTERFACE=\"$WIFI_INTERFACE\"/" /etc/network.conf
+		fi
+		
+		echo -n "configuring $WIFI_INTERFACE..."
+		ifconfig $WIFI_INTERFACE up
+		if iwconfig $WIFI_INTERFACE | grep -q "Tx-Power"; then
+			iwconfig $WIFI_INTERFACE txpower on
+		fi
+		status
+		
+		[ -n "$WPA_DRIVER" ] || WPA_DRIVER="wext"
+		
+		
+		IWCONFIG_ARGS=""
+		[ -n "$WIFI_MODE" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS mode $WIFI_MODE"
+		[ -n "$WIFI_CHANNEL" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS channel $WIFI_CHANNEL"
+		
+		[ -n "$WIFI_KEY" ] && case "$WIFI_KEY_TYPE" in
+			wep|WEP) 
+			     IWCONFIG_ARGS="$IWCONFIG_ARGS key $WIFI_KEY"
+				 iwconfig $WIFI_INTERFACE essid "$WIFI_ESSID" $IWCONFIG_ARGS
+# wpa_supplicant can also deal with wep encryption but iwconfig is preferred
+# Tip:Use unquoted strings for hexadecimal key in wep_key0
+#			cat /etc/wpa_supplicant.conf > /tmp/wpa.conf 
+#			cat >> /tmp/wpa.conf <<EOF
+#ctrl_interface=/var/run/wpa_supplicant
+#ctrl_interface_group=0
+#ap_scan=1
+#network={
+#	ssid="$WIFI_ESSID"
+#	scan_ssid=1
+#	key_mgmt=NONE
+#	wep_key0="$WIFI_KEY"
+#	wep_tx_keyidx=0
+#	priority=5
+#}
+#EOF
+				    ;;
+			wpa|WPA) cat /etc/wpa_supplicant.conf > /tmp/wpa.conf # load pre-configured multiple profiles 
+			cat >> /tmp/wpa.conf <<EOF
+ctrl_interface=/var/run/wpa_supplicant
+ctrl_interface_group=0
+ap_scan=1
+network={
+	ssid="$WIFI_ESSID"
+	scan_ssid=1
+	proto=WPA
+	key_mgmt=WPA-PSK
+	psk="$WIFI_KEY"
+	priority=5
+}
+EOF
+				echo "starting wpa_supplicant, for WPA-PSK"
+				wpa_supplicant -B -W -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE 
+				;;
+			any|ANY) cat /etc/wpa_supplicant.conf > /tmp/wpa.conf 
+			cat >> /tmp/wpa.conf <<EOF
+ctrl_interface=/var/run/wpa_supplicant
+ctrl_interface_group=0
+ap_scan=1
+network={
+	ssid="$WIFI_ESSID"
+	scan_ssid=1
+	key_mgmt=WPA-EAP WPA-PSK IEEE8021X NONE
+	group=CCMP TKIP WEP104 WEP40
+	pairwise=CCMP TKIP
+	psk="$WIFI_KEY"
+	priority=5
+}
+EOF
+				echo "starting wpa_supplicant for any key type"
+				wpa_supplicant -B -W -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE 
+				;;
+		esac
+		
+		rm -f /tmp/wpa.conf
+		
+		INTERFACE=$WIFI_INTERFACE			
+	fi
+
+}
+
+wpa()
+{
+	DHCP_SCRIPT="/etc/init.d/wpa_action.sh"
+	wpa_cli -a$DHCP_SCRIPT -B 
+}
+
+dhcp() {
+
+# For a dynamic IP with DHCP. 
+	if [ "$DHCP" = "yes" ]  ; then
+		echo "Starting udhcpc client on: $INTERFACE... "		
+		if [ -d /var/run/wpa_supplicant ]; then # wpa wireless && wpa_ctrl_open interface is up
+		   wpa		  
+		else  # fallback on udhcpc: wep, eth
+		   /sbin/udhcpc -b -T 1 -A 12 -i $INTERFACE -p /var/run/udhcpc.$INTERFACE.pid
+		fi		
+	fi
+	
+}
+
+static_ip() {
+# For a static IP.
+	if [ "$STATIC" = "yes" ] ; then
+		echo "Configuring static IP on $INTERFACE: $IP... "
+		/sbin/ifconfig $INTERFACE $IP netmask $NETMASK up
+		/sbin/route add default gateway $GATEWAY
+		# Multi-DNS server in $DNS_SERVER.
+		/bin/mv /etc/resolv.conf /tmp/resolv.conf.$$
+		for NS in $DNS_SERVER
+		do
+			echo "nameserver $NS" >> /etc/resolv.conf
+		done
+	fi
 }
 
 # Stopping everything
@@ -40,101 +177,26 @@ Stop() {
 }
 
 Start() {
-	# For wifi. Users just have to enable it through yes and usually
-	# essid any will work and interface is autodetected.
-	if [ "$WIFI" = "yes" ] || grep -q "wifi" /proc/cmdline; then
-		if [ ! -d /sys/class/net/$WIFI_INTERFACE/wireless ]; then
-			echo "$WIFI_INTERFACE is not a wifi interface, changing it."
-			WIFI_INTERFACE=$(grep : /proc/net/dev | cut -d: -f1 | \
-				while read dev; do iwconfig $dev 2>&1 | \
-					grep -iq "essid" && { echo $dev ; break; }; \
-				done)
-			[ -n "$WIFI_INTERFACE" ] && sed -i "s/^WIFI_INTERFACE=.*/WIFI_INTERFACE=\"$WIFI_INTERFACE\"/" /etc/network.conf
-		fi
-		[ -n "$WPA_DRIVER" ] || WPA_DRIVER="wext"
-		IWCONFIG_ARGS=""
-		[ -n "$WIFI_MODE" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS mode $WIFI_MODE"
-		[ -n "$WIFI_KEY" ] && case "$WIFI_KEY_TYPE" in
-			wep|WEP) IWCONFIG_ARGS="$IWCONFIG_ARGS key $WIFI_KEY";;
-			wpa|WPA) cat > /tmp/wpa.conf <<EOF
-ap_scan=1
-network={
-	ssid="$WIFI_ESSID"
-	scan_ssid=1
-	proto=WPA
-	key_mgmt=WPA-PSK
-	psk="$WIFI_KEY"
-	priority=5
-}
-EOF
-				echo "Starting wpa_supplicant for WPA-PSK"
-				wpa_supplicant -B -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE
-				;;
-			any|ANY) cat > /tmp/wpa.conf <<EOF
-ap_scan=1
-network={
-	ssid="$WIFI_ESSID"
-	scan_ssid=1
-	key_mgmt=WPA-EAP WPA-PSK IEEE8021X NONE
-	group=CCMP TKIP WEP104 WEP40
-	pairwise=CCMP TKIP
-	psk="$WIFI_KEY"
-	priority=5
-}
-EOF
-				echo "Starting wpa_supplicant for any key type"
-				wpa_supplicant -B -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE
-				;;
-		esac
-		rm -f /tmp/wpa.conf
-		[ -n "$WIFI_CHANNEL" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS channel $WIFI_CHANNEL"
-		echo -n "Configuring $WIFI_INTERFACE..."
-		ifconfig $WIFI_INTERFACE up
-		if iwconfig $WIFI_INTERFACE | grep -q "Tx-Power"; then
-			iwconfig $WIFI_INTERFACE txpower on
-		fi
-		iwconfig $WIFI_INTERFACE essid "$WIFI_ESSID" $IWCONFIG_ARGS
-		status
-		INTERFACE=$WIFI_INTERFACE
-	fi
-
-	# For a dynamic IP with DHCP.
-	if [ "$DHCP" = "yes" ] ; then
-		echo "Starting udhcpc client on: $INTERFACE... "
-		/sbin/udhcpc -b -T 1 -A 12 -i $INTERFACE -p /var/run/udhcpc.$INTERFACE.pid
-	fi
-
-	# For a static IP.
-	if [ "$STATIC" = "yes" ] ; then
-		echo "Configuring static IP on $INTERFACE: $IP... "
-		/sbin/ifconfig $INTERFACE $IP netmask $NETMASK up
-		/sbin/route add default gateway $GATEWAY
-		# Multi-DNS server in $DNS_SERVER.
-		/bin/mv /etc/resolv.conf /tmp/resolv.conf.$$
-		for NS in $DNS_SERVER
-		do
-			echo "nameserver $NS" >> /etc/resolv.conf
-		done
-	fi
+   eth
+   wifi
+   dhcp 
+   static_ip	
 }
 
 
-# Looking for arguments:
+# looking for arguments:
 if [ -z "$1" ]; then
 	Boot
 	Start
 else
 	case $1 in
 		start)
-			Start
-		;;
+			Start ;;
 		stop)
-			Stop
-		;;
+			Stop ;;
 		restart)
 			Stop
-			Start
-		;;
+			Start ;;
 		*)
 			echo ""
 			echo -e "\033[1mUsage:\033[0m /etc/init.d/`basename $0` [start|stop|restart]"
