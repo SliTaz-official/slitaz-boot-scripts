@@ -13,12 +13,12 @@ fi
 
 Boot() {
 	# Set hostname.
-	echo -n "Setting hostname... "
+	echo -n "Setting hostname..."
 	/bin/hostname -F /etc/hostname
 	status
 
 	# Configure loopback interface.
-	echo -n "Configuring loopback... "
+	echo -n "Configuring loopback..."
 	/sbin/ifconfig lo 127.0.0.1 up
 	/sbin/route add 127.0.0.1 lo
 	status	
@@ -26,13 +26,13 @@ Boot() {
 
 
 eth() {
-#  use ethernet
+#  Use ethernet
 	   	ifconfig $INTERFACE up	
 }
 
 wifi() {
-		# For wifi. Users just have to enable it throught yes and usually
-	# essid any will work and interface is autodetected.
+	# For wifi. Users just have to enable it through yes and usually
+	# essid any will work and the interface is autodetected.
 	if [ "$WIFI" = "yes" ] || grep -q "wifi" /proc/cmdline; then
 	    ifconfig $INTERFACE down
 		
@@ -46,7 +46,7 @@ wifi() {
 			[ -n "$WIFI_INTERFACE" ] && sed -i "s/^WIFI_INTERFACE=.*/WIFI_INTERFACE=\"$WIFI_INTERFACE\"/" /etc/network.conf
 		fi
 		
-		echo -n "configuring $WIFI_INTERFACE..."
+		echo -n "Configuring $WIFI_INTERFACE..."
 		ifconfig $WIFI_INTERFACE up
 		if iwconfig $WIFI_INTERFACE | grep -q "Tx-Power"; then
 			iwconfig $WIFI_INTERFACE txpower on
@@ -65,7 +65,7 @@ wifi() {
 			     IWCONFIG_ARGS="$IWCONFIG_ARGS key $WIFI_KEY"
 				 iwconfig $WIFI_INTERFACE essid "$WIFI_ESSID" $IWCONFIG_ARGS
 # wpa_supplicant can also deal with wep encryption but iwconfig is preferred
-# Tip:Use unquoted strings for hexadecimal key in wep_key0
+# Tip: Use unquoted strings for hexadecimal key in wep_key0
 #			cat /etc/wpa_supplicant.conf > /tmp/wpa.conf 
 #			cat >> /tmp/wpa.conf <<EOF
 #ctrl_interface=/var/run/wpa_supplicant
@@ -95,7 +95,7 @@ network={
 	priority=5
 }
 EOF
-				echo "starting wpa_supplicant, for WPA-PSK"
+				echo "Starting wpa_supplicant for WPA-PSK..."
 				wpa_supplicant -B -W -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE 
 				;;
 			any|ANY) cat /etc/wpa_supplicant.conf > /tmp/wpa.conf 
@@ -113,7 +113,7 @@ network={
 	priority=5
 }
 EOF
-				echo "starting wpa_supplicant for any key type"
+				echo "Starting wpa_supplicant for any key type..."
 				wpa_supplicant -B -W -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE 
 				;;
 		esac
@@ -135,7 +135,7 @@ dhcp() {
 
 # For a dynamic IP with DHCP. 
 	if [ "$DHCP" = "yes" ]  ; then
-		echo "Starting udhcpc client on: $INTERFACE... "		
+		echo "Starting udhcpc client on: $INTERFACE..."		
 		if [ -d /var/run/wpa_supplicant ]; then # wpa wireless && wpa_ctrl_open interface is up
 		   wpa		  
 		else  # fallback on udhcpc: wep, eth
@@ -148,7 +148,7 @@ dhcp() {
 static_ip() {
 # For a static IP.
 	if [ "$STATIC" = "yes" ] ; then
-		echo "Configuring static IP on $INTERFACE: $IP... "
+		echo "Configuring static IP on $INTERFACE: $IP..."
 		/sbin/ifconfig $INTERFACE $IP netmask $NETMASK up
 		/sbin/route add default gateway $GATEWAY
 		# Multi-DNS server in $DNS_SERVER.
@@ -202,7 +202,7 @@ else
 			echo -e "\033[1mUsage:\033[0m /etc/init.d/`basename $0` [start|stop|restart]"
 			echo ""
 			echo -e "	Default configuration file is \033[1m/etc/network.conf\033[0m"
-			echo -e "	You can specify another configuration file in second argument:"
+			echo -e "	You can specify another configuration file in the second argument:"
 			echo -e "	\033[1mUsage:\033[0m /etc/init.d/`basename $0` [start|stop|restart] file.conf"
 			echo ""
 
