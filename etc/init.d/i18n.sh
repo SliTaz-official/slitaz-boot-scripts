@@ -67,11 +67,11 @@ if grep -q "fr_*" /etc/locale.conf; then
 		cat > /etc/motd << "EOF"
 
 
-  (°-  { Documentation dans /usr/share/doc. Utiliser 'less -EM' pour,
-  //\    lire des fichiers, devenir root avec 'su' et éditer avec 'nano'.
+  (Â°-  { Documentation dans /usr/share/doc. Utiliser 'less -EM' pour,
+  //\    lire des fichiers, devenir root avec 'su' et Ã©diter avec 'nano'.
   v_/_   Taper 'startx' pour lancer une session X. }
 
-  SliTaz GNU/Linux est distribuée dans l'espoir qu'elle sera utile, mais
+  SliTaz GNU/Linux est distribuÃ©e dans l'espoir qu'elle sera utile, mais
   alors SANS AUCUNE GARANTIE.
 
 
@@ -81,7 +81,7 @@ EOF
 		cat > /etc/motd << "EOF"
 
 
-  (°-  { Documentation in /usr/share/doc. Use 'less -EM' to read files,
+  (Â°-  { Documentation in /usr/share/doc. Use 'less -EM' to read files,
   //\    become root with 'su' and edit using 'nano'.
   v_/_   Type 'startx' to start a X window session. }
 
