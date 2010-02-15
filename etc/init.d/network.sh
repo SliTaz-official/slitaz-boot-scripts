@@ -89,7 +89,7 @@ ap_scan=1
 network={
 	ssid="$WIFI_ESSID"
 	scan_ssid=1
-	proto=WPA
+	proto=WPA RSN
 	key_mgmt=WPA-PSK
 	psk="$WIFI_KEY"
 	priority=5
@@ -151,6 +151,8 @@ static_ip() {
 		echo "Configuring static IP on $INTERFACE: $IP..."
 		/sbin/ifconfig $INTERFACE $IP netmask $NETMASK up
 		/sbin/route add default gateway $GATEWAY
+		# Dirty trick: wpa_supplicant waits for wpa_cli
+		wpa_cli -B
 		# Multi-DNS server in $DNS_SERVER.
 		/bin/mv /etc/resolv.conf /tmp/resolv.conf.$$
 		for NS in $DNS_SERVER
