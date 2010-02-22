@@ -27,13 +27,13 @@ for opt in `cat /proc/cmdline`
 do
 	case $opt in
 		fastbootx|fbx)
-			FAST_BOOT_X="yes" ;;
+			export FAST_BOOT_X="yes" ;;
 		cdrom=*)
-			CDROM=${opt#cdrom=} ;;
+			export CDROM=${opt#cdrom=} ;;
 		modprobe=*)
-			MODPROBE="yes" ;;
+			export MODPROBE="yes" ;;
 		config=*)
-			CONFIG=${opt#config=} ;;
+			export CONFIG=${opt#config=} ;;
 		*)
 			continue ;;
 	esac
