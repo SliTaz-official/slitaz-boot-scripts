@@ -12,6 +12,7 @@ status()
 		echo -en "\\033[1;31mFailed"
 	fi
 	echo -e "\\033[0;39m ]"
+	return $?
 }
 
 # Another way to sleep.
