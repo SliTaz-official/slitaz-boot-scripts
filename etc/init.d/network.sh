@@ -60,6 +60,10 @@ wifi() {
 		[ -n "$WIFI_MODE" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS mode $WIFI_MODE"
 		[ -n "$WIFI_CHANNEL" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS channel $WIFI_CHANNEL"
 		
+		if [ "$WIFI_KEY_TYPE" == "" ]; then
+			iwconfig $WIFI_INTERFACE essid "$WIFI_ESSID" $IWCONFIG_ARGS
+		fi
+		
 		[ -n "$WIFI_KEY" ] && case "$WIFI_KEY_TYPE" in
 			wep|WEP) 
 			     IWCONFIG_ARGS="$IWCONFIG_ARGS key $WIFI_KEY"
