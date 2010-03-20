@@ -33,8 +33,9 @@ if ! grep -q "100[0-9]:100[0-9]" /etc/passwd; then
 	echo "$USER:x:1000:" >> /etc/group
 	echo "$USER:!::" >> /etc/gshadow
 	status
-	# Audio group.
-	sed -i s/"audio:x:20:"/"audio:x:20:$USER"/ /etc/group
+	# Audio and cdrom group.
+	addgroup $USER audio
+	addgroup $USER cdrom
 	# /home/$USER files from /etc/skel.
 	if [ -d /etc/skel ]; then
 		cp -a /etc/skel /home/$USER
