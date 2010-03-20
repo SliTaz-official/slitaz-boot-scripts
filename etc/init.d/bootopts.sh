@@ -74,7 +74,8 @@ do
 			echo -n "Setting system locale to: $LANG... "
 			echo "LANG=$LANG" > /etc/locale.conf
 			echo "LC_ALL=$LANG" >> /etc/locale.conf
-			status ;;
+			status
+			localedef -i $LANG -c -f UTF-8 /usr/lib/locale/$LANG &;
 		kmap=*)
 			# Check for a specified keymap (kmap=*).
 			KEYMAP=${opt#kmap=}
