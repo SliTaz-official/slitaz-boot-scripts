@@ -103,7 +103,7 @@ do
 			fi
 			if [ -n "$DEVID" ] && grep -q "$DEVID" /proc/partitions ; then
 				echo "Mounting /home on /dev/$DEVID... "
-				mv /home/$USER /tmp/$USER-files
+				[ -d /home/$USER ] && mv /home/$USER /tmp/$USER-files
 				mount /dev/$DEVID /home -o uid=1000,gid=1000 2>/dev/null \
 					|| mount /dev/$DEVID /home
 				# Check if swap file must be generated in /home: swap=size (Mb).
