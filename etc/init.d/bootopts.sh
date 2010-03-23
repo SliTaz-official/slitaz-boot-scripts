@@ -76,6 +76,7 @@ do
 			echo "LC_ALL=$LANG" >> /etc/locale.conf
 			[ ! -d /usr/lib/locale/$LANG ] && localedef \
 				-i $LANG -c -f UTF-8 /usr/lib/locale/$LANG &
+			tazlocale link-files
 			status ;;
 		kmap=*)
 			# Check for a specified keymap (kmap=*).
