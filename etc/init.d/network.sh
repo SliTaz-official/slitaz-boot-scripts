@@ -59,11 +59,12 @@ wifi() {
 		IWCONFIG_ARGS=""
 		[ -n "$WIFI_MODE" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS mode $WIFI_MODE"
 		[ -n "$WIFI_CHANNEL" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS channel $WIFI_CHANNEL"
-		
-		if [ "$WIFI_KEY_TYPE" == "" ]; then
+		# unencrypted network
+		if [ "$WIFI_KEY" == "" -o "$WIFI_KEY_TYPE" == "none" ]; 
+then
 			iwconfig $WIFI_INTERFACE essid "$WIFI_ESSID" $IWCONFIG_ARGS
 		fi
-		
+		# encrypted network
 		[ -n "$WIFI_KEY" ] && case "$WIFI_KEY_TYPE" in
 			wep|WEP) 
 			     IWCONFIG_ARGS="$IWCONFIG_ARGS key $WIFI_KEY"
@@ -84,6 +85,8 @@ wifi() {
 #	priority=5
 #}
 #EOF
+#				echo "Starting wpa_supplicant for NONE/WEP..."
+#				wpa_supplicant -B -W -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE 
 				    ;;
 			wpa|WPA) cat /etc/wpa_supplicant.conf > /tmp/wpa.conf # load pre-configured multiple profiles 
 			cat >> /tmp/wpa.conf <<EOF
@@ -124,7 +127,8 @@ EOF
 		
 		rm -f /tmp/wpa.conf
 		
-		INTERFACE=$WIFI_INTERFACE			
+		INTERFACE=$WIFI_INTERFACE	
+		 		
 	fi
 
 }
@@ -155,8 +159,8 @@ static_ip() {
 		echo "Configuring static IP on $INTERFACE: $IP..."
 		/sbin/ifconfig $INTERFACE $IP netmask $NETMASK up
 		/sbin/route add default gateway $GATEWAY
-		# Dirty trick: wpa_supplicant waits for wpa_cli
-		wpa_cli -B
+		# wpa_supplicant waits for wpa_cli
+		[ -d /var/run/wpa_supplicant ] && wpa_cli -B
 		# Multi-DNS server in $DNS_SERVER.
 		/bin/mv /etc/resolv.conf /tmp/resolv.conf.$$
 		for NS in $DNS_SERVER
@@ -186,7 +190,9 @@ Start() {
    eth
    wifi
    dhcp 
-   static_ip	
+   static_ip
+   # change default lxpanel panel iface
+	sed -i "s/iface=.*/iface=$INTERFACE/" /etc/lxpanel/default/panels/panel	
 }
 
 
