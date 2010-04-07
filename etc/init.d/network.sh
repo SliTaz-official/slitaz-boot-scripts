@@ -192,7 +192,8 @@ Start() {
    dhcp 
    static_ip
    # change default lxpanel panel iface
-	sed -i "s/iface=.*/iface=$INTERFACE/" /etc/lxpanel/default/panels/panel	
+   [ -f /etc/lxpanel/default/panels/panel ] \
+		&& sed -i "s/iface=.*/iface=$INTERFACE/" /etc/lxpanel/default/panels/panel	
 }
 
 
