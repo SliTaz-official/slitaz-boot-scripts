@@ -76,8 +76,6 @@ if [ ! -s /etc/X11/xorg.conf -a -x /usr/bin/Xorg ]; then
 	echo "Configuring Xorg..."
 	# $HOME is not yet set.
 	HOME=/root
-	Xorg -configure
-	mv -f /root/xorg.conf.new /etc/X11/xorg.conf
 	sed -i 's|/usr/bin/Xvesa|/usr/bin/Xorg|' /etc/slim.conf
 	sed -i s/"^xserver_arguments"/'\#xserver_arguments'/ /etc/slim.conf
 	tazx config-xorg
@@ -86,7 +84,7 @@ fi
 # Screen size config for slim/Xvesa (last config dialog before login).
 #
 # NOTE: Xvesa is unmaintained, package will be removed and all related
-# code cleaned 
+# code cleaned
 #
 if [ ! -s /etc/X11/screen.conf -a -x /usr/bin/Xvesa ]; then
 	# $HOME is not yet set.
