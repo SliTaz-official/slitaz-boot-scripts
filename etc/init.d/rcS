@@ -75,7 +75,7 @@ echo "Mounting filesystems in fstab..."
 
 # Store boot messages to log files.
 /bin/dmesg > /var/log/dmesg.log &
-conspy -d 1 | sed -e 's/ *$//' -e '/^$/d' -e '/^Processing\|^.witching/,$!d' >/var/log/boot.log
+conspy -d | sed 's/ *$//;/^$/d;/^Processi\|^.witchi/,$!d' > /var/log/boot.log
 script -a -q -c '/etc/init.d/rcS logged' /var/log/boot.log
 
 else # logged

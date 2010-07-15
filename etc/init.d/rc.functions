@@ -40,3 +40,6 @@ active_pidfile()
 		return 2
 	fi
 }
+
+# Set TZ
+[ -s /etc/TZ ] && export TZ="$(cat /etc/TZ)"
