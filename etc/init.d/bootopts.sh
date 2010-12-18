@@ -136,6 +136,11 @@ do
 				do
 					tazpkg install $pkg
 				done
+			fi
+			# We can have custom files in /home/boot/rootfs to overwrite
+			# the one packed into the Live system.
+			if [ -d "/home/boot/rootfs" ]; then
+				cp -a /home/boot/rootfs/* /
 			fi ;;
 		laptop)
 			# Laptop option to load related Kernel modules.
