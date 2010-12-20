@@ -144,7 +144,7 @@ dhcp() {
 # For a dynamic IP with DHCP. 
 	if [ "$DHCP" = "yes" ]  ; then
 		echo "Starting udhcpc client on: $INTERFACE..."		
-		if [ -d /var/run/wpa_supplicant ]; then # wpa wireless && wpa_ctrl_open interface is up
+		if [ -d /var/run/wpa_supplicant ] && [ "$WIFI" = "yes" ]; then # wpa wireless && wpa_ctrl_open interface is up
 		   wpa		  
 		else  # fallback on udhcpc: wep, eth
 		   /sbin/udhcpc -b -T 1 -A 12 -i $INTERFACE -p /var/run/udhcpc.$INTERFACE.pid
