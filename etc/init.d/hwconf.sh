@@ -16,6 +16,7 @@ do
 		xarg=*)
 			XARG="$XARG ${opt#xarg=}" ;;
 		screen=text)
+				SCREEN=text
 				# Disable X.
 				echo -n "Disabling X login manager: slim..."
 				. /etc/rcS.conf
@@ -72,7 +73,7 @@ else
 fi
 
 # Xorg auto configuration.
-if [ ! -s /etc/X11/xorg.conf -a -x /usr/bin/Xorg ]; then
+if [ "$SCREEN" != "text" -a ! -s /etc/X11/xorg.conf -a -x /usr/bin/Xorg ]; then
 	echo "Configuring Xorg..."
 	# $HOME is not yet set.
 	HOME=/root
@@ -86,7 +87,7 @@ fi
 # NOTE: Xvesa is unmaintained, package will be removed and all related
 # code cleaned
 #
-if [ ! -s /etc/X11/screen.conf -a -x /usr/bin/Xvesa ]; then
+if [ "$SCREEN" != "text" -a ! -s /etc/X11/screen.conf -a -x /usr/bin/Xvesa ]; then
 	# $HOME is not yet set.
 	HOME=/root
 	if [ -n "$XARG" ]; then
