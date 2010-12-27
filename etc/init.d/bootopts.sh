@@ -36,6 +36,7 @@ if ! grep -q "100[0-9]:100[0-9]" /etc/passwd; then
 	# Audio and cdrom group.
 	addgroup $USER audio
 	addgroup $USER cdrom
+	addgroup $USER video
 	# /home/$USER files from /etc/skel.
 	if [ -d /etc/skel ]; then
 		cp -a /etc/skel /home/$USER
