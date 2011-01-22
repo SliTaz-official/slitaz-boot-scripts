@@ -49,7 +49,7 @@ if ! grep -q "100[0-9]:100[0-9]" /etc/passwd; then
 		mkdir -p /home/$USER
 	fi
 	# Set permissions.
-	chown -R $USER.$USER /home/$USER
+	chown -R $USER.users /home/$USER
 	# Slim default user.
 	if [ -f /etc/slim.conf ]; then
 		sed -i s/"default_user .*"/"default_user        $USER"/\
@@ -125,7 +125,7 @@ do
 			# Move all user dir if needed.
 			if [ ! -d "/home/$USER" ] ; then
 				mv /tmp/$USER-files /home/$USER
-				chown -R $USER.$USER /home/$USER
+				chown -R $USER.users /home/$USER
 			else
 				rm -rf /tmp/$USER-files
 			fi
