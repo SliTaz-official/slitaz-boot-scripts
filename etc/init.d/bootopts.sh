@@ -93,7 +93,7 @@ do
 			[ "$DEVICE" = "usb" ] && DEVICE=sda1
 			echo "Home has been specified to $DEVICE..."
 			USBDELAY=`cat /sys/module/usb_storage/parameters/delay_use`
-			USBDELAY=$((1+$USBDELAY))
+			USBDELAY=$((2+$USBDELAY))
 			echo "Sleeping $USBDELAY s to let the kernel detect the device... "
 			sleep $USBDELAY
 			USER=`cat /etc/passwd | grep 1000 | cut -d ":" -f 1`
