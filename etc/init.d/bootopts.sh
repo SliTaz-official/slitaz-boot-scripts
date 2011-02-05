@@ -92,17 +92,20 @@ do
 			DEVICE=${opt#home=}
 			[ "$DEVICE" = "usb" ] && DEVICE=sda1
 			echo "Home has been specified to $DEVICE..."
-			USBDELAY=`cat /sys/module/usb_storage/parameters/delay_use`
-			USBDELAY=$((2+$USBDELAY))
-			echo "Sleeping $USBDELAY s to let the kernel detect the device... "
-			sleep $USBDELAY
+			DEVID=`/sbin/blkid | sed 'p;s/"//g' | grep "$DEVICE" | sed 's/:.*//;q'`
+			if [ -z "$DEVID" ]; then
+				USBDELAY=`cat /sys/module/usb_storage/parameters/delay_use`
+				USBDELAY=$((2+$USBDELAY))
+				echo "Sleeping $USBDELAY s to let the kernel detect the device... "
+				sleep $USBDELAY
+			fi
 			USER=`cat /etc/passwd | sed '/:1000:/!d;s/:.*//;q'`
 			DEVID=$DEVICE
 			if [ -x /sbin/blkid ]; then
 				# Can be a label, uuid, type or devname. DEVID gives us first: /dev/name.
 				DEVID=`/sbin/blkid | sed 'p;s/"//g' | grep "$DEVICE" | sed 's/:.*//;q'`
-				DEVID=${DEVID##*/}
 			fi
+			DEVID=${DEVID##*/}
 			if [ -n "$DEVID" ] && grep -q "$DEVID" /proc/partitions ; then
 				echo "Mounting /home on /dev/$DEVID... "
 				[ -d /home/$USER ] && mv /home/$USER /tmp/$USER-files
