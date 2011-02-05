@@ -96,11 +96,11 @@ do
 			USBDELAY=$((2+$USBDELAY))
 			echo "Sleeping $USBDELAY s to let the kernel detect the device... "
 			sleep $USBDELAY
-			USER=`cat /etc/passwd | grep 1000 | cut -d ":" -f 1`
+			USER=`cat /etc/passwd | sed '/:1000:/!d;s/:.*//;q'`
 			DEVID=$DEVICE
 			if [ -x /sbin/blkid ]; then
-				# Can be a label, uuid or devname. DEVID gives us first: /dev/name.
-				DEVID=`/sbin/blkid | grep $DEVICE | cut -d: -f1`
+				# Can be a label, uuid, type or devname. DEVID gives us first: /dev/name.
+				DEVID=`/sbin/blkid | sed 'p;s/"//g' | grep "$DEVICE" | sed 's/:.*//;q'`
 				DEVID=${DEVID##*/}
 			fi
 			if [ -n "$DEVID" ] && grep -q "$DEVID" /proc/partitions ; then
@@ -111,7 +111,7 @@ do
 				# Check if swap file must be generated in /home: swap=size (Mb).
 				# This option is only used within home=device.
 				if grep -q "swap=[1-9]*" /proc/cmdline; then
-					SWAP_SIZE=`cat /proc/cmdline | sed 's/.*swap=\([^ ]*\).*/\1/'`
+					SWAP_SIZE=`sed 's/.*swap=\([^ ]*\).*/\1/' < /proc/cmdline`
 					# DD to gen a virtual disk.
 					echo "Generating swap file: /home/swap ($SWAP_SIZE)..."
 					dd if=/dev/zero of=/home/swap bs=1M count=$SWAP_SIZE
@@ -158,7 +158,7 @@ do
 		mount)
 			# Mount all ext3 partitions found (opt: mount).
 			# Get the list of partitions.
-			DEVICES_LIST=`fdisk -l | grep 83 | cut -d " " -f 1`
+			DEVICES_LIST=`fdisk -l | sed '/83 Linux/!d;s/ .*//'`
 			# Mount filesystems rw.
 			for device in $DEVICES_LIST
 			do
@@ -208,7 +208,7 @@ fi
 
 # Activate an eventual swap file or partition.
 if [ "`fdisk -l | grep swap`" ]; then
-	for SWAP_DEV in `fdisk -l | grep swap | awk '{ print $1 }'`; do
+	for SWAP_DEV in `fdisk -l | sed '/swap/!d;s/ .*//'`; do
 		echo "Swap memory detected on: $SWAP_DEV"
 		add_swap_in_fstab $SWAP_DEV
 	done
