@@ -5,57 +5,34 @@
 . /etc/init.d/rc.functions
 . /etc/rcS.conf
 
-clear && sleep 1
-
 # Bold info message with uptime
-echo ""
-echo -e "
-================================================================================
+clear && echo -e "\n
 
-    \033[1mSystem is going down for reboot or halt.\033[0m
+	\033[1mSystem is going down for reboot or halt.\033[0m
 
-    Uptime:`uptime`
-
-================================================================================"
-echo ""
+    Uptime:`uptime`\n"
 
 # Store last alsa settings.
 if [ -x /usr/sbin/alsactl ]; then
-	echo -n "Storing alsa sound settings..."
 	alsactl store
-	status
 fi
 
 # Stop all daemons started at boot time.
-echo "Stopping all daemons started at boot time..."
 for daemon in $RUN_DAEMONS
 do
 	if [ -x /etc/init.d/$daemon ]; then
-		/etc/init.d/$daemon stop
+		/etc/init.d/$daemon stop > /dev/null
 	fi
 done
 
 # Sync all filesystems.
-echo -n "Syncing all filesystems... "
 sync
-status && sleep 1
 
 # Swap off.
-echo -n "Disabling swap space... "
 /sbin/swapoff -a
-status
 
 # Kill all processes.
-echo "Killing all processes..."
 killall5
 
 # Umount filesystems.
-echo -n "Remounting rootfs read only..."
-mount -o remount,ro /
-status
-echo "Unmounting all filesystems... "
-/bin/umount -a -r
-
-echo ""
-usleep_progress
-echo ""
+/bin/umount -a -r 2>/dev/null
