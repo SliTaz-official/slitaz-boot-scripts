@@ -42,16 +42,18 @@ status
 
 # Start Udev to populate /dev and handle hotplug events
 if [ "$UDEV" = "yes" ]; then
-	echo -n "Starting udev daemon..."
-	/sbin/udevd --daemon
-	status
-	echo -n "Udevadm requesting events from the Kernel..."
-	udevadm trigger
-	status
-	echo -n "Udevadm waiting for the event queue to finish..."
-	udevadm settle
-	status
+	#echo -n "Starting udev daemon..."
+	#/sbin/udevd --daemon
+	#status
+	#echo -n "Udevadm requesting events from the Kernel..."
+	#udevadm trigger
+	#status
+	#echo -n "Udevadm waiting for the event queue to finish..."
+	#udevadm settle
+	#status
+	echo -n "Using udev daemon for hotplug..."
 	echo "/sbin/udevd" > /proc/sys/kernel/hotplug
+	status
 fi
 
 # Before mounting filesystems we check fs specified in the file
