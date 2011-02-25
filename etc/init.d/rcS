@@ -11,6 +11,15 @@
 # Boot time.
 bootdate=`date +%s`
 
+# Graphical boot start.
+if [ "$FBSPLASH" == "yes" ]; then
+	reset && fbsplash -c \
+		-s /etc/fbsplash/$FBSPLASH_THEME/fbsplash.ppm \
+		-i /etc/fbsplash/$FBSPLASH_THEME/fbsplash.cfg \
+		-f /etc/fbsplash/fifo &
+	echo "0" > /etc/fbsplash/fifo
+fi
+
 if [ "$1" != "logged" ]; then # logged
 
 echo "Processing /etc/init.d/rcS..."
@@ -19,6 +28,8 @@ echo "Processing /etc/init.d/rcS..."
 echo -n "Mounting proc filesystem..."
 /bin/mount proc
 status
+
+[ "$FBSPLASH" == "yes" ] && echo "10" > /etc/fbsplash/fifo
 
 # Parse cmdline args for earlier boot options. All other boot options
 # are in /etc/init./bootopts.sh.
@@ -40,12 +51,14 @@ do
 done
 status
 
+[ "$FBSPLASH" == "yes" ] && echo "20" > /etc/fbsplash/fifo
+
 # Trigger Udev and handle hotplug events
 if [ "$UDEV" = "yes" ]; then
 	echo -n "Udevadm requesting events from the Kernel..."
 	udevadm trigger
 	status
-	echo -n "Using udev daemon for hotplugging..."
+	echo -n "Using Udev for hotplugging..."
 	echo "/sbin/udevd" > /proc/sys/kernel/hotplug
 	status
 fi
@@ -64,6 +77,8 @@ fi
 # Remount rootfs rw.
 echo "Remounting rootfs read/write..."
 /bin/mount -o remount,rw /
+
+[ "$FBSPLASH" == "yes" ] && echo "30" > /etc/fbsplash/fifo
 
 # Mount filesystems in /etc/fstab.
 echo "Mounting filesystems in fstab..."
@@ -88,6 +103,8 @@ else
 	echo -n "Keeping all tmp and pid files..."
 	status
 fi
+
+[ "$FBSPLASH" == "yes" ] && echo "40" > /etc/fbsplash/fifo
 
 # Set up tmp X11 and ICE dir.
 echo -n "Setting up tmp X11 and ICE unix dir..."
@@ -135,6 +152,8 @@ if [ -n "$DRIVE_NAME" -a "`readlink /dev/cdrom`" ]; then
 	status
 fi
 
+[ "$FBSPLASH" == "yes" ] && echo "50" > /etc/fbsplash/fifo
+
 # Handle kernel cmdline parameter modprobe=<module_list> 
 if [ -n "$MODPROBE" ]; then
 	MODULES=`sed -e 's/.* modprobe=\([^ ]*\).*/\1/' -e 's/,/\n/g' < /proc/cmdline`
@@ -177,6 +196,8 @@ if [ -d /proc/bus/usb ]; then
 	status
 fi
 
+[ "$FBSPLASH" == "yes" ] && echo "60" > /etc/fbsplash/fifo
+
 # Start syslogd and klogd.
 if [ "$KERNEL_LOG_DAEMONS" = "yes" ]; then
 	echo -n "Starting system log deamon: syslogd..."
@@ -197,6 +218,8 @@ fi
 
 # Be quiet on configuration to avoid messages overwriting ncurses dialog
 echo "0 0 0 0" > /proc/sys/kernel/printk
+
+[ "$FBSPLASH" == "yes" ] && echo "70" > /etc/fbsplash/fifo
 
 # Detect PCI and USB devices with Tazhw from slitaz-tools. We load
 # kernel modules only at first boot or in LiveCD mode.
@@ -221,6 +244,8 @@ do
 	fi
 done
 
+[ "$FBSPLASH" == "yes" ] && echo "80" > /etc/fbsplash/fifo
+
 # Re-source main config file. In Live mode, daemons list can be modified 
 # by boot options (screen=text will remove slim).
 . /etc/rcS.conf
@@ -234,6 +259,8 @@ do
 	fi
 done
 
+[ "$FBSPLASH" == "yes" ] && echo "90" > /etc/fbsplash/fifo
+
 # Back to a verbose mode.
 echo "7 4 1 7" > /proc/sys/kernel/printk
 
@@ -243,9 +270,12 @@ if [ -n "$MESSAGE" ]; then
 	echo -e "\033[1m$MESSAGE\033[0m"
 fi
 
+[ "$FBSPLASH" == "yes" ] && echo "100" > /etc/fbsplash/fifo
+
 # Display and log boot time.
 time=$((`date +%s` - $bootdate))
 echo $time > /var/log/boot-time
 echo "SliTaz boot time: ${time}s"
+[ "$FBSPLASH" == "yes" ] && echo "exit" > /etc/fbsplash/fifo
 
 fi # logged
