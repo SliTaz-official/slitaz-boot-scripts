@@ -28,18 +28,15 @@ if ! grep -q "100[0-9]:100[0-9]" /etc/passwd; then
 		USER=tux
 	fi
 	echo -n "Configuring user and group: $USER..."
-	echo "$USER:x:1000:1000:SliTaz User,,,:/home/$USER:/bin/sh" >> /etc/passwd
-	echo "$USER::14035:0:99999:7:::" >> /etc/shadow
-	echo "$USER:x:1000:" >> /etc/group
-	echo "$USER:!::" >> /etc/gshadow
+	adduser -D -s /bin/sh -g "SliTaz User" -G users -h /home/$USER $USER
 	status
 	# Audio and cdrom group.
 	addgroup $USER audio
 	addgroup $USER cdrom
 	addgroup $USER video
+	addgroup $USER tty
 	# /home/$USER files from /etc/skel.
-	if [ -d /etc/skel ]; then
-		cp -a /etc/skel /home/$USER
+	if [ -d /home/$USER ]; then
 		# Path for user desktop files.
 		for i in /home/$USER/.local/share/applications/*.desktop
 		do
@@ -48,8 +45,8 @@ if ! grep -q "100[0-9]:100[0-9]" /etc/passwd; then
 	else
 		mkdir -p /home/$USER
 	fi
-	# Set permissions.
-	chown -R $USER.users /home/$USER
+	# make user be only read/write by user
+	chmod -R 700 /home/$USER
 	# Slim default user.
 	if [ -f /etc/slim.conf ]; then
 		sed -i s/"default_user .*"/"default_user        $USER"/\
