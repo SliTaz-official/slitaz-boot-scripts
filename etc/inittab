@@ -11,7 +11,7 @@ tty4::respawn:/sbin/getty 38400 tty4
 tty5::respawn:/sbin/getty 38400 tty5
 tty6::respawn:/sbin/getty 38400 tty6
 
-# Stuff to do when restarting the init 
+# Stuff to do when restarting the init
 # process, or before rebooting.
 ::restart:/etc/init.d/rc.shutdown
 ::restart:/sbin/init
