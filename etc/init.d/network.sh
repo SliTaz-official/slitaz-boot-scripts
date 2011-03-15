@@ -97,7 +97,7 @@ network={
 	ssid="$WIFI_ESSID"
 	scan_ssid=1
 	proto=WPA RSN
-	key_mgmt=WPA-PSK
+	key_mgmt=WPA-PSK WPA-EAP
 	psk="$WIFI_KEY"
 	priority=5
 }
