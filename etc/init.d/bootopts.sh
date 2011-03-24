@@ -29,6 +29,7 @@ if ! grep -q "100[0-9]:100[0-9]" /etc/passwd; then
 	fi
 	echo -n "Configuring user and group: $USER..."
 	adduser -D -s /bin/sh -g "SliTaz User" -G users -h /home/$USER $USER
+	passwd -d $USER >/dev/null
 	status
 	# Audio and cdrom group.
 	addgroup $USER audio
