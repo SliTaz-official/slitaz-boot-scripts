@@ -5,9 +5,9 @@
 . /etc/init.d/rc.functions
 
 if [ -z "$2" ]; then
-	. /etc/network.conf 
+	. /etc/network.conf
 else
-	. $2 
+	. $2
 fi
 
 
@@ -21,13 +21,13 @@ Boot() {
 	echo -n "Configuring loopback..."
 	/sbin/ifconfig lo 127.0.0.1 up
 	/sbin/route add 127.0.0.1 lo
-	status	
+	status
 }
 
 
 eth() {
 #  Use ethernet
-	   	ifconfig $INTERFACE up	
+	   	ifconfig $INTERFACE up
 }
 
 wifi() {
@@ -35,7 +35,7 @@ wifi() {
 	# essid any will work and the interface is autodetected.
 	if [ "$WIFI" = "yes" ] || grep -q "wifi" /proc/cmdline; then
 	    ifconfig $INTERFACE down
-		
+
 		# Confirm if $WIFI_INTERFACE is the wifi interface
 		if [ ! -d /sys/class/net/$WIFI_INTERFACE/wireless ]; then
 			echo "$WIFI_INTERFACE is not a wifi interface, changing it."
@@ -45,33 +45,33 @@ wifi() {
 				done)
 			[ -n "$WIFI_INTERFACE" ] && sed -i "s/^WIFI_INTERFACE=.*/WIFI_INTERFACE=\"$WIFI_INTERFACE\"/" /etc/network.conf
 		fi
-		
+
 		echo -n "Configuring $WIFI_INTERFACE..."
 		ifconfig $WIFI_INTERFACE up
 		if iwconfig $WIFI_INTERFACE | grep -q "Tx-Power"; then
 			iwconfig $WIFI_INTERFACE txpower on
 		fi
 		status
-		
+
 		[ -n "$WPA_DRIVER" ] || WPA_DRIVER="wext"
-		
-		
+
+
 		IWCONFIG_ARGS=""
 		[ -n "$WIFI_MODE" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS mode $WIFI_MODE"
 		[ -n "$WIFI_CHANNEL" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS channel $WIFI_CHANNEL"
 		# unencrypted network
-		if [ "$WIFI_KEY" == "" -o "$WIFI_KEY_TYPE" == "none" ]; 
+		if [ "$WIFI_KEY" == "" -o "$WIFI_KEY_TYPE" == "none" ];
 then
 			iwconfig $WIFI_INTERFACE essid "$WIFI_ESSID" $IWCONFIG_ARGS
 		fi
 		# encrypted network
 		[ -n "$WIFI_KEY" ] && case "$WIFI_KEY_TYPE" in
-			wep|WEP) 
+			wep|WEP)
 			     IWCONFIG_ARGS="$IWCONFIG_ARGS key $WIFI_KEY"
 				 iwconfig $WIFI_INTERFACE essid "$WIFI_ESSID" $IWCONFIG_ARGS
 # wpa_supplicant can also deal with wep encryption but iwconfig is preferred
 # Tip: Use unquoted strings for hexadecimal key in wep_key0
-#			cat /etc/wpa_supplicant.conf > /tmp/wpa.conf 
+#			cat /etc/wpa_supplicant.conf > /tmp/wpa.conf
 #			cat >> /tmp/wpa.conf <<EOF
 #ctrl_interface=/var/run/wpa_supplicant
 #ctrl_interface_group=0
@@ -86,9 +86,9 @@ then
 #}
 #EOF
 #				echo "Starting wpa_supplicant for NONE/WEP..."
-#				wpa_supplicant -B -W -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE 
+#				wpa_supplicant -B -W -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE
 				    ;;
-			wpa|WPA) cat /etc/wpa_supplicant.conf > /tmp/wpa.conf # load pre-configured multiple profiles 
+			wpa|WPA) cat /etc/wpa_supplicant.conf > /tmp/wpa.conf # load pre-configured multiple profiles
 			cat >> /tmp/wpa.conf <<EOF
 ctrl_interface=/var/run/wpa_supplicant
 ctrl_interface_group=0
@@ -97,15 +97,15 @@ network={
 	ssid="$WIFI_ESSID"
 	scan_ssid=1
 	proto=WPA RSN
-	key_mgmt=WPA-PSK
+	key_mgmt=WPA-PSK WPA-EAP
 	psk="$WIFI_KEY"
 	priority=5
 }
 EOF
 				echo "Starting wpa_supplicant for WPA-PSK..."
-				wpa_supplicant -B -W -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE 
+				wpa_supplicant -B -W -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE
 				;;
-			any|ANY) cat /etc/wpa_supplicant.conf > /tmp/wpa.conf 
+			any|ANY) cat /etc/wpa_supplicant.conf > /tmp/wpa.conf
 			cat >> /tmp/wpa.conf <<EOF
 ctrl_interface=/var/run/wpa_supplicant
 ctrl_interface_group=0
@@ -121,14 +121,14 @@ network={
 }
 EOF
 				echo "Starting wpa_supplicant for any key type..."
-				wpa_supplicant -B -W -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE 
+				wpa_supplicant -B -W -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE
 				;;
 		esac
-		
+
 		rm -f /tmp/wpa.conf
-		
-		INTERFACE=$WIFI_INTERFACE	
-		 		
+
+		INTERFACE=$WIFI_INTERFACE
+
 	fi
 
 }
@@ -136,21 +136,21 @@ EOF
 wpa()
 {
 	DHCP_SCRIPT="/etc/init.d/wpa_action.sh"
-	wpa_cli -a$DHCP_SCRIPT -B 
+	wpa_cli -a$DHCP_SCRIPT -B
 }
 
 dhcp() {
 
-# For a dynamic IP with DHCP. 
+# For a dynamic IP with DHCP.
 	if [ "$DHCP" = "yes" ]  ; then
-		echo "Starting udhcpc client on: $INTERFACE..."		
+		echo "Starting udhcpc client on: $INTERFACE..."
 		if [ -d /var/run/wpa_supplicant ] && [ "$WIFI" = "yes" ]; then # wpa wireless && wpa_ctrl_open interface is up
-		   wpa		  
+		   wpa
 		else  # fallback on udhcpc: wep, eth
 		   /sbin/udhcpc -b -T 1 -A 12 -i $INTERFACE -p /var/run/udhcpc.$INTERFACE.pid
-		fi		
+		fi
 	fi
-	
+
 }
 
 static_ip() {
@@ -179,7 +179,7 @@ Stop() {
 	echo "Killing all daemons"
 	killall udhcpc
 	killall wpa_supplicant 2>/dev/null
-	
+
 	if iwconfig $WIFI_INTERFACE | grep -q "Tx-Power"; then
 		echo "Shutting down wifi card"
 		iwconfig $WIFI_INTERFACE txpower off
@@ -189,11 +189,11 @@ Stop() {
 Start() {
    eth
    wifi
-   dhcp 
+   dhcp
    static_ip
    # change default lxpanel panel iface
    [ -f /etc/lxpanel/default/panels/panel ] \
-		&& sed -i "s/iface=.*/iface=$INTERFACE/" /etc/lxpanel/default/panels/panel	
+		&& sed -i "s/iface=.*/iface=$INTERFACE/" /etc/lxpanel/default/panels/panel
 }
 
 

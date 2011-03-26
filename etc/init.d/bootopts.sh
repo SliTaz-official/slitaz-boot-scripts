@@ -5,7 +5,7 @@
 #
 . /etc/init.d/rc.functions
 
-# Update fstab for swapon/swapoff 
+# Update fstab for swapon/swapoff
 add_swap_in_fstab()
 {
 	grep -q "$1	" /etc/fstab || cat >> /etc/fstab <<EOT
@@ -84,7 +84,7 @@ do
 			echo "$KEYMAP" > /etc/keymap.conf
 			status ;;
 		home=*)
-			# Check for a specified home partition (home=*) and check for 
+			# Check for a specified home partition (home=*) and check for
 			# user home dir. Note: home=usb is a shorter and easier way to
 			# have home=/dev/sda1.
 			DEVICE=${opt#home=}
@@ -130,8 +130,8 @@ do
 			else
 				rm -rf /tmp/$USER-files
 			fi
-			# Install all packages in /home/boot/packages. In live CD and 
-			# USB mode the option home= mounts the device on /home, so we 
+			# Install all packages in /home/boot/packages. In live CD and
+			# USB mode the option home= mounts the device on /home, so we
 			# already have a boot directory with the Kernel and rootfs.
 			if [ -d "/home/boot/packages" ]; then
 				for pkg in /home/boot/packages/*.tazpkg
@@ -151,7 +151,7 @@ do
 			do
 				modprobe $mod
 			done
-			grep -qs batt /etc/lxpanel/default/panels/panel || 
+			grep -qs batt /etc/lxpanel/default/panels/panel ||
 			sed -i 's/= cpu/= batt\n}\n\nPlugin {\n    type = cpu/' \
 				/etc/lxpanel/default/panels/panel 2> /dev/null
 			# Enable Kernel Laptop mode.
@@ -172,7 +172,7 @@ do
 				fi
 			done ;;
 		mount-packages)
-			# Mount and install packages-XXX.iso (useful without Internet 
+			# Mount and install packages-XXX.iso (useful without Internet
 			# connection).
 			PKGSIGN="LABEL=\"packages-$(cat /etc/slitaz-release)\" TYPE=\"iso9660\""
 			PKGDEV=$(blkid | grep "$PKGSIGN" | cut -d: -f1)

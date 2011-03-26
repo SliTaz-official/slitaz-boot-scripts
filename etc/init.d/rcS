@@ -1,5 +1,5 @@
 #!/bin/sh
-# /etc/init.d/rcS - Initial boot script for SliTaz GNU/Linux. 
+# /etc/init.d/rcS - Initial boot script for SliTaz GNU/Linux.
 # Config file is : /etc/rcS.conf
 #
 # rcS is the main initialization script used to check fs, mount, clean,
@@ -118,7 +118,7 @@ echo -n "Setting up tmp X11 and ICE unix dir..."
 /bin/chmod 1777 /tmp/.X11-unix /tmp/.ICE-unix
 status
 
-# Fast boot into X for HD install or custom Live system. We need 
+# Fast boot into X for HD install or custom Live system. We need
 # keymap settings since Xvesa dumps the console mapping and a correct
 # slim configuration for screen resolution. DBUS and HAL must also start
 # before X session (manual login or autologin) to have devices in PCmanFM.
@@ -160,17 +160,17 @@ fi
 
 [ "$FBSPLASH" == "yes" ] && echo "50" > /etc/fbsplash/fifo
 
-# Handle kernel cmdline parameter modprobe=<module_list> 
+# Handle kernel cmdline parameter modprobe=<module_list>
 if [ -n "$MODPROBE" ]; then
 	MODULES=`sed -e 's/.* modprobe=\([^ ]*\).*/\1/' -e 's/,/\n/g' < /proc/cmdline`
 	for i in $MODULES; do
 		echo -n "Loading kernel module $i"
 		/sbin/modprobe $i
-		status 
+		status
 	done
 fi
 
-# Handle kernel cmdline parameter config=<device>,<path> to source a 
+# Handle kernel cmdline parameter config=<device>,<path> to source a
 # disk init script
 if [ -n "$CONFIG" ]; then
 	DEVICE=${CONFIG%,*}
@@ -192,7 +192,7 @@ if [ -n "$CONFIG" ]; then
 		. /mnt/$SCRIPT
 		/bin/umount /mnt 2> /dev/null || true
 	fi
-	status 
+	status
 fi
 
 # Mount /proc/bus/usb.
@@ -246,7 +246,7 @@ done
 
 [ "$FBSPLASH" == "yes" ] && echo "90" > /etc/fbsplash/fifo
 
-# Re-source main config file. In Live mode, daemons list can be modified 
+# Re-source main config file. In Live mode, daemons list can be modified
 # by boot options (screen=text will remove slim).
 . /etc/rcS.conf
 
