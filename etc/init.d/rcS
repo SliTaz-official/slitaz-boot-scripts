@@ -53,16 +53,6 @@ status
 
 [ "$FBSPLASH" == "yes" ] && echo "20" > /etc/fbsplash/fifo
 
-# Trigger Udev and handle hotplug events
-if [ "$UDEV" = "yes" ]; then
-	echo -n "Udevadm requesting events from the Kernel..."
-	udevadm trigger
-	status
-	echo -n "Using Udev for hotplugging..."
-	echo "/sbin/udevd" > /proc/sys/kernel/hotplug
-	status
-fi
-
 # Before mounting filesystems we check fs specified in the file
 # /etc/rcS.conf and variable $CHECK_FS.
 if [ -n "$CHECK_FS" ]; then
@@ -77,6 +67,22 @@ fi
 # Remount rootfs rw.
 echo "Remounting rootfs read/write..."
 /bin/mount -o remount,rw /
+
+# Trigger Udev and handle hotplug events
+if [ "$UDEV" = "yes" ]; then
+	echo -n "Starting udev daemon..."
+	/sbin/udevd --daemon
+	status
+	echo -n "Udevadm requesting events from the Kernel..."
+	udevadm trigger
+	status
+	echo -n "Udevadm waiting for the event queue to finish..."
+	udevadm settle
+	status
+	echo -n "Using Udev for hotplugging..."
+	echo "/sbin/udevd" > /proc/sys/kernel/hotplug
+	status
+fi
 
 [ "$FBSPLASH" == "yes" ] && echo "30" > /etc/fbsplash/fifo
 
