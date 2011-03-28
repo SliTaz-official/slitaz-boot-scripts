@@ -11,16 +11,16 @@
 # Boot time.
 bootdate=`date +%s`
 
+if [ "$1" != "logged" ]; then # logged
+
 # Graphical boot start.
 if [ "$FBSPLASH" == "yes" ]; then
 	reset && fbsplash -c \
 		-s /etc/fbsplash/$FBSPLASH_THEME/fbsplash.ppm \
 		-i /etc/fbsplash/$FBSPLASH_THEME/fbsplash.cfg \
 		-f /etc/fbsplash/fifo &
-	echo "0" > /etc/fbsplash/fifo
+	echo "0" > /etc/fbsplash/fifo && sleep 1
 fi
-
-if [ "$1" != "logged" ]; then # logged
 
 echo "Processing /etc/init.d/rcS..."
 
@@ -227,6 +227,8 @@ if [ ! -s /var/lib/detected-modules ]; then
 	/sbin/tazhw init
 fi
 
+[ "$FBSPLASH" == "yes" ] && echo "80" > /etc/fbsplash/fifo
+
 # Call udevadm trigger to ensure /dev is fully populate now that all 
 # modules are loaded.
 if [ "$UDEV" = "yes" ]; then
@@ -244,7 +246,7 @@ do
 	fi
 done
 
-[ "$FBSPLASH" == "yes" ] && echo "80" > /etc/fbsplash/fifo
+[ "$FBSPLASH" == "yes" ] && echo "90" > /etc/fbsplash/fifo
 
 # Re-source main config file. In Live mode, daemons list can be modified
 # by boot options (screen=text will remove slim).
@@ -259,7 +261,7 @@ do
 	fi
 done
 
-[ "$FBSPLASH" == "yes" ] && echo "90" > /etc/fbsplash/fifo
+[ "$FBSPLASH" == "yes" ] && echo "100" > /etc/fbsplash/fifo
 
 # Back to a verbose mode.
 echo "7 4 1 7" > /proc/sys/kernel/printk
@@ -269,8 +271,6 @@ if [ -n "$MESSAGE" ]; then
 	/usr/bin/reset
 	echo -e "\033[1m$MESSAGE\033[0m"
 fi
-
-[ "$FBSPLASH" == "yes" ] && echo "100" > /etc/fbsplash/fifo
 
 # Display and log boot time.
 time=$((`date +%s` - $bootdate))
