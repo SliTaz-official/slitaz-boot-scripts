@@ -46,8 +46,6 @@ if ! grep -q "100[0-9]:100[0-9]" /etc/passwd; then
 	else
 		mkdir -p /home/$USER
 	fi
-	# make user be only read/write by user
-	chmod -R 700 /home/$USER
 	# Slim default user.
 	if [ -f /etc/slim.conf ]; then
 		sed -i s/"default_user .*"/"default_user        $USER"/\
