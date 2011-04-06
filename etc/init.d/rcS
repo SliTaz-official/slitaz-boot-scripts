@@ -258,6 +258,9 @@ done
 # by boot options (screen=text will remove slim).
 . /etc/rcS.conf
 
+# Auto recharge packages list (after network connection of course)
+[ "$RECHARGE_PACKAGES_LIST" == "yes" ] && tazpkg recharge &
+
 # Start all daemons specified with $RUN_DAEMONS.
 echo "Starting all daemons specified in /etc/rcS.conf..."
 for daemon in $RUN_DAEMONS
