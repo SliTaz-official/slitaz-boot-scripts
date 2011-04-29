@@ -144,8 +144,8 @@ status
 # Requested screen is not text mode and keymap.conf is empty so go
 # for an i18n configuration in GUI mode. In cas of screen=text we
 # configure locale and keymap just after via i18n.sh
-if [ "$SCREEN" != "text" -a ! -s "/etc/locale.conf" -a -x /usr/bin/Xorg ]; then
-	tazbox boot
+if [ "$SCREEN" != "text" -a ! -s "/etc/keymap.conf" -a -x /usr/bin/Xorg ]; then
+	DISPLAY=:1 tazbox boot
 fi
 
 [ "$FBSPLASH" == "yes" ] && echo "80" > /etc/fbsplash/fifo
