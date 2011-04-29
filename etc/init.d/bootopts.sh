@@ -13,39 +13,6 @@ $1	swap	swap	default	0 0
 EOT
 }
 
-# Default user account without password (uid=1000). In live mode the option
-# user=name can be used, but user must be added before home= to have home dir.
-# This option is not handled by a loop and case like others and has no
-# effect on an installed system.
-if ! grep -q "100[0-9]:100[0-9]" /etc/passwd; then
-	if grep -q "user=" /proc/cmdline; then
-		USER=`cat /proc/cmdline | sed 's/.*user=\([^ ]*\).*/\1/'`
-		# Avoid usage of an existing system user or root.
-		if grep -q ^$USER /etc/passwd; then
-			USER=tux
-		fi
-	else
-		USER=tux
-	fi
-	echo -n "Configuring user and group: $USER..."
-	adduser -D -s /bin/sh -g "SliTaz User" -G users -h /home/$USER $USER
-	passwd -d $USER >/dev/null
-	status
-	# Audio and cdrom group.
-	addgroup $USER audio
-	addgroup $USER cdrom
-	addgroup $USER video
-	addgroup $USER tty
-	# /home/$USER files from /etc/skel.
-	# make user be only read/write by user
-	chmod -R 700 /home/$USER
-	# Slim default user.
-	if [ -f /etc/slim.conf ]; then
-		sed -i s/"default_user .*"/"default_user        $USER"/\
-			/etc/slim.conf
-	fi
-fi
-
 # Parse /proc/cmdline for boot options.
 echo "Parsing kernel cmdline for SliTaz live options... "
 
