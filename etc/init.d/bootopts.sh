@@ -37,15 +37,8 @@ if ! grep -q "100[0-9]:100[0-9]" /etc/passwd; then
 	addgroup $USER video
 	addgroup $USER tty
 	# /home/$USER files from /etc/skel.
-	if [ -d /home/$USER ]; then
-		# Path for user desktop files.
-		for i in /home/$USER/.local/share/applications/*.desktop
-		do
-			sed -i s/"user_name"/"$USER"/g $i
-		done
-	else
-		mkdir -p /home/$USER
-	fi
+	# make user be only read/write by user
+	chmod -R 700 /home/$USER
 	# Slim default user.
 	if [ -f /etc/slim.conf ]; then
 		sed -i s/"default_user .*"/"default_user        $USER"/\
@@ -62,86 +55,6 @@ do
 		eject)
 			# Eject cdrom.
 			eject /dev/cdrom ;;
-		autologin)
-			# Autologin option to skip first graphic login prompt.
-			echo "auto_login        yes" >> /etc/slim.conf ;;
-		lang=*)
-			# Check for a specified locale (lang=*).
-			LANG=${opt#lang=}
-			echo -n "Setting system locale to: $LANG... "
-			echo "LANG=$LANG" > /etc/locale.conf
-			echo "LC_ALL=$LANG" >> /etc/locale.conf
-			[ ! -d /usr/lib/locale/$LANG ] && localedef \
-				-i $LANG -c -f UTF-8 /usr/lib/locale/$LANG &
-			tazlocale link-files
-			status ;;
-		kmap=*)
-			# Check for a specified keymap (kmap=*).
-			KEYMAP=${opt#kmap=}
-			echo -n "Setting system keymap to: $KEYMAP..."
-			echo "$KEYMAP" > /etc/keymap.conf
-			status ;;
-		home=*)
-			# Check for a specified home partition (home=*) and check for
-			# user home dir. Note: home=usb is a shorter and easier way to
-			# have home=/dev/sda1.
-			DEVICE=${opt#home=}
-			[ "$DEVICE" = "usb" ] && DEVICE=sda1
-			echo "Home has been specified to $DEVICE..."
-			DEVID=`/sbin/blkid | sed 'p;s/"//g' | grep "$DEVICE" | sed 's/:.*//;q'`
-			if [ -z "$DEVID" ]; then
-				USBDELAY=`cat /sys/module/usb_storage/parameters/delay_use`
-				USBDELAY=$((2+$USBDELAY))
-				echo "Sleeping $USBDELAY s to let the kernel detect the device... "
-				sleep $USBDELAY
-			fi
-			USER=`cat /etc/passwd | sed '/:1000:/!d;s/:.*//;q'`
-			DEVID=$DEVICE
-			if [ -x /sbin/blkid ]; then
-				# Can be a label, uuid, type or devname. DEVID gives us first: /dev/name.
-				DEVID=`/sbin/blkid | sed 'p;s/"//g' | grep "$DEVICE" | sed 's/:.*//;q'`
-			fi
-			DEVID=${DEVID##*/}
-			if [ -n "$DEVID" ] && grep -q "$DEVID" /proc/partitions ; then
-				echo "Mounting /home on /dev/$DEVID... "
-				[ -d /home/$USER ] && mv /home/$USER /tmp/$USER-files
-				mount /dev/$DEVID /home -o uid=1000,gid=1000 2>/dev/null \
-					|| mount /dev/$DEVID /home
-				# Check if swap file must be generated in /home: swap=size (Mb).
-				# This option is only used within home=device.
-				if grep -q "swap=[1-9]*" /proc/cmdline; then
-					SWAP_SIZE=`sed 's/.*swap=\([^ ]*\).*/\1/' < /proc/cmdline`
-					# DD to gen a virtual disk.
-					echo "Generating swap file: /home/swap ($SWAP_SIZE)..."
-					dd if=/dev/zero of=/home/swap bs=1M count=$SWAP_SIZE
-					# Make the Linux swap filesystem.
-					mkswap /home/swap
-					add_swap_in_fstab /home/swap
-				fi
-			else
-				echo "Unable to find $DEVICE... "
-			fi
-			# Move all user dir if needed.
-			if [ ! -d "/home/$USER" ] ; then
-				mv /tmp/$USER-files /home/$USER
-				chown -R $USER.users /home/$USER
-			else
-				rm -rf /tmp/$USER-files
-			fi
-			# Install all packages in /home/boot/packages. In live CD and
-			# USB mode the option home= mounts the device on /home, so we
-			# already have a boot directory with the Kernel and rootfs.
-			if [ -d "/home/boot/packages" ]; then
-				for pkg in /home/boot/packages/*.tazpkg
-				do
-					tazpkg install $pkg
-				done
-			fi
-			# We can have custom files in /home/boot/rootfs to overwrite
-			# the one packed into the Live system.
-			if [ -d "/home/boot/rootfs" ]; then
-				cp -a /home/boot/rootfs/* /
-			fi ;;
 		laptop)
 			# Laptop option to load related Kernel modules.
 			echo "Loading laptop modules: ac, battery, fan, yenta_socket..."
@@ -182,28 +95,10 @@ do
 				status
 				/packages/install.sh
 			fi ;;
-		wm=*)
-			# Check for a Window Manager (for a flavor, default WM can be changed
-			# with boot options or with an addfile in /etc/X11/wm.default.
-			WM=${opt#wm=}
-			mkdir -p /etc/X11
-			case $WM in
-				jwm)
-					echo "jwm" > /etc/X11/wm.default ;;
-				ob|openbox|openbox-session)
-					echo "openbox" > /etc/X11/wm.default ;;
-				e17|enlightenment|enlightenment_start)
-					echo "enlightenment" > /etc/X11/wm.default ;;
-			esac ;;
 		*)
 			continue ;;
 	esac
 done
-
-# If no default WM fallback to Openbox (we never know).
-if [ ! -f /etc/X11/wm.default ]; then
-	echo "openbox" > /etc/X11/wm.default
-fi
 
 # Activate an eventual swap file or partition.
 if [ "`fdisk -l | grep swap`" ]; then

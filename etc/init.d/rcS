@@ -29,29 +29,54 @@ echo -n "Mounting proc filesystem..."
 /bin/mount proc
 status
 
-[ "$FBSPLASH" == "yes" ] && echo "10" > /etc/fbsplash/fifo
+# Set time zone now to get system events at local time
+if [ -s /etc/TZ ]; then
+	export TZ=$(cat /etc/TZ)
+fi
+
+[ "$FBSPLASH" == "yes" ] && echo "20" > /etc/fbsplash/fifo
 
 # Parse cmdline args for earlier boot options. All other boot options
 # are in /etc/init./bootopts.sh.
-echo -n "Searching for early boot options..."
+echo "Checking for early boot options..."
 for opt in `cat /proc/cmdline`
 do
 	case $opt in
-		fastbootx|fbx)
-			export FAST_BOOT_X="yes" ;;
 		cdrom=*)
 			export CDROM=${opt#cdrom=} ;;
 		modprobe=*)
 			export MODPROBE="yes" ;;
 		config=*)
 			export CONFIG=${opt#config=} ;;
+		xarg=*)
+			XARG="$XARG ${opt#xarg=}" ;;
+		screen=text)
+			echo -n "Text mode option detected..."
+			SCREEN=text
+			status ;;
+		screen=[0-9]*)
+			SCREEN=${opt#screen=} ;;
+		autologin)
+			# Autologin option to skip first graphic login prompt.
+			echo "auto_login        yes" >> /etc/slim.conf ;;
+		lang=*)
+			# Check for a specified locale (lang=*).
+			LANG=${opt#lang=}
+			echo -n "Setting system locale to: $LANG... "
+			tazlocale init $LANG
+			status ;;
+		kmap=*)
+			# Check for a specified keymap (kmap=*).
+			KEYMAP=${opt#kmap=}
+			echo -n "Setting system keymap to: $KEYMAP..."
+			tazkeymap init $KEYMAP
+			status ;;
 		*)
 			continue ;;
 	esac
 done
-status
 
-[ "$FBSPLASH" == "yes" ] && echo "20" > /etc/fbsplash/fifo
+[ "$FBSPLASH" == "yes" ] && echo "40" > /etc/fbsplash/fifo
 
 # Before mounting filesystems we check fs specified in the file
 # /etc/rcS.conf and variable $CHECK_FS.
@@ -73,9 +98,6 @@ if [ "$UDEV" = "yes" ]; then
 	echo -n "Starting udev daemon..."
 	/sbin/udevd --daemon
 	status
-	echo -n "Udevadm requesting events from the Kernel..."
-	udevadm trigger
-	status
 	echo -n "Udevadm waiting for the event queue to finish..."
 	udevadm settle
 	status
@@ -84,7 +106,7 @@ if [ "$UDEV" = "yes" ]; then
 	status
 fi
 
-[ "$FBSPLASH" == "yes" ] && echo "30" > /etc/fbsplash/fifo
+[ "$FBSPLASH" == "yes" ] && echo "60" > /etc/fbsplash/fifo
 
 # Mount filesystems in /etc/fstab.
 echo "Mounting filesystems in fstab..."
@@ -110,7 +132,7 @@ else
 	status
 fi
 
-[ "$FBSPLASH" == "yes" ] && echo "40" > /etc/fbsplash/fifo
+[ "$FBSPLASH" == "yes" ] && echo "70" > /etc/fbsplash/fifo
 
 # Set up tmp X11 and ICE dir.
 echo -n "Setting up tmp X11 and ICE unix dir..."
@@ -118,15 +140,43 @@ echo -n "Setting up tmp X11 and ICE unix dir..."
 /bin/chmod 1777 /tmp/.X11-unix /tmp/.ICE-unix
 status
 
-# Fast boot into X for HD install or custom Live system. We need
-# keymap settings since Xvesa dumps the console mapping and a correct
-# slim configuration for screen resolution. DBUS and HAL must also start
-# before X session (manual login or autologin) to have devices in PCmanFM.
-if [ "$FAST_BOOT_X" = "yes" ]; then
-	/etc/init.d/i18n.sh
-	/etc/init.d/dbus start
-	/etc/init.d/hald start
-	/etc/init.d/slim start &
+# Start DBUS and HAL deamon so we can use Xorg and a WM to configure
+# system locale and keybord on first boot.
+[ -x /etc/init.d/dbus ] && /etc/init.d/dbus start
+[ -x /etc/init.d/hald ] && /etc/init.d/hald start
+
+# Requested screen is not text mode and keymap.conf is empty so go
+# for an i18n configuration in GUI mode. In cas of screen=text we
+# configure locale and keymap just after via i18n.sh
+if [ "$SCREEN" != "text" -a ! -s "/etc/locale.conf" -a -x /usr/bin/Xorg ]; then
+	tazbox boot
+fi
+
+[ "$FBSPLASH" == "yes" ] && echo "80" > /etc/fbsplash/fifo
+
+# Set the console keymap and configure i18n in case of screen=text and
+# no locale.conf or keymap.conf. Add default user for live mode and
+# mount an eventual /home partition.
+/etc/init.d/i18n.sh
+/etc/init.d/user-home.sh
+
+[ "$FBSPLASH" == "yes" ] && echo "100" > /etc/fbsplash/fifo
+
+# Now that we have a keymap configuration we can auto configure Xorg.
+# We need to set $HOME.
+if [ "$SCREEN" != "text" -a ! -s /etc/X11/xorg.conf -a -x /usr/bin/Xorg ]; then
+	echo "Configuring Xorg..."
+	HOME=/root
+	tazx config-xorg
+fi
+
+# Here we finish bootsplash since we start Xorg session.
+[ "$FBSPLASH" == "yes" ] && sleep 1 && echo "exit" > /etc/fbsplash/fifo
+
+# No text mode requested, we have i18n and Xorg settings as well as a 
+# user, so start a desktop and let boot process finih in backgroud.
+if [ "$screen" != "text" -a -x /etc/init.d/slim ]; then
+	/etc/init.d/slim start
 fi
 
 # Create /dev/cdrom if needed (symlink does not exist on LiveCD).
@@ -134,7 +184,7 @@ fi
 if [ -n "$CDROM" ]; then
 	DRIVE_NAME=${CDROM#/dev/}
 else
-	DRIVE_NAME=`grep -s "drive name" /proc/sys/dev/cdrom/info | cut -f 3`
+	DRIVE_NAME=$(grep -s "drive name" /proc/sys/dev/cdrom/info | cut -f 3)
 fi
 if [ -n "$DRIVE_NAME" -a ! "`readlink /dev/cdrom`" ]; then
 	echo -n "Creating symlink : /dev/cdrom..."
@@ -148,6 +198,7 @@ if ! grep -q "/dev/cdrom" /etc/fstab; then
 		>> /etc/fstab
 	status
 fi
+
 # Chmod hack on each boot for Asunder and burnbox. Allowing all users
 # to burn/rip CD/DVD.
 if [ -n "$DRIVE_NAME" -a "`readlink /dev/cdrom`" ]; then
@@ -157,8 +208,6 @@ if [ -n "$DRIVE_NAME" -a "`readlink /dev/cdrom`" ]; then
 	chmod 0666 /dev/$DRIVE_NAME
 	status
 fi
-
-[ "$FBSPLASH" == "yes" ] && echo "50" > /etc/fbsplash/fifo
 
 # Handle kernel cmdline parameter modprobe=<module_list>
 if [ -n "$MODPROBE" ]; then
@@ -202,8 +251,6 @@ if [ -d /proc/bus/usb ]; then
 	status
 fi
 
-[ "$FBSPLASH" == "yes" ] && echo "60" > /etc/fbsplash/fifo
-
 # Start syslogd and klogd.
 if [ "$KERNEL_LOG_DAEMONS" = "yes" ]; then
 	echo -n "Starting system log deamon: syslogd..."
@@ -225,23 +272,14 @@ fi
 # Be quiet on configuration to avoid messages overwriting ncurses dialog
 echo "0 0 0 0" > /proc/sys/kernel/printk
 
-[ "$FBSPLASH" == "yes" ] && echo "70" > /etc/fbsplash/fifo
-
 # Detect PCI and USB devices with Tazhw from slitaz-tools. We load
 # kernel modules only at first boot or in LiveCD mode.
 if [ ! -s /var/lib/detected-modules ]; then
 	/sbin/tazhw init
 fi
 
-[ "$FBSPLASH" == "yes" ] && echo "80" > /etc/fbsplash/fifo
-
-# Call udevadm trigger to ensure /dev is fully populate now that all 
-# modules are loaded.
-if [ "$UDEV" = "yes" ]; then
-	echo -n "Requesting events from the Kernel..."
-	udevadm trigger
-	status
-fi
+# Auto recharge packages list (after network connection of course)
+[ "$RECHARGE_PACKAGES_LIST" == "yes" ] && tazpkg recharge &
 
 # Start all scripts specified with $RUN_SCRIPTS.
 echo "Executing all initialization scripts..."
@@ -252,15 +290,6 @@ do
 	fi
 done
 
-[ "$FBSPLASH" == "yes" ] && echo "90" > /etc/fbsplash/fifo
-
-# Re-source main config file. In Live mode, daemons list can be modified
-# by boot options (screen=text will remove slim).
-. /etc/rcS.conf
-
-# Auto recharge packages list (after network connection of course)
-[ "$RECHARGE_PACKAGES_LIST" == "yes" ] && tazpkg recharge &
-
 # Start all daemons specified with $RUN_DAEMONS.
 echo "Starting all daemons specified in /etc/rcS.conf..."
 for daemon in $RUN_DAEMONS
@@ -269,8 +298,6 @@ do
 		/etc/init.d/$daemon start
 	fi
 done
-
-[ "$FBSPLASH" == "yes" ] && echo "100" > /etc/fbsplash/fifo
 
 # Back to a verbose mode.
 echo "7 4 1 7" > /proc/sys/kernel/printk
@@ -285,6 +312,5 @@ fi
 time=$((`date +%s` - $bootdate))
 echo $time > /var/log/boot-time
 echo "SliTaz boot time: ${time}s"
-[ "$FBSPLASH" == "yes" ] && echo "exit" > /etc/fbsplash/fifo
 
 fi # logged
