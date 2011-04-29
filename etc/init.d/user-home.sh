@@ -10,6 +10,7 @@
 # This option is not handled by a loop and case like others and has no
 # effect on an installed system.
 #
+. /etc/init.d/rc.functions
 
 if ! grep -q "100[0-9]:100[0-9]" /etc/passwd; then
 	if grep -q "user=" /proc/cmdline; then

@@ -49,13 +49,9 @@ do
 		config=*)
 			export CONFIG=${opt#config=} ;;
 		xarg=*)
-			XARG="$XARG ${opt#xarg=}" ;;
-		screen=text)
-			echo -n "Text mode option detected..."
-			SCREEN=text
-			status ;;
-		screen=[0-9]*)
-			SCREEN=${opt#screen=} ;;
+			export XARG="$XARG ${opt#xarg=}" ;;
+		screen=*)
+			export SCREEN=${opt#screen=} ;;
 		autologin)
 			# Autologin option to skip first graphic login prompt.
 			echo "auto_login        yes" >> /etc/slim.conf ;;
@@ -175,7 +171,7 @@ fi
 
 # No text mode requested, we have i18n and Xorg settings as well as a 
 # user, so start a desktop and let boot process finih in backgroud.
-if [ "$screen" != "text" -a -x /etc/init.d/slim ]; then
+if [ "$SCREEN" != "text" -a -x /etc/init.d/slim ]; then
 	/etc/init.d/slim start
 fi
 
