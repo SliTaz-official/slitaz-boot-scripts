@@ -34,7 +34,7 @@ if [ -s /etc/TZ ]; then
 	export TZ=$(cat /etc/TZ)
 fi
 
-[ "$FBSPLASH" == "yes" ] && echo "20" > /etc/fbsplash/fifo
+[ "$FBSPLASH" == "yes" ] && echo "10" > /etc/fbsplash/fifo
 
 # Parse cmdline args for earlier boot options. All other boot options
 # are in /etc/init./bootopts.sh.
@@ -54,7 +54,9 @@ do
 			export SCREEN=${opt#screen=} ;;
 		autologin)
 			# Autologin option to skip first graphic login prompt.
-			echo "auto_login        yes" >> /etc/slim.conf ;;
+			if [ ! $(grep -l '^auto_login        yes' /etc/slim.conf) ]; then
+				echo "auto_login        yes" >> /etc/slim.conf
+			fi ;;
 		lang=*)
 			# Check for a specified locale (lang=*).
 			LANG=${opt#lang=}
@@ -72,7 +74,7 @@ do
 	esac
 done
 
-[ "$FBSPLASH" == "yes" ] && echo "40" > /etc/fbsplash/fifo
+[ "$FBSPLASH" == "yes" ] && echo "20" > /etc/fbsplash/fifo
 
 # Before mounting filesystems we check fs specified in the file
 # /etc/rcS.conf and variable $CHECK_FS.
@@ -105,7 +107,7 @@ if [ "$UDEV" = "yes" ]; then
 	status
 fi
 
-[ "$FBSPLASH" == "yes" ] && echo "60" > /etc/fbsplash/fifo
+[ "$FBSPLASH" == "yes" ] && echo "30" > /etc/fbsplash/fifo
 
 # Mount filesystems in /etc/fstab.
 echo "Mounting filesystems in fstab..."
@@ -131,52 +133,13 @@ else
 	status
 fi
 
-[ "$FBSPLASH" == "yes" ] && echo "70" > /etc/fbsplash/fifo
+[ "$FBSPLASH" == "yes" ] && echo "40" > /etc/fbsplash/fifo
 
 # Set up tmp X11 and ICE dir.
 echo -n "Setting up tmp X11 and ICE unix dir..."
 /bin/mkdir -p /tmp/.X11-unix /tmp/.ICE-unix
 /bin/chmod 1777 /tmp/.X11-unix /tmp/.ICE-unix
 status
-
-# Start DBUS and HAL deamon so we can use Xorg and a WM to configure
-# system locale and keybord on first boot.
-[ -x /etc/init.d/dbus ] && /etc/init.d/dbus start
-[ -x /etc/init.d/hald ] && /etc/init.d/hald start
-
-# Requested screen is not text mode and keymap.conf is empty so go
-# for an i18n configuration in GUI mode. In cas of screen=text we
-# configure locale and keymap just after via i18n.sh
-if [ "$SCREEN" != "text" -a ! -s "/etc/keymap.conf" -a -x /usr/bin/Xorg ]; then
-	DISPLAY=:1 tazbox boot
-fi
-
-[ "$FBSPLASH" == "yes" ] && echo "80" > /etc/fbsplash/fifo
-
-# Set the console keymap and configure i18n in case of screen=text and
-# no locale.conf or keymap.conf. Add default user for live mode and
-# mount an eventual /home partition.
-/etc/init.d/i18n.sh
-/etc/init.d/user-home.sh
-
-[ "$FBSPLASH" == "yes" ] && echo "100" > /etc/fbsplash/fifo
-
-# Now that we have a keymap configuration we can auto configure Xorg.
-# We need to set $HOME.
-if [ "$SCREEN" != "text" -a ! -s /etc/X11/xorg.conf -a -x /usr/bin/Xorg ]; then
-	echo "Configuring Xorg..."
-	HOME=/root
-	tazx config-xorg
-fi
-
-# Here we finish bootsplash since we start Xorg session.
-[ "$FBSPLASH" == "yes" ] && sleep 1 && echo "exit" > /etc/fbsplash/fifo
-
-# No text mode requested, we have i18n and Xorg settings as well as a 
-# user, so start a desktop and let boot process finih in backgroud.
-if [ "$SCREEN" != "text" -a -x /etc/init.d/slim ]; then
-	/etc/init.d/slim start
-fi
 
 # Create /dev/cdrom if needed (symlink does not exist on LiveCD).
 # Also add /dev/cdrom to fstab if entry does not exist.
@@ -198,6 +161,8 @@ if ! grep -q "/dev/cdrom" /etc/fstab; then
 	status
 fi
 
+[ "$FBSPLASH" == "yes" ] && echo "50" > /etc/fbsplash/fifo
+
 # Chmod hack on each boot for Asunder and burnbox. Allowing all users
 # to burn/rip CD/DVD.
 if [ -n "$DRIVE_NAME" -a "`readlink /dev/cdrom`" ]; then
@@ -217,6 +182,8 @@ if [ -n "$MODPROBE" ]; then
 		status
 	done
 fi
+
+[ "$FBSPLASH" == "yes" ] && echo "60" > /etc/fbsplash/fifo
 
 # Handle kernel cmdline parameter config=<device>,<path> to source a
 # disk init script
@@ -260,6 +227,8 @@ else
 	echo "Kernel log daemons are disabled in /etc/rc.conf..."
 fi
 
+[ "$FBSPLASH" == "yes" ] && echo "70" > /etc/fbsplash/fifo
+
 # Load all modules listed in config file.
 if [ -n "$LOAD_MODULES" ]; then
 	for mod in $LOAD_MODULES
@@ -281,6 +250,45 @@ if [ "$UDEV" = "yes" ]; then
 	echo -n "Udevadm requesting events from the Kernel..."
 	udevadm trigger
 	status
+fi
+
+# Start DBUS and HAL deamon so we can use Xorg and a WM to configure
+# system locale and keybord on first boot.
+[ -x /etc/init.d/dbus ] && /etc/init.d/dbus start
+[ -x /etc/init.d/hald ] && /etc/init.d/hald start
+
+[ "$FBSPLASH" == "yes" ] && echo "80" > /etc/fbsplash/fifo
+
+# Set the console keymap and configure i18n in case of screen=text and
+# no locale.conf or keymap.conf. Add default user for live mode and
+# mount an eventual /home partition.
+/etc/init.d/i18n.sh
+/etc/init.d/user-home.sh
+
+# Requested screen is not text mode and keymap.conf is empty so go
+# for an i18n configuration in GUI mode. In cas of screen=text we
+# configure locale and keymap just after via i18n.sh
+#if [ "$SCREEN" != "text" -a ! -s "/etc/keymap.conf" -a -x /usr/bin/Xorg ]; then
+#	DISPLAY=:1 tazbox boot
+#fi
+
+[ "$FBSPLASH" == "yes" ] && echo "100" > /etc/fbsplash/fifo
+
+# Now that we have a keymap configuration we can auto configure Xorg.
+# We need to set $HOME.
+if [ "$SCREEN" != "text" -a ! -s /etc/X11/xorg.conf -a -x /usr/bin/Xorg ]; then
+	echo "Configuring Xorg..."
+	HOME=/root
+	tazx config-xorg
+fi
+
+# Here we finish bootsplash since we start Xorg session.
+[ "$FBSPLASH" == "yes" ] && sleep 1 && echo "exit" > /etc/fbsplash/fifo
+
+# No text mode requested, we have i18n and Xorg settings as well as a 
+# user, so start a desktop and let boot process finih in backgroud.
+if [ "$SCREEN" != "text" -a -x /etc/init.d/slim ]; then
+	/etc/init.d/slim start
 fi
 
 # Auto recharge packages list (after network connection of course)
