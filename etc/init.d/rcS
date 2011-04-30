@@ -94,6 +94,9 @@ if [ "$UDEV" = "yes" ]; then
 	echo -n "Starting udev daemon..."
 	/sbin/udevd --daemon
 	status
+	echo -n "Udevadm requesting events from the Kernel..."
+	udevadm trigger
+	status
 	echo -n "Udevadm waiting for the event queue to finish..."
 	udevadm settle
 	status
@@ -272,6 +275,12 @@ echo "0 0 0 0" > /proc/sys/kernel/printk
 # kernel modules only at first boot or in LiveCD mode.
 if [ ! -s /var/lib/detected-modules ]; then
 	/sbin/tazhw init
+fi
+
+if [ "$UDEV" = "yes" ]; then
+	echo -n "Udevadm requesting events from the Kernel..."
+	udevadm trigger
+	status
 fi
 
 # Auto recharge packages list (after network connection of course)
