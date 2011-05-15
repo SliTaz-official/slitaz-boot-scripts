@@ -135,7 +135,7 @@ fi
 if [ -n "$CDROM" ]; then
 	DRIVE_NAME=${CDROM#/dev/}
 else
-	DRIVE_NAME=`grep -s "drive name" /proc/sys/dev/cdrom/info | cut -f 3`
+	DRIVE_NAME=$(fgrep -s "drive name" /proc/sys/dev/cdrom/info | cut -f 3)
 fi
 if [ -n "$DRIVE_NAME" -a ! "`readlink /dev/cdrom`" ]; then
 	echo -n "Creating symlink : /dev/cdrom..."
@@ -143,7 +143,7 @@ if [ -n "$DRIVE_NAME" -a ! "`readlink /dev/cdrom`" ]; then
 	ln -s /dev/$DRIVE_NAME /dev/dvd
 	status
 fi
-if ! grep -q "/dev/cdrom" /etc/fstab; then
+if ! fgrep -q "/dev/cdrom" /etc/fstab; then
 	echo -n "Adding /dev/cdrom  to fstab..."
 	echo '/dev/cdrom      /media/cdrom iso9660 user,ro,noauto       0       0' \
 		>> /etc/fstab

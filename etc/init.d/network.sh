@@ -10,8 +10,7 @@ else
 	. $2
 fi
 
-
-Boot() {
+boot() {
 	# Set hostname.
 	echo -n "Setting hostname..."
 	/bin/hostname -F /etc/hostname
@@ -24,17 +23,16 @@ Boot() {
 	status
 }
 
-
+# Use ethernet
 eth() {
-#  Use ethernet
-	   	ifconfig $INTERFACE up
+	ifconfig $INTERFACE up
 }
 
-wifi() {
-	# For wifi. Users just have to enable it through yes and usually
-	# essid any will work and the interface is autodetected.
+# For wifi. Users just have to enable it through yes and usually
+# essid any will work and the interface is autodetected.
+wifi() {	
 	if [ "$WIFI" = "yes" ] || grep -q "wifi" /proc/cmdline; then
-	    ifconfig $INTERFACE down
+		ifconfig $INTERFACE down
 
 		# Confirm if $WIFI_INTERFACE is the wifi interface
 		if [ ! -d /sys/class/net/$WIFI_INTERFACE/wireless ]; then
@@ -52,22 +50,19 @@ wifi() {
 			iwconfig $WIFI_INTERFACE txpower on
 		fi
 		status
-
+		
 		[ -n "$WPA_DRIVER" ] || WPA_DRIVER="wext"
-
-
 		IWCONFIG_ARGS=""
 		[ -n "$WIFI_MODE" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS mode $WIFI_MODE"
 		[ -n "$WIFI_CHANNEL" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS channel $WIFI_CHANNEL"
 		# unencrypted network
-		if [ "$WIFI_KEY" == "" -o "$WIFI_KEY_TYPE" == "none" ];
-then
+		if [ "$WIFI_KEY" == "" -o "$WIFI_KEY_TYPE" == "none" ]; then
 			iwconfig $WIFI_INTERFACE essid "$WIFI_ESSID" $IWCONFIG_ARGS
 		fi
 		# encrypted network
 		[ -n "$WIFI_KEY" ] && case "$WIFI_KEY_TYPE" in
 			wep|WEP)
-			     IWCONFIG_ARGS="$IWCONFIG_ARGS key $WIFI_KEY"
+				 IWCONFIG_ARGS="$IWCONFIG_ARGS key $WIFI_KEY"
 				 iwconfig $WIFI_INTERFACE essid "$WIFI_ESSID" $IWCONFIG_ARGS
 # wpa_supplicant can also deal with wep encryption but iwconfig is preferred
 # Tip: Use unquoted strings for hexadecimal key in wep_key0
@@ -87,9 +82,11 @@ then
 #EOF
 #				echo "Starting wpa_supplicant for NONE/WEP..."
 #				wpa_supplicant -B -W -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE
-				    ;;
-			wpa|WPA) cat /etc/wpa_supplicant.conf > /tmp/wpa.conf # load pre-configured multiple profiles
-			cat >> /tmp/wpa.conf <<EOF
+				;;
+			wpa|WPA)
+				# load pre-configured multiple profiles
+				cat /etc/wpa_supplicant.conf > /tmp/wpa.conf
+				cat >> /tmp/wpa.conf <<EOF
 ctrl_interface=/var/run/wpa_supplicant
 ctrl_interface_group=0
 ap_scan=1
@@ -103,8 +100,8 @@ network={
 }
 EOF
 				echo "Starting wpa_supplicant for WPA-PSK..."
-				wpa_supplicant -B -W -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE
-				;;
+				wpa_supplicant -B -W -c/tmp/wpa.conf \
+					-D$WPA_DRIVER -i$WIFI_INTERFACE ;;
 			any|ANY) cat /etc/wpa_supplicant.conf > /tmp/wpa.conf
 			cat >> /tmp/wpa.conf <<EOF
 ctrl_interface=/var/run/wpa_supplicant
@@ -121,16 +118,12 @@ network={
 }
 EOF
 				echo "Starting wpa_supplicant for any key type..."
-				wpa_supplicant -B -W -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE
-				;;
+				wpa_supplicant -B -W -c/tmp/wpa.conf \
+					-D$WPA_DRIVER -i$WIFI_INTERFACE ;;
 		esac
-
 		rm -f /tmp/wpa.conf
-
 		INTERFACE=$WIFI_INTERFACE
-
 	fi
-
 }
 
 wpa()
@@ -139,22 +132,22 @@ wpa()
 	wpa_cli -a$DHCP_SCRIPT -B
 }
 
-dhcp() {
-
 # For a dynamic IP with DHCP.
+dhcp() {
 	if [ "$DHCP" = "yes" ]  ; then
 		echo "Starting udhcpc client on: $INTERFACE..."
-		if [ -d /var/run/wpa_supplicant ] && [ "$WIFI" = "yes" ]; then # wpa wireless && wpa_ctrl_open interface is up
-		   wpa
-		else  # fallback on udhcpc: wep, eth
-		   /sbin/udhcpc -b -T 1 -A 12 -i $INTERFACE -p /var/run/udhcpc.$INTERFACE.pid
+		# Is wpa wireless && wpa_ctrl_open interface up ?
+		if [ -d /var/run/wpa_supplicant ] && [ "$WIFI" = "yes" ]; then
+			wpa
+		else # fallback on udhcpc: wep, eth
+			/sbin/udhcpc -b -T 1 -A 12 -i $INTERFACE -p \
+			/var/run/udhcpc.$INTERFACE.pid
 		fi
 	fi
-
 }
 
-static_ip() {
 # For a static IP.
+static_ip() {
 	if [ "$STATIC" = "yes" ] ; then
 		echo "Configuring static IP on $INTERFACE: $IP..."
 		/sbin/ifconfig $INTERFACE $IP netmask $NETMASK up
@@ -193,13 +186,13 @@ Start() {
    static_ip
    # change default lxpanel panel iface
    [ -f /etc/lxpanel/default/panels/panel ] \
-		&& sed -i "s/iface=.*/iface=$INTERFACE/" /etc/lxpanel/default/panels/panel
+		&& sed -i "s/iface=.*/iface=$INTERFACE/" \
+			/etc/lxpanel/default/panels/panel
 }
-
 
 # looking for arguments:
 if [ -z "$1" ]; then
-	Boot
+	boot
 	Start
 else
 	case $1 in
@@ -217,7 +210,6 @@ else
 			echo -e "	Default configuration file is \033[1m/etc/network.conf\033[0m"
 			echo -e "	You can specify another configuration file in the second argument:"
 			echo -e "	\033[1mUsage:\033[0m /etc/init.d/`basename $0` [start|stop|restart] file.conf"
-			echo ""
-
+			echo "" ;;
 	esac
 fi

@@ -83,7 +83,7 @@ fi
 echo "Checking if /etc/locale.conf exists... "
 if [ ! -s "/etc/locale.conf" ]; then
 	if [ "$SCREEN" != "text" ] && [ -x /usr/bin/Xorg ]; then
-		echo "GUI configuration starting..."
+		echo "Starting TazBox configuration..."
 		DISPLAY=:1 tazbox boot
 	else
 		tazlocale
