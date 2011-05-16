@@ -134,11 +134,11 @@ fi
 # Start X sesssion as soon as possible in Live/frugal mode. HD install
 # can use FAST_BOOT_X wich start X even before. In live mode we need
 # keymap config for Xorg configuration and a working Xorg config.
-if [ "$SCREEN" != "text" ] && [ -x /usr/bin/slim ]; then
-	if fgrep -q root=/dev/null /proc/cmdline; then
-		/etc/init.d/slim start
-	fi
-fi
+#if [ "$SCREEN" != "text" ] && [ -x /usr/bin/slim ]; then
+	#if fgrep -q root=/dev/null /proc/cmdline; then
+		#/etc/init.d/slim start
+	#fi
+#fi
 
 # Firefox hack to get the right locale.
 if fgrep -q "fr_" /etc/locale.conf; then
