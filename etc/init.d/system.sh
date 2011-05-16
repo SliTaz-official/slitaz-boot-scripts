@@ -2,8 +2,8 @@
 # /etc/init.d/system.sh - SliTaz hardware configuration.
 #
 # This script configures the sound card and screen. Tazhw is used earlier
-# at boot time to autoconfigure PCI and USB devices. It also configure
-# system language, keyboarf and TZ in live mode.
+# at boot time to autoconfigure PCI and USB devices. It also configures
+# system language, keyboard and TZ in live mode.
 #
 . /etc/init.d/rc.functions
 
@@ -132,7 +132,7 @@ if [ "$SCREEN" != "text" -a ! -s /etc/X11/xorg.conf -a -x /usr/bin/Xorg ]; then
 fi
 
 # Start X sesssion as soon as possible in Live/frugal mode. HD install
-# can use FAST_BOOT_X wich start X even before. In live mode we need
+# can use FAST_BOOT_X which starts X beforehand. In live mode we need
 # keymap config for Xorg configuration and a working Xorg config.
 #if [ "$SCREEN" != "text" ] && [ -x /usr/bin/slim ]; then
 	#if fgrep -q root=/dev/null /proc/cmdline; then
