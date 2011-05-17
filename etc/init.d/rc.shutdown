@@ -5,12 +5,11 @@
 . /etc/init.d/rc.functions
 . /etc/rcS.conf
 
+log=/var/lib/shutdown.log
+
 # Bold info message with uptime
-clear && echo -e "\n
-
-	\033[1mSystem is going down for reboot or halt.\033[0m
-
-    Uptime:`uptime`\n"
+clear && echo "System is going down for reboot or halt." > $log
+uptime >> $log
 
 # Store last alsa settings.
 if [ -x /usr/sbin/alsactl ]; then
@@ -21,7 +20,7 @@ fi
 for daemon in $RUN_DAEMONS
 do
 	if [ -x /etc/init.d/$daemon ]; then
-		/etc/init.d/$daemon stop > /dev/null
+		/etc/init.d/$daemon stop >> $log
 	fi
 done
 

@@ -89,7 +89,8 @@ if [ ! -s "/etc/locale.conf" ]; then
 		tazlocale
 	fi
 else
-	echo -n "Locale configuration: $(cat /etc/locale.conf)" && status
+	lang=$(cat /etc/locale.conf | fgrep LANG | cut -d "=" -f 2)
+	echo -n "Locale configuration: $lang" && status
 fi
 
 # Keymap config.
