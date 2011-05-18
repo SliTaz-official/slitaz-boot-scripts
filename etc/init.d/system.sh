@@ -12,6 +12,9 @@ XARG=""
 for opt in $(cat /proc/cmdline)
 do
 	case $opt in
+		console=*)
+			sed -i "s/tty1/${opt#console=}/g;/^tty[2-9]::/d" \
+				/etc/inittab ;;
 		sound=*)
 			DRIVER=${opt#sound=} ;;
 		xarg=*)
