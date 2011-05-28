@@ -71,18 +71,14 @@ echo "Remounting rootfs read/write..."
 
 # Trigger Udev and handle hotplug events
 if [ "$UDEV" = "yes" ]; then
-	echo -n "Starting udev daemon..."
+	echo "Starting udev daemon..."
 	/sbin/udevd --daemon
-	status
-	echo -n "Udevadm requesting events from the Kernel..."
+	echo "Udevadm requesting events from the Kernel..."
 	udevadm trigger
-	status
-	echo -n "Udevadm waiting for the event queue to finish..."
+	echo "Udevadm waiting for the event queue to finish..."
 	udevadm settle
-	status
-	echo -n "Using Udev for hotplugging..."
+	echo "Using Udev for hotplugging..."
 	echo "/sbin/udevd" > /proc/sys/kernel/hotplug
-	status
 fi
 
 [ "$FBSPLASH" == "yes" ] && echo "30" > /etc/fbsplash/fifo
