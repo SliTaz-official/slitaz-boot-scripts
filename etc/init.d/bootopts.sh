@@ -61,11 +61,7 @@ do
 			# Check for a specified locale (lang=*).
 			LANG=${opt#lang=}
 			echo -n "Setting system locale to: $LANG... "
-			echo "LANG=$LANG" > /etc/locale.conf
-			echo "LC_ALL=$LANG" >> /etc/locale.conf
-			[ ! -d /usr/lib/locale/$LANG ] && localedef \
-				-i $LANG -c -f UTF-8 /usr/lib/locale/$LANG &
-			tazlocale link-files
+			tazlocale init $LANG
 			status ;;
 		kmap=*)
 			# Check for a specified keymap (kmap=*).
