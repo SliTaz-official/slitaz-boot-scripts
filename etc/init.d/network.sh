@@ -160,6 +160,9 @@ static_ip() {
 		do
 			echo "nameserver $NS" >> /etc/resolv.conf
 		done
+		for HELPER in /etc/ipup.d/*; do
+			[ -x $HELPER ] && $HELPER $INTERFACE $DNS_SERVER
+		done
 	fi
 }
 
