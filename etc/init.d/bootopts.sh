@@ -36,8 +36,6 @@ if ! grep -q "100[0-9]:100[0-9]" /etc/passwd; then
 	addgroup $USER cdrom
 	addgroup $USER video
 	addgroup $USER tty
-	# make user be only read/write by user
-	chmod -R 755 /home/$USER
 	# Slim default user.
 	if [ -f /etc/slim.conf ]; then
 		sed -i s/"default_user .*"/"default_user        $USER"/\
