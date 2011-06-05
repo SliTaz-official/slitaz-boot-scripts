@@ -37,7 +37,7 @@ if ! grep -q "100[0-9]:100[0-9]" /etc/passwd; then
 	addgroup $USER video
 	addgroup $USER tty
 	# make user be only read/write by user
-	chmod -R 700 /home/$USER
+	chmod -R 755 /home/$USER
 	# Slim default user.
 	if [ -f /etc/slim.conf ]; then
 		sed -i s/"default_user .*"/"default_user        $USER"/\
@@ -93,7 +93,7 @@ do
 			if [ -n "$DEVID" ] && grep -q "$DEVID" /proc/partitions ; then
 				echo "Mounting /home on /dev/$DEVID... "
 				[ -d /home/$USER ] && mv /home/$USER /tmp/$USER-files
-				mount /dev/$DEVID /home -o uid=1000,gid=1000 2>/dev/null \
+				mount /dev/$DEVID /home -o uid=1000,gid=100 2>/dev/null \
 					|| mount /dev/$DEVID /home
 				# Check if swap file must be generated in /home: swap=size (Mb).
 				# This option is only used within home=device.
