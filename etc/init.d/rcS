@@ -10,9 +10,11 @@
 
 # Set TZ and boot time.
 [ -s /etc/TZ ] && export TZ="$(cat /etc/TZ)"
-bootdate=`date +%s`
+[ -n "$bootdate" ] || bootdate=`date +%s`
 
-if [ "$1" != "logged" ]; then # logged
+case "$1" in
+
+readonly)
 
 # Graphical boot start.
 if [ "$FBSPLASH" == "yes" ]; then
@@ -32,26 +34,6 @@ status
 
 [ "$FBSPLASH" == "yes" ] && echo "10" > /etc/fbsplash/fifo
 
-# Parse cmdline args for earlier boot options. All other boot options
-# are in /etc/init./bootopts.sh.
-echo -n "Searching for early boot options..."
-for opt in `cat /proc/cmdline`
-do
-	case $opt in
-		fastbootx|fbx)
-			export FAST_BOOT_X="yes" ;;
-		cdrom=*)
-			export CDROM=${opt#cdrom=} ;;
-		modprobe=*)
-			export MODPROBE="yes" ;;
-		config=*)
-			export CONFIG=${opt#config=} ;;
-		*)
-			continue ;;
-	esac
-done
-status
-
 [ "$FBSPLASH" == "yes" ] && echo "20" > /etc/fbsplash/fifo
 
 # Before mounting filesystems we check fs specified in the file
@@ -68,6 +50,9 @@ fi
 # Remount rootfs rw.
 echo "Remounting rootfs read/write..."
 /bin/mount -o remount,rw /
+;;
+
+readwrite)
 
 # Trigger Udev and handle hotplug events
 if [ "$UDEV" = "yes" ]; then
@@ -89,10 +74,29 @@ echo "Mounting filesystems in fstab..."
 
 # Store boot messages to log files.
 /bin/dmesg > /var/log/dmesg.log &
-conspy -d | sed 's/ *$//;/^$/d;/^Processi\|^.witchi/,$!d' > /var/log/boot.log
-script -a -q -c '/etc/init.d/rcS logged' /var/log/boot.log
+;;
 
-else # logged
+logged)
+
+# Parse cmdline args for earlier boot options. All other boot options
+# are in /etc/init./bootopts.sh.
+echo -n "Searching for early boot options..."
+for opt in `cat /proc/cmdline`
+do
+	case $opt in
+		fastbootx|fbx)
+			export FAST_BOOT_X="yes" ;;
+		cdrom=*)
+			export CDROM=${opt#cdrom=} ;;
+		modprobe=*)
+			export MODPROBE="yes" ;;
+		config=*)
+			export CONFIG=${opt#config=} ;;
+		*)
+			continue ;;
+	esac
+done
+status
 
 # Clean up the system.
 if [ "$CLEAN_UP_SYSTEM" = "yes" ]; then
@@ -280,5 +284,19 @@ time=$((`date +%s` - $bootdate))
 echo $time > /var/log/boot-time
 echo "SliTaz boot time: ${time}s"
 [ "$FBSPLASH" == "yes" ] && echo "exit" > /etc/fbsplash/fifo
+;;
 
-fi # logged
+*)
+if [ ! -s /dev/shm/boot.log ]; then
+	mount -t devpts devpts /dev/pts
+	mount -t tmpfs tmpfs /dev/shm
+fi
+script -aqc '/etc/init.d/rcS readonly' /dev/shm/boot.log
+mv -f /dev/shm/boot.log /boot.log
+umount /dev/shm
+script -aqc '/etc/init.d/rcS readwrite' /boot.log
+mv -f /boot.log /var/log/boot.log
+script -aqc '/etc/init.d/rcS logged' /var/log/boot.log
+;;
+
+esac
