@@ -1,15 +1,20 @@
 #!/bin/sh
 
-launch_init()
+success()
 {
+	cat > /dev/shm/init
 	[ -d /proc/sys ] && umount /proc
 	echo -e "\\033[70G[ \\033[1;32mOK\\033[0;39m ]"
-	cat > /dev/shm/init <<EOT
-mount --move /dev/pts /mnt/dev/pts
-mount --move /dev/shm /mnt/dev/shm
+	exit
+}
+
+launch_init()
+{
+	mount --move /dev/pts /mnt/dev/pts
+	mount --move /dev/shm /mnt/dev/shm
+	success <<EOT
 exec /sbin/switch_root mnt /sbin/init
 EOT
-	exit
 }
 
 failed()
@@ -85,10 +90,9 @@ if [ "$1" != "logged" ]; then
 else
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
-echo -n "Switching / to "
 if grep -q dmraid= /proc/cmdline; then
 	root="$(sed 's/.*dmraid=\([^ ]*\).*/\1/' < /proc/cmdline)"
-	echo -n "dmraid $root..."
+	echo -n "Switching / to dmraid $root..."
 	dmraid -s | grep ^type | awk '{ print $3 }' | load_raid
 	case "$root" in
 	/dev/*);;
@@ -100,7 +104,7 @@ if grep -q dmraid= /proc/cmdline; then
 fi
 if grep -q softraid= /proc/cmdline; then
 	root="$(sed 's/.*softraid=\([^ ]*\).*/\1/' < /proc/cmdline)"
-	echo -n "softraid $root..."
+	echo -n "Switching / to softraid $root..."
 	mdadm --examine --scan --config=partitions > /etc/mdadm.conf
 	grep -qs " $root " /etc/mdadm.conf ||
 		root=$(awk '/dev.md/ { print $2; exit }' < /etc/mdadm.conf)
@@ -114,13 +118,13 @@ if grep -q softraid= /proc/cmdline; then
 	mount_mapper /etc/mdadm.conf
 fi
 if lvmsetup; then
-	echo -n "lvm $root..."
+	echo -n "Switching / to lvm $root..."
 	mount_mapper
 fi
 if grep -q mount= /proc/cmdline; then
 	root="$(sed 's/.*mount=\([^ ]*\).*/\1/' < /proc/cmdline)"
 	dev=$(blkid | grep $root | sed 's/:.*//;q')
-	echo -n "Mounting $dev ($root) ..."
+	echo "Mounting $dev ($root) ..."
 	if ! mount $dev /mnt; then
 		if echo $dev | grep -q "/dev/sd"; then
 			delay=`cat /sys/module/usb_storage/parameters/delay_use`
@@ -130,45 +134,55 @@ if grep -q mount= /proc/cmdline; then
 		fi
 		mount $dev /mnt
 	fi
-	grep -q posixovl /proc/cmdline && mount.posixovl /mnt
+	grep -q posixovl /proc/cmdline &&
+	echo "Mounting posixovl.." &&
+	mount.posixovl /mnt
 fi
 if grep -q loopfs= /proc/cmdline; then
 	loopfs="$(sed 's/.*loopfs=\([^ ]*\).*/\1/' < /proc/cmdline)"
-	echo -n "loop $loopfs..."
+	echo "Into loop file $loopfs..."
 	losetup /dev/loop0 /mnt/$loopfs
 	mount /dev/loop0 /mnt 2> /dev/null
 fi
 if grep -q bindfs= /proc/cmdline; then
 	bind="$(sed 's/.*bindfs=\([^ ]*\).*/\1/' < /proc/cmdline)"
+	echo "Binding ${bind/,/ to } ..."
 	mount --bind /mnt/${bind%,*} /mnt/${bind%,*}/${bind#*,}
 fi
 grep -q cryptoroot= /proc/cmdline && try_init
 umount /sys
 if grep -q subroot= /proc/cmdline; then
 	subroot="/$(sed 's/.*subroot=\([^ ]*\).*/\1/' < /proc/cmdline)" &&
-	if [ -s /usr/share/boot/busybox-static ]; then
-		mv /usr/share/boot/busybox-static .
-		/busybox-static rm -rf /etc /lib /*bin /usr /var
-		echo "exec /busybox-static chroot /mnt$subroot /sbin/init" > /dev/shm/init
+	echo -n "Chrooting to $subroot..."
+	mount --move /dev/pts /mnt$subroot/dev/pts
+	shm=$subroot/dev/shm
+	mount --move /dev/shm /mnt$shm
+	if mv /usr/share/boot/busybox-static /mnt$shm 2> /dev/null; then
+		success <<EOT
+exec /sbin/switch_root mnt $shm/busybox-static chroot $subroot /sbin/init
+EOT
 	else
-		echo "exec chroot /mnt$subroot /sbin/init" > /dev/shm/init
+		success <<EOT
+exec chroot /mnt$subroot /sbin/init
+EOT
 	fi
 fi
-echo -n "tmpfs..."
+echo -n "Switching / to tmpfs"
 size="$(grep rootfssize= < /proc/cmdline | \
 	sed 's/.*rootfssize=\([0-9]*[kmg%]\).*/-o size=\1/')"
 free=$(busybox free | busybox awk '/Mem:/ { print int(($4*100)/$3) }')
 umount /proc
 [ -n "$size" ] || size="-o size=90%"
 echo "exec /sbin/init" > /dev/shm/init
-if [ $free -lt 100 ] || ! mount -t tmpfs $size tmpfs /mnt; then
+if [ $free -lt 50 ] || ! mount -t tmpfs $size tmpfs /mnt; then
 	echo -e "\\033[70G[ \\033[1;33mSkipped\\033[0;39m]"
 	exit
 fi
-for i in $(ls -a /); do
+for i in $(ls -ar /); do
 	case "$i" in
 	.|..)	;;
 	mnt)	mkdir /mnt/mnt;;
+	usr|var) mv /$i /mnt ;;
 	*)	if ! cp -a /$i /mnt 2> /dev/null; then
 			failed
 			umount /mnt
