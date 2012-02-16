@@ -62,7 +62,7 @@ if [ -n "$DRIVER" ]; then
 # Sound card may already be detected by PCI-detect.
 elif [ -d /proc/asound ]; then
 	# Restore sound config for installed system.
-	if [ -s /etc/asound.state ]; then
+	if [ -s /var/lib/alsa/asound.state ]; then
 		echo -n "Restoring last alsa configuration..."
 		alsactl restore
 		status
