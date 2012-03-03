@@ -31,22 +31,24 @@ eth() {
 # For wifi. Users just have to enable it through yes and usually
 # essid any will work and the interface is autodetected.
 wifi() {	
-	if [ "$WIFI" = "yes" ] || grep -q "wifi" /proc/cmdline; then
+	if [ "$WIFI" = "yes" ] || fgrep -q "wifi" /proc/cmdline; then
 		ifconfig $INTERFACE down
 
 		# Confirm if $WIFI_INTERFACE is the wifi interface
 		if [ ! -d /sys/class/net/$WIFI_INTERFACE/wireless ]; then
 			echo "$WIFI_INTERFACE is not a wifi interface, changing it."
-			WIFI_INTERFACE=$(grep : /proc/net/dev | cut -d: -f1 | \
+			WIFI_INTERFACE=$(fgrep : /proc/net/dev | cut -d: -f1 | \
 				while read dev; do iwconfig $dev 2>&1 | \
-					grep -iq "essid" && { echo $dev ; break; }; \
+					fgrep -iq "essid" && { echo $dev ; break; }; \
 				done)
-			[ -n "$WIFI_INTERFACE" ] && sed -i "s/^WIFI_INTERFACE=.*/WIFI_INTERFACE=\"$WIFI_INTERFACE\"/" /etc/network.conf
+			[ -n "$WIFI_INTERFACE" ] && sed -i \
+				"s/^WIFI_INTERFACE=.*/WIFI_INTERFACE=\"$WIFI_INTERFACE\"/" \
+				/etc/network.conf
 		fi
 
 		echo -n "Configuring $WIFI_INTERFACE..."
-		ifconfig $WIFI_INTERFACE up
-		if iwconfig $WIFI_INTERFACE | grep -q "Tx-Power"; then
+		ifconfig $WIFI_INTERFACE up 2>/dev/null
+		if iwconfig $WIFI_INTERFACE | fgrep -q "Tx-Power"; then
 			iwconfig $WIFI_INTERFACE txpower on
 		fi
 		status
@@ -62,27 +64,34 @@ wifi() {
 		# encrypted network
 		[ -n "$WIFI_KEY" ] && case "$WIFI_KEY_TYPE" in
 			wep|WEP)
-				 IWCONFIG_ARGS="$IWCONFIG_ARGS key $WIFI_KEY"
-				 iwconfig $WIFI_INTERFACE essid "$WIFI_ESSID" $IWCONFIG_ARGS
-# wpa_supplicant can also deal with wep encryption but iwconfig is preferred
-# Tip: Use unquoted strings for hexadecimal key in wep_key0
-#			cat /etc/wpa_supplicant.conf > /tmp/wpa.conf
-#			cat >> /tmp/wpa.conf <<EOF
-#ctrl_interface=/var/run/wpa_supplicant
-#ctrl_interface_group=0
-#ap_scan=1
-#network={
-#	ssid="$WIFI_ESSID"
-#	scan_ssid=1
-#	key_mgmt=NONE
-#	wep_key0="$WIFI_KEY"
-#	wep_tx_keyidx=0
-#	priority=5
-#}
-#EOF
-#				echo "Starting wpa_supplicant for NONE/WEP..."
-#				wpa_supplicant -B -W -c/tmp/wpa.conf -D$WPA_DRIVER -i$WIFI_INTERFACE
-				;;
+				#
+				# NOTE (20120303) struggled to connect with WEP key in
+				# cooking but work with 3.0. Busybox/iwconfig seems buggy
+				# but connection work with wpa_supplicant and unquoted
+				# wep_key0
+				#
+				#IWCONFIG_ARGS="$IWCONFIG_ARGS key $WIFI_KEY"
+				#iwconfig $WIFI_INTERFACE essid "$WIFI_ESSID" $IWCONFIG_ARGS
+				#
+				# wpa_supplicant can also deal with wep encryption
+				# Tip: Use unquoted strings for hexadecimal key in wep_key0
+				cat /etc/wpa_supplicant.conf > /tmp/wpa.conf
+				cat >> /tmp/wpa.conf <<EOF
+ctrl_interface=/var/run/wpa_supplicant
+ctrl_interface_group=0
+ap_scan=1
+network={
+	ssid="$WIFI_ESSID"
+	scan_ssid=1
+	key_mgmt=NONE
+	wep_key0=$WIFI_KEY
+	wep_tx_keyidx=0
+	priority=5
+}
+EOF
+				echo "Starting wpa_supplicant for NONE/WEP..."
+				wpa_supplicant -B -W -c/tmp/wpa.conf -D$WPA_DRIVER \
+					-i$WIFI_INTERFACE ;;
 			wpa|WPA)
 				# load pre-configured multiple profiles
 				cat /etc/wpa_supplicant.conf > /tmp/wpa.conf
@@ -176,7 +185,7 @@ Stop() {
 	killall udhcpc
 	killall wpa_supplicant 2>/dev/null
 
-	if iwconfig $WIFI_INTERFACE | grep -q "Tx-Power"; then
+	if iwconfig $WIFI_INTERFACE | fgrep -q "Tx-Power"; then
 		echo "Shutting down wifi card"
 		iwconfig $WIFI_INTERFACE txpower off
 	fi
