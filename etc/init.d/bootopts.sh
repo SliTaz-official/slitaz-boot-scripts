@@ -18,7 +18,7 @@ EOT
 # This option is not handled by a loop and case like others and has no
 # effect on an installed system.
 if ! grep -q "100[0-9]:100[0-9]" /etc/passwd; then
-	if grep -q "user=" /proc/cmdline; then
+	if fgrep -q "user=" /proc/cmdline; then
 		USER=`cat /proc/cmdline | sed 's/.*user=\([^ ]*\).*/\1/'`
 		# Avoid usage of an existing system user or root.
 		if grep -q ^$USER /etc/passwd; then
@@ -74,7 +74,7 @@ do
 			DEVICE=${opt#home=}
 			[ "$DEVICE" = "usb" ] && DEVICE=sda1
 			echo "Home has been specified to $DEVICE..."
-			DEVID=`/sbin/blkid | sed 'p;s/"//g' | grep "$DEVICE" | sed 's/:.*//;q'`
+			DEVID=`/sbin/blkid | sed 'p;s/"//g' | fgrep "$DEVICE" | sed 's/:.*//;q'`
 			if [ -z "$DEVID" ]; then
 				USBDELAY=`cat /sys/module/usb_storage/parameters/delay_use`
 				USBDELAY=$((2+$USBDELAY))
@@ -85,10 +85,10 @@ do
 			DEVID=$DEVICE
 			if [ -x /sbin/blkid ]; then
 				# Can be a label, uuid, type or devname. DEVID gives us first: /dev/name.
-				DEVID=`/sbin/blkid | sed 'p;s/"//g' | grep "$DEVICE" | sed 's/:.*//;q'`
+				DEVID=`/sbin/blkid | sed 'p;s/"//g' | fgrep "$DEVICE" | sed 's/:.*//;q'`
 			fi
 			DEVID=${DEVID##*/}
-			if [ -n "$DEVID" ] && grep -q "$DEVID" /proc/partitions ; then
+			if [ -n "$DEVID" ] && fgrep -q "$DEVID" /proc/partitions ; then
 				echo "Mounting /home on /dev/$DEVID... "
 				[ -d /home/$USER ] && mv /home/$USER /tmp/$USER-files
 				mount /dev/$DEVID /home -o uid=1000,gid=100 2>/dev/null \
