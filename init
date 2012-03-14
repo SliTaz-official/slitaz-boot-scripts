@@ -43,6 +43,8 @@ try_init()
 		fi
 		mount /dev/mapper/$dmlabel /mnt
 	fi
+	grep -q subroot= /proc/cmdline && return
+	grep -q loopfs= /proc/cmdline && return
 	if [ -d /mnt/etc ]; then
 		umount /sys
 		[ -n "$1" ] && for i in $@ ; do
