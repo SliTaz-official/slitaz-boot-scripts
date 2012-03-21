@@ -159,7 +159,8 @@ if grep -q subroot= /proc/cmdline; then
 	mount --move /dev/pts /mnt$subroot/dev/pts
 	shm=$subroot/dev/shm
 	mount --move /dev/shm /mnt$shm
-	if mv /usr/share/boot/busybox-static /mnt$shm 2> /dev/null; then
+	bb="/usr/share/boot/busybox-static /mnt$shm 2> /dev/null"
+	if mv $bb || cp /mnt$subroot$bb ; then
 		success <<EOT
 exec /sbin/switch_root mnt $shm/busybox-static chroot $subroot /sbin/init
 EOT
