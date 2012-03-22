@@ -159,16 +159,12 @@ if grep -q subroot= /proc/cmdline; then
 	mount --move /dev/pts /mnt$subroot/dev/pts
 	shm=$subroot/dev/shm
 	mount --move /dev/shm /mnt$shm
-	bb="/usr/share/boot/busybox-static /mnt$shm 2> /dev/null"
-	if mv $bb || cp /mnt$subroot$bb ; then
-		success <<EOT
-exec /sbin/switch_root mnt $shm/busybox-static chroot $subroot /sbin/init
+	cp $(LD_TRACE_LOADED_OBJECTS=1 /lib/ld*.so /usr/sbin/chroot | sed \
+	     's|.*=> \(/lib/l[^ ]*\).*|\1|;/^\//!d') /usr/sbin/chroot /mnt$shm
+	success <<EOT
+export LD_LIBRARY_PATH=$shm:/lib
+exec /sbin/switch_root mnt $shm/$(cd /mnt$shm ; ls ld-*) $shm/chroot $subroot /sbin/init
 EOT
-	else
-		success <<EOT
-exec chroot /mnt$subroot /sbin/init
-EOT
-	fi
 fi
 echo -n "Switching / to tmpfs"
 size="$(grep rootfssize= < /proc/cmdline | \
