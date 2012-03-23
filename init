@@ -78,7 +78,8 @@ while read line; do
 	case "$line" in
 	*raid10*)	modprobe raid10 ;;
 	*raid0*)	modprobe raid0 ;;
-	*raid1*)	modprobe raid1 ;;
+	*raid1*|*mirror*)
+			modprobe raid1 ;;
 	*raid[456]*)	modprobe raid456 ;;
 	esac
 done
@@ -126,7 +127,8 @@ fi
 if grep -q mount= /proc/cmdline; then
 	root="$(sed 's/.*mount=\([^ ]*\).*/\1/' < /proc/cmdline)"
 	dev=$(blkid | grep $root | sed 's/:.*//;q')
-	echo "Mounting $dev ($root) ..."
+	[ "$dev" = "$root" ] || root="$dev ($root)"
+	echo "Mounting $root ..."
 	if ! mount $dev /mnt; then
 		if echo $dev | grep -q "/dev/sd"; then
 			delay=`cat /sys/module/usb_storage/parameters/delay_use`
