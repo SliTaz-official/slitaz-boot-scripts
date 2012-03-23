@@ -18,7 +18,7 @@ usb_device()
 {
 	cd /sys/block
 	for i in sd* sda ; do
-		grep -q 1 $i/removable && break
+		grep -qs 1 $i/removable && break
 	done
 	echo $i
 }
