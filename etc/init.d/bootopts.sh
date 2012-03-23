@@ -13,6 +13,16 @@ $1	swap	swap	default	0 0
 EOT
 }
 
+# Get first usb disk
+usb_device()
+{
+	cd /sys/block
+	for i in sd* sda ; do
+		grep -q 1 $i/removable && break
+	done
+	echo $i
+}
+
 # Default user account without password (uid=1000). In live mode the option
 # user=name can be used, but user must be added before home= to have home dir.
 # This option is not handled by a loop and case like others and has no
@@ -72,7 +82,7 @@ do
 			# user home dir. Note: home=usb is a shorter and easier way to
 			# have home=/dev/sda1.
 			DEVICE=${opt#home=}
-			[ "$DEVICE" = "usb" ] && DEVICE=sda1
+			[ "$DEVICE" = "usb" ] && DEVICE="$(usb_device)1"
 			echo "Home has been specified to $DEVICE..."
 			DEVID=`/sbin/blkid | sed 'p;s/"//g' | fgrep "$DEVICE" | sed 's/:.*//;q'`
 			if [ -z "$DEVID" ]; then
