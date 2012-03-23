@@ -78,9 +78,9 @@ while read line; do
 	case "$line" in
 	*raid10*)	modprobe raid10 ;;
 	*raid0*)	modprobe raid0 ;;
-	*raid1*|*mirror*)
-			modprobe raid1 ;;
+	*raid1*)	modprobe raid1 ;;
 	*raid[456]*)	modprobe raid456 ;;
+	*mirror*)	modprobe dm-mirror ;;
 	esac
 done
 }
