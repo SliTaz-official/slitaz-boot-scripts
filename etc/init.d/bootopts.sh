@@ -93,6 +93,9 @@ do
 				[ -d /home/$USER ] && mv /home/$USER /tmp/$USER-files
 				mount /dev/$DEVID /home -o uid=1000,gid=100 2>/dev/null \
 					|| mount /dev/$DEVID /home
+				case "$(/sbin/blkid | grep /dev/$DEVID:)" in
+				*\"ntfs\"*|*\"vfat\"*) mount.posixovl /home ;;
+				esac					
 				# Check if swap file must be generated in /home: swap=size (Mb).
 				# This option is only used within home=device.
 				if grep -q "swap=[1-9]*" /proc/cmdline; then
