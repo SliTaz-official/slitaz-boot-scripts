@@ -175,7 +175,7 @@ free=$(busybox free | busybox awk '/Mem:/ { print int(($4*100)/$3) }')
 umount /proc
 [ -n "$size" ] || size="-o size=90%"
 echo "exec /sbin/init" > /dev/shm/init
-if [ $free -lt 50 ] || ! mount -t tmpfs $size tmpfs /mnt; then
+if [ $free -lt 100 ] || ! mount -t tmpfs $size tmpfs /mnt; then
 	echo -e "\\033[70G[ \\033[1;33mSkipped\\033[0;39m]"
 	exit
 fi
