@@ -71,12 +71,12 @@ fi
 # Mount filesystems in /etc/fstab.
 echo "Mounting filesystems in fstab..."
 /bin/mount -a
-
-# Store boot messages to log files.
-/bin/dmesg > /var/log/dmesg.log &
 ;;
 
 logged)
+
+# Store boot messages to log files.
+/bin/dmesg > /var/log/dmesg.log &
 
 # Parse cmdline args for earlier boot options. All other boot options
 # are in /etc/init./bootopts.sh.
