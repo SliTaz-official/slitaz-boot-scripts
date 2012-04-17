@@ -85,28 +85,24 @@ fi
 # Locale config. Do a gui config for both lang/keymap.
 echo "Checking if /etc/locale.conf exists... "
 if [ ! -s "/etc/locale.conf" ]; then
-	if [ "$SCREEN" != "text" ] && [ -x /usr/bin/Xorg ]; then
-		echo "Starting TazBox configuration..."
-		DISPLAY=:1 tazbox boot
-	else
-		tazlocale
-	fi
-else
-	lang=$(cat /etc/locale.conf | fgrep LANG | cut -d "=" -f 2)
-	echo -n "Locale configuration: $lang" && status
+	echo "Setting system locale to: C (English)"
+	echo -e "LANG=POSIX\nLC_ALL=POSIX" > /etc/locale.conf
 fi
+echo -n "Locale configuration: $LANG"
+. /etc/locale.conf
+export LANG LC_ALL
+status
 
 # Keymap config.
-if [ -s "/etc/keymap.conf" ]; then
-	KEYMAP=$(cat /etc/keymap.conf)
-	echo "Keymap configuration: $KEYMAP"
-	if [ -x /bin/loadkeys ]; then
-		loadkeys $KEYMAP
-	else
-		loadkmap < /usr/share/kmap/$KEYMAP.kmap
-	fi
+if [ ! -s "/etc/keymap.conf" ]; then
+	echo "us" > /etc/keymap.conf
+fi
+KEYMAP=$(cat /etc/keymap.conf)
+echo "Keymap configuration: $KEYMAP"
+if [ -x /bin/loadkeys ]; then
+	loadkeys $KEYMAP
 else
-	tazkeymap
+	loadkmap < /usr/share/kmap/$KEYMAP.kmap
 fi
 
 # Timezone config. Set timezone using the keymap config for fr, be, fr_CH

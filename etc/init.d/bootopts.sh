@@ -148,9 +148,6 @@ do
 			do
 				modprobe $mod
 			done
-			grep -qs batt /etc/lxpanel/default/panels/panel ||
-			sed -i 's/= cpu/= batt\n}\n\nPlugin {\n    type = cpu/' \
-				/etc/lxpanel/default/panels/panel 2> /dev/null
 			# Enable Kernel Laptop mode.
 			echo "5" > /proc/sys/vm/laptop_mode ;;
 		mount)
@@ -183,17 +180,18 @@ do
 			fi ;;
 		wm=*)
 			# Check for a Window Manager (for a flavor, default WM can be changed
-			# with boot options or with an addfile in /etc/X11/wm.default.
+			# with boot options or via /etc/slitaz/applications.conf).
 			WM=${opt#wm=}
-			mkdir -p /etc/X11
 			case $WM in
-				jwm)
-					echo "jwm" > /etc/X11/wm.default ;;
 				ob|openbox|openbox-session)
-					echo "openbox" > /etc/X11/wm.default ;;
+					WM=openbox-session ;;
 				e17|enlightenment|enlightenment_start)
-					echo "enlightenment" > /etc/X11/wm.default ;;
-			esac ;;
+					WM=enlightenment ;;
+				razorqt|razor-session)
+					WM=razor-session ;;
+			esac
+			sed -i s/"WINDOW_MANAGER=.*"/"WINDOW_MANAGER=\"$WM\""/ \
+				/etc/slitaz/applications.conf ;;
 		*)
 			continue ;;
 	esac
