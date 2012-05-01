@@ -82,34 +82,29 @@ fi
 # Auto recharge packages list (after network connection of course)
 [ "$RECHARGE_PACKAGES_LIST" == "yes" ] && tazpkg recharge &
 
-# Locale config. Do a gui config for both lang/keymap.
+# Locale config.
 echo "Checking if /etc/locale.conf exists... "
 if [ ! -s "/etc/locale.conf" ]; then
-	echo "Setting system locale to: C (English)"
+	echo "Setting system locale to: POSIX (English)"
 	echo -e "LANG=POSIX\nLC_ALL=POSIX" > /etc/locale.conf
 fi
-echo -n "Locale configuration: $LANG"
 . /etc/locale.conf
-export LANG LC_ALL
-status
+echo -n "Locale configuration: $LANG"
+export LC_ALL
+. /lib/libtaz.sh && status
 
-# Keymap config.
+# Keymap config. Default to us in live mode if kmap= was not used.
 if [ ! -s "/etc/keymap.conf" ]; then
 	echo "us" > /etc/keymap.conf
 fi
-KEYMAP=$(cat /etc/keymap.conf)
-echo "Keymap configuration: $KEYMAP"
-if [ -x /bin/loadkeys ]; then
-	loadkeys $KEYMAP
-else
-	loadkmap < /usr/share/kmap/$KEYMAP.kmap
-fi
+kmap=$(cat /etc/keymap.conf)
+echo "Keymap configuration: $kmap"
+/sbin/tazkeymap $kmap
 
 # Timezone config. Set timezone using the keymap config for fr, be, fr_CH
 # and ca with Montreal.
 if [ ! -s "/etc/TZ" ]; then
-	map=$(cat /etc/keymap.conf)
-	case "$map" in
+	case "$kmap" in
 		fr-latin1|be-latin1)
 			echo "Europe/Paris" > /etc/TZ ;;
 		fr_CH-latin1|de_CH-latin1)

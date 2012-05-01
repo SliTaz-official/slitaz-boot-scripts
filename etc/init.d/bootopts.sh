@@ -68,9 +68,7 @@ do
 		lang=*)
 			# Check for a specified locale (lang=*).
 			LANG=${opt#lang=}
-			echo -n "Setting system locale to: $LANG... "
-			tazlocale init $LANG
-			status ;;
+			/sbin/tazlocale $LANG ;;
 		kmap=*)
 			# Check for a specified keymap (kmap=*).
 			KEYMAP=${opt#kmap=}
@@ -105,7 +103,7 @@ do
 					|| mount /dev/$DEVID /home
 				case "$(/sbin/blkid | grep /dev/$DEVID:)" in
 				*\"ntfs\"*|*\"vfat\"*) mount.posixovl /home ;;
-				esac					
+				esac
 				# Check if swap file must be generated in /home: swap=size (Mb).
 				# This option is only used within home=device.
 				if grep -q "swap=[1-9]*" /proc/cmdline; then
