@@ -20,12 +20,11 @@ readonly)
 
 colorize 34 "Processing: /etc/init.d/rcS..."
 
-# Mount /proc.
+# Mount /proc
 echo -n "Mounting proc filesystem on /proc"
 mount proc && status
 
-# Mount /run as tmpfs to avoid pidfile and other runtime data behing
-# writting to disk.
+# Mount /run as tmpfs runtime data are not written to disk
 echo -n "Mounting tmpfs filesystem on: /run"
 mount -t tmpfs tmpfs /run
 status
@@ -45,7 +44,7 @@ if [ "$UDEV" == "yes" ]; then
 	echo "" > /proc/sys/kernel/hotplug
 fi
 
-# Busybox mdev is an udev alternative tu Udev.
+# Busybox mdev is an udev alternative
 if [ "$UDEV" == "mdev" ]; then
 	echo -n "Executing mdev -s to populate /dev..."
 	mdev -s && echo "mdev" > /proc/sys/kernel/hotplug
@@ -111,8 +110,8 @@ fi
 
 # Handle kernel cmdline parameter modprobe=<module_list>
 if [ "$MODPROBE" ]; then
-	MODULES=$(sed -e 's/.* modprobe=\([^ ]*\).*/\1/' -e 's/,/\n/g' < /proc/cmdline)
-	for i in $MODULES; do
+	mods=$(sed -e 's/.* modprobe=\([^ ]*\).*/\1/' -e 's/,/\n/g' < /proc/cmdline)
+	for i in $mods; do
 		echo -n "Loading kernel module: $i"
 		modprobe $i
 		status
@@ -146,7 +145,7 @@ fi
 
 # Mount /proc/bus/usb
 if [ -d /proc/bus/usb ]; then
-	echo -n "Mounting /proc/bus/usb filesystem..."
+	echo -n "Mounting usbfs filesystem on: /proc/bus/usb"
 	mount -t usbfs usbfs /proc/bus/usb
 	status
 fi
@@ -211,19 +210,17 @@ echo "SliTaz boot time: ${time}s"
 
 *)
 	# --> readonly --> readwrite
-	#if [ ! -s /tmp/boot.log ]; then
-		#mount -t tmpfs tmpfs /tmp
-		#mount -t devpts devpts /dev/pts
-	#fi
-	#script -aqc '/etc/init.d/rcS readonly' /tmp/boot.log
-	/etc/init.d/rcS readonly
-	#umount /tmp
+	if [ ! -s /tmp/boot.log ]; then
+		mount -t tmpfs tmpfs /tmp
+	fi
+	/etc/init.d/rcS readonly | tee /tmp/boot.log
 	# Lograde boot.log
 	last=.9
 	for i in .8 .7 .6 .5 .4 .3 .2 .1 .0 '' ; do
-		mv -f /var/log/boot.log$i /var/log/boot.log$last 2>/dev/null
+		mv -f /var/log/boot.log${i} /var/log/boot.log${last} 2>/dev/null
 		last=$i
 	done
-	#mv -f /tmp/boot.log /var/log/boot.log
-	script -aqc '/etc/init.d/rcS readwrite' /var/log/boot.log ;;
+	mv -f /tmp/boot.log /var/log/boot.log
+	umount /tmp
+	/etc/init.d/rcS readwrite | tee -a /var/log/boot.log ;;
 esac
