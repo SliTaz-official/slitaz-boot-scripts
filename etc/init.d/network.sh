@@ -1,6 +1,7 @@
 #!/bin/sh
-# /etc/init.d/network.sh - Network initialization boot script.
-# Config file is: /etc/network.conf
+#
+# /etc/init.d/network.sh : Network initialization boot script
+# Configuration file     : /etc/network.conf
 #
 . /etc/init.d/rc.functions
 
@@ -12,7 +13,7 @@ fi
 
 boot() {
 	# Set hostname.
-	echo -n "Setting hostname..."
+	echo -n "Setting hostname to: $(cat /etc/hostname)"
 	/bin/hostname -F /etc/hostname
 	status
 
@@ -30,7 +31,7 @@ eth() {
 
 # For wifi. Users just have to enable it through yes and usually
 # essid any will work and the interface is autodetected.
-wifi() {	
+wifi() {
 	if [ "$WIFI" = "yes" ] || fgrep -q "wifi" /proc/cmdline; then
 		ifconfig $INTERFACE down
 
@@ -52,7 +53,7 @@ wifi() {
 			iwconfig $WIFI_INTERFACE txpower on
 		fi
 		status
-		
+
 		[ -n "$WPA_DRIVER" ] || WPA_DRIVER="wext"
 		IWCONFIG_ARGS=""
 		[ -n "$WIFI_MODE" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS mode $WIFI_MODE"

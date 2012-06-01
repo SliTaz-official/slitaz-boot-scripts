@@ -1,21 +1,13 @@
 #!/bin/sh
-# /etc/init.d/bootopts.sh - SliTaz boot options from the cmdline.
+#
+# /etc/init.d/bootopts.sh : SliTaz boot options from the cmdline
 #
 # Earlier boot options are in rcS, ex: config= and modprobe=
 #
 . /etc/init.d/rc.functions
 
-# Update fstab for swapon/swapoff
-add_swap_in_fstab()
-{
-	grep -q "$1	" /etc/fstab || cat >> /etc/fstab <<EOT
-$1	swap	swap	default	0 0
-EOT
-}
-
 # Get first usb disk
-usb_device()
-{
+usb_device() {
 	cd /sys/block
 	for i in sd* sda ; do
 		grep -qs 1 $i/removable && break
@@ -29,7 +21,7 @@ usb_device()
 # effect on an installed system.
 if ! grep -q "100[0-9]:100[0-9]" /etc/passwd; then
 	if fgrep -q "user=" /proc/cmdline; then
-		USER=`cat /proc/cmdline | sed 's/.*user=\([^ ]*\).*/\1/'`
+		USER=$(cat /proc/cmdline | sed 's/.*user=\([^ ]*\).*/\1/')
 		# Avoid usage of an existing system user or root.
 		if grep -q ^$USER /etc/passwd; then
 			USER=tux
@@ -54,9 +46,9 @@ if ! grep -q "100[0-9]:100[0-9]" /etc/passwd; then
 fi
 
 # Parse /proc/cmdline for boot options.
-echo "Parsing kernel cmdline for SliTaz live options... "
+echo "Checking for SliTaz cmdline options..."
 
-for opt in `cat /proc/cmdline`
+for opt in $(cat /proc/cmdline)
 do
 	case $opt in
 		eject)
@@ -140,12 +132,6 @@ do
 				cp -a /home/boot/rootfs/* /
 			fi ;;
 		laptop)
-			# Laptop option to load related Kernel modules.
-			echo "Loading laptop modules: ac, battery, fan, yenta_socket..."
-			for mod in ac battery fan yenta_socket
-			do
-				modprobe $mod
-			done
 			# Enable Kernel Laptop mode.
 			echo "5" > /proc/sys/vm/laptop_mode ;;
 		mount)
@@ -198,16 +184,4 @@ done
 # If no default WM fallback to Openbox (we never know).
 if [ ! -f /etc/X11/wm.default ]; then
 	echo "openbox" > /etc/X11/wm.default
-fi
-
-# Activate an eventual swap file or partition.
-if [ "`fdisk -l | grep swap`" ]; then
-	for SWAP_DEV in `fdisk -l | sed '/swap/!d;s/ .*//'`; do
-		echo "Swap memory detected on: $SWAP_DEV"
-		add_swap_in_fstab $SWAP_DEV
-	done
-fi
-if grep -q swap /etc/fstab; then
-	echo "Activating swap memory..."
-	swapon -a
 fi

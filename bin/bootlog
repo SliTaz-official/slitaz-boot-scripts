@@ -1,4 +1,16 @@
 #!/bin/sh
-# tazbootlog: Display SliTaz boot log messages.
 #
-cat /var/log/dmesg.log /var/log/boot.log | sed "s/.\[3g.*\]R//"
+# Display SliTaz boot log messages
+#
+
+catlog() {
+	cat /var/log/dmesg.log /var/log/boot.log | sed "s/.\[3g.*\]R//"
+}
+
+case "$1" in
+	box) catlog | sed -e s'///'g -e s'/\[1;3[0-9]m//'g \
+		-e s'/\[*.0G\[/ /'g -e s'/\[0;39m.*//'g | yad \
+		--text-info --title="Boot Log" --window-icon=text-plain \
+		--width=600 --height=400 --button=gtk-close:0 ;;
+	*) catlog ;;
+esac
