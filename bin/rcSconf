@@ -1,0 +1,62 @@
+#!/bin/sh
+#
+# Update and clean-up /etc/rcS.conf
+#
+
+# X is now started earlier by system.sh
+up_daemons() {
+	echo $RUN_DAEMONS | sed \
+		-e s/dbus// -e s/hald// -e s/slim// -e s'/   //' -e s'/  //'
+}
+
+case "$1" in
+	up)
+		[ $(id -u) != 0 ] && exit 0
+		#check_root: broken gettext in libtaz.sh
+		. /etc/rcS.conf
+		cp -f /etc/rcS.conf /etc/slitaz/rcS.conf.bak
+		echo "Updating: /etc/rcS.conf"
+		cat > /etc/rcS.conf << EOT
+# /etc/rcS.conf : Initial boot script configuration for SliTaz GNU/Linux
+# Sourced by    : /etc/init.d/rcS
+#
+
+# Use udev to populate /dev and handle hotplug events
+UDEV="$UDEV"
+
+# Clean up the system removing all tmp and pid files
+CLEAN_UP_SYSTEM="$CLEAN_UP_SYSTEM"
+
+# Filesystems to check integrity of at boot time. You should check the
+# rootfs (where SliTaz is installed) and all partitions listed in fstab.
+# Example: CHECK_FS="/dev/hda5 /dev/hdb1"
+CHECK_FS="$CHECK_FS"
+
+# Syslogd: Max size (KB) before rotation
+SYSLOGD_ROTATED_SIZE="$SYSLOGD_ROTATED_SIZE"
+
+# Kernel modules to load at boot time
+LOAD_MODULES="$LOAD_MODULES"
+
+# X Login manager: slim or lxdm, empty to disable X
+LOGIN_MANAGER="slim"
+
+# Initialization scripts to run at boot time. The local.sh script
+# let you quickly add some local startup commands.
+RUN_SCRIPTS="bootopts.sh system.sh network.sh local.sh"
+
+# Daemons to start at boot time. DBUS daemon is started before the
+# login manager and from: /etc/init.d/system.sh
+RUN_DAEMONS="$(up_daemons)"
+
+# Pre login message
+MESSAGE="Welcome to your box"
+EOT
+		diff /etc/slitaz/rcS.conf.bak /etc/rcS.conf > \
+			/etc/slitaz/rcS.conf.diff ;;
+	show) less -E /etc/rcS.conf ;;
+	show-diff) less -E /etc/slitaz/rcS.conf.diff ;;
+	clean) rm -f /etc/slitaz/rcS.conf* ;;
+	*) echo "Usage: $(basename $0) [up|show|show-diff|clean]" ;;
+esac
+exit 0

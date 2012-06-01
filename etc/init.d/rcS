@@ -106,20 +106,6 @@ else
 	echo "System clean up is disabled in: /etc/rcS.conf"
 fi
 
-# Create /dev/cdrom if needed (symlink does not exist on LiveCD).
-# Also add /dev/cdrom to fstab if entry does not exist.
-if [ "$CDROM" ]; then
-	DRIVE_NAME=${CDROM#/dev/}
-else
-	DRIVE_NAME=$(fgrep -s "drive name" /proc/sys/dev/cdrom/info | cut -f 3)
-fi
-if [ "$DRIVE_NAME" -a ! "$(readlink /dev/cdrom)" ]; then
-	echo -n "Creating symlink : /dev/cdrom..."
-	ln -s /dev/$DRIVE_NAME /dev/cdrom
-	ln -s /dev/$DRIVE_NAME /dev/dvd
-	status
-fi
-
 # Handle kernel cmdline parameter modprobe=<module_list>
 if [ "$MODPROBE" ]; then
 	MODULES=$(sed -e 's/.* modprobe=\([^ ]*\).*/\1/' -e 's/,/\n/g' < /proc/cmdline)
