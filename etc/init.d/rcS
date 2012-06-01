@@ -18,10 +18,10 @@ case "$1" in
 
 readonly)
 
-colorize 34 "Processing /etc/init.d/rcS..."
+colorize 34 "Processing: /etc/init.d/rcS..."
 
 # Mount /proc.
-echo -n "Mounting proc filesystem..."
+echo -n "Mounting proc filesystem on /proc"
 mount proc && status
 
 # Mount /run as tmpfs to avoid pidfile and other runtime data behing
@@ -30,26 +30,9 @@ echo -n "Mounting tmpfs filesystem on: /run"
 mount -t tmpfs tmpfs /run
 status
 
-# Before mounting filesystems we check fs specified in the file
-# /etc/rcS.conf and variable $CHECK_FS.
-if [ "$CHECK_FS" ]; then
-	mount -o remount,ro /
-	for i in $CHECK_FS; do
-		colorize 36 "Checking filesystem: $i"
-		e2fsck -p $i
-	done
-fi
-
-# Remount rootfs rw.
-echo "Remounting rootfs read/write..."
-mount -o remount,rw /
-;;
-
-readwrite)
-
 # Trigger Udev and handle hotplug events
-if [ "$UDEV" = "yes" ]; then
-	echo -n "Mounting devtmpfs filesystem..."
+if [ "$UDEV" == "yes" ]; then
+	echo -n "Mounting devtmpfs filesystem on: /dev"
 	mount -t devtmpfs devtmpfs /dev
 	status
 	echo "Starting udev daemon..."
@@ -62,15 +45,37 @@ if [ "$UDEV" = "yes" ]; then
 	echo "" > /proc/sys/kernel/hotplug
 fi
 
+# Busybox mdev is an udev alternative tu Udev.
+if [ "$UDEV" == "mdev" ]; then
+	echo -n "Executing mdev -s to populate /dev..."
+	mdev -s && echo "mdev" > /proc/sys/kernel/hotplug
+	status
+fi
+
+# Before mounting filesystems we check fs specified in the file
+# /etc/rcS.conf and variable $CHECK_FS. WE need udev started to
+# have /dev/* populated
+if [ "$CHECK_FS" ]; then
+	mount -o remount,ro /
+	for i in $CHECK_FS; do
+		colorize 36 "Checking filesystem: $i"
+		e2fsck -p $i
+	done
+fi
+
+# Remount rootfs rw.
+echo "Remounting rootfs read/write..."
+mount -o remount,rw /
+
 # Mount filesystems in /etc/fstab.
 echo "Mounting filesystems in fstab..."
 mount -a
+;;
+
+readwrite)
 
 # Be quiet
 echo "0 0 0 0" > /proc/sys/kernel/printk
-;;
-
-logged)
 
 # Store boot messages to log files.
 dmesg > /var/log/dmesg.log &
@@ -205,22 +210,20 @@ echo "SliTaz boot time: ${time}s"
 ;;
 
 *)
-	# --> readonly --> readwrite --> logged.
-	#if [ ! -s /run/boot.log ]; then
+	# --> readonly --> readwrite
+	#if [ ! -s /tmp/boot.log ]; then
+		#mount -t tmpfs tmpfs /tmp
 		#mount -t devpts devpts /dev/pts
-		#mount -t tmpfs tmpfs /run
 	#fi
-	#script -aqc '/etc/init.d/rcS readonly' /run/boot.log
-	#script -aqc '/etc/init.d/rcS readwrite' /run/boot.log
+	#script -aqc '/etc/init.d/rcS readonly' /tmp/boot.log
 	/etc/init.d/rcS readonly
-	/etc/init.d/rcS readwrite
+	#umount /tmp
 	# Lograde boot.log
-	#last=.9
-	#for i in .8 .7 .6 .5 .4 .3 .2 .1 .0 '' ; do
-		#mv -f /var/log/boot.log$i /var/log/boot.log$last 2>/dev/null
-		#last=$i
-	#done
-	#mv -f /run/boot.log /var/log/boot.log
-	#script -aqc '/etc/init.d/rcS logged' /var/log/boot.log
-	/etc/init.d/rcS logged ;;
+	last=.9
+	for i in .8 .7 .6 .5 .4 .3 .2 .1 .0 '' ; do
+		mv -f /var/log/boot.log$i /var/log/boot.log$last 2>/dev/null
+		last=$i
+	done
+	#mv -f /tmp/boot.log /var/log/boot.log
+	script -aqc '/etc/init.d/rcS readwrite' /var/log/boot.log ;;
 esac
