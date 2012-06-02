@@ -214,7 +214,7 @@ echo "SliTaz boot time: ${time}s"
 		mount -t tmpfs tmpfs /tmp
 	fi
 	/etc/init.d/rcS readonly 2>&1 | tee -a /tmp/boot.log
-	# Lograde boot.log
+	# Logrotate boot.log
 	last=.9
 	for i in .8 .7 .6 .5 .4 .3 .2 .1 .0 '' ; do
 		mv -f /var/log/boot.log${i} /var/log/boot.log${last} 2>/dev/null
