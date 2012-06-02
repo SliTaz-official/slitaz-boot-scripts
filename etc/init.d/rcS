@@ -24,11 +24,6 @@ colorize 34 "Processing: /etc/init.d/rcS..."
 echo -n "Mounting proc filesystem on /proc"
 mount proc && status
 
-# Mount /run as tmpfs runtime data are not written to disk
-echo -n "Mounting tmpfs filesystem on: /run"
-mount -t tmpfs tmpfs /run
-status
-
 # Trigger Udev and handle hotplug events
 if [ "$UDEV" == "yes" ]; then
 	echo -n "Mounting devtmpfs filesystem on: /dev"
@@ -210,17 +205,17 @@ echo "SliTaz boot time: ${time}s"
 
 *)
 	# --> readonly --> readwrite
-	if [ ! -s /tmp/boot.log ]; then
-		mount -t tmpfs tmpfs /tmp
+	if [ ! -s /run/boot.log ]; then
+		# Mount /run as tmpfs runtime data are not written to disk
+		mount -t tmpfs tmpfs /run
 	fi
-	/etc/init.d/rcS readonly 2>&1 | tee -a /tmp/boot.log
+	/etc/init.d/rcS readonly 2>&1 | tee -a /run/boot.log
 	# Logrotate boot.log
 	last=.9
 	for i in .8 .7 .6 .5 .4 .3 .2 .1 .0 '' ; do
 		mv -f /var/log/boot.log${i} /var/log/boot.log${last} 2>/dev/null
 		last=$i
 	done
-	mv -f /tmp/boot.log /var/log/boot.log
-	umount /tmp
+	mv -f /run/boot.log /var/log/boot.log
 	/etc/init.d/rcS readwrite 2>&1 | tee -a /var/log/boot.log ;;
 esac
