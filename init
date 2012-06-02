@@ -2,7 +2,7 @@
 
 success()
 {
-	cat > /dev/shm/init
+	cat > /tmp/init
 	[ -d /proc/sys ] && umount /proc
 	echo -e "\\033[70G[ \\033[1;32mOK\\033[0;39m ]"
 	exit
@@ -10,8 +10,7 @@ success()
 
 launch_init()
 {
-	mount --move /dev/pts /mnt/dev/pts
-	mount --move /dev/shm /mnt/dev/shm
+	mount --move /tmp /mnt/tmp
 	success <<EOT
 exec /sbin/switch_root mnt /sbin/init
 EOT
@@ -86,10 +85,9 @@ done
 }
 
 if [ "$1" != "logged" ]; then
-	mount -t devpts devpts /dev/pts
-	mount -t tmpfs tmpfs /dev/shm
-	script -qc '/init logged' /dev/shm/boot.log
-	. /dev/shm/init
+	mount -t tmpfs tmpfs /tmp
+	/init logged 2>&1 | tee /tmp/boot.log
+	. /tmp/init
 else
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
@@ -159,13 +157,13 @@ if grep -q subroot= /proc/cmdline; then
 	subroot="/$(sed 's/.*subroot=\([^ ]*\).*/\1/' < /proc/cmdline)" &&
 	echo -n "Chrooting to $subroot..."
 	mount --move /dev/pts /mnt$subroot/dev/pts
-	shm=$subroot/dev/shm
-	mount --move /dev/shm /mnt$shm
+	tmp=$subroot/tmp
+	mount --move /tmp /mnt$tmp
 	cp $(LD_TRACE_LOADED_OBJECTS=1 /lib/ld*.so /usr/sbin/chroot | sed \
-	     's|.*=> \(/lib/l[^ ]*\).*|\1|;/^\//!d') /usr/sbin/chroot /mnt$shm
+	     's|.*=> \(/lib/l[^ ]*\).*|\1|;/^\//!d') /usr/sbin/chroot /mnt$tmp
 	success <<EOT
-export LD_LIBRARY_PATH=$shm:/lib
-exec /sbin/switch_root mnt $shm/$(cd /mnt$shm ; ls ld-*) $shm/chroot $subroot /sbin/init
+export LD_LIBRARY_PATH=$tmp:/lib
+exec /sbin/switch_root mnt $tmp/$(cd /mnt$tmp ; ls ld-*) $tmp/chroot $subroot /sbin/init
 EOT
 fi
 echo -n "Switching / to tmpfs"
@@ -174,7 +172,7 @@ size="$(grep rootfssize= < /proc/cmdline | \
 free=$(busybox free | busybox awk '/Mem:/ { print int(($4*100)/$3) }')
 umount /proc
 [ -n "$size" ] || size="-o size=90%"
-echo "exec /sbin/init" > /dev/shm/init
+echo "exec /sbin/init" > /tmp/init
 if [ $free -lt 100 ] || ! mount -t tmpfs $size tmpfs /mnt; then
 	echo -e "\\033[70G[ \\033[1;33mSkipped\\033[0;39m]"
 	exit

@@ -213,7 +213,7 @@ echo "SliTaz boot time: ${time}s"
 	if [ ! -s /tmp/boot.log ]; then
 		mount -t tmpfs tmpfs /tmp
 	fi
-	/etc/init.d/rcS readonly | tee /tmp/boot.log
+	/etc/init.d/rcS readonly 2>&1 | tee -a /tmp/boot.log
 	# Lograde boot.log
 	last=.9
 	for i in .8 .7 .6 .5 .4 .3 .2 .1 .0 '' ; do
@@ -222,5 +222,5 @@ echo "SliTaz boot time: ${time}s"
 	done
 	mv -f /tmp/boot.log /var/log/boot.log
 	umount /tmp
-	/etc/init.d/rcS readwrite | tee -a /var/log/boot.log ;;
+	/etc/init.d/rcS readwrite 2>&1 | tee -a /var/log/boot.log ;;
 esac
