@@ -62,6 +62,7 @@ wifi() {
 		if [ "$WIFI_KEY" == "" -o "$WIFI_KEY_TYPE" == "none" ]; then
 			iwconfig $WIFI_INTERFACE essid "$WIFI_ESSID" $IWCONFIG_ARGS
 		fi
+		[ -n "$WIFI_AP" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS ap $WIFI_AP"
 		# encrypted network
 		[ -n "$WIFI_KEY" ] && case "$WIFI_KEY_TYPE" in
 			wep|WEP)
