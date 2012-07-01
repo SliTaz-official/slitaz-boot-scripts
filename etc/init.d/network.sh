@@ -58,11 +58,11 @@ wifi() {
 		IWCONFIG_ARGS=""
 		[ -n "$WIFI_MODE" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS mode $WIFI_MODE"
 		[ -n "$WIFI_CHANNEL" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS channel $WIFI_CHANNEL"
+		[ -n "$WIFI_AP" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS ap $WIFI_AP"
 		# unencrypted network
 		if [ "$WIFI_KEY" == "" -o "$WIFI_KEY_TYPE" == "none" ]; then
 			iwconfig $WIFI_INTERFACE essid "$WIFI_ESSID" $IWCONFIG_ARGS
 		fi
-		[ -n "$WIFI_AP" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS ap $WIFI_AP"
 		# encrypted network
 		[ -n "$WIFI_KEY" ] && case "$WIFI_KEY_TYPE" in
 			wep|WEP)
