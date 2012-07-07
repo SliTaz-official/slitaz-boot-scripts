@@ -156,7 +156,6 @@ umount /sys
 if grep -q subroot= /proc/cmdline; then
 	subroot="/$(sed 's/.*subroot=\([^ ]*\).*/\1/' < /proc/cmdline)" &&
 	echo -n "Chrooting to $subroot..."
-	mount --move /dev/pts /mnt$subroot/dev/pts
 	run=$subroot/run
 	mount --move /run /mnt$run
 	cp $(LD_TRACE_LOADED_OBJECTS=1 /lib/ld*.so /usr/sbin/chroot | sed \
