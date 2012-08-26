@@ -8,7 +8,7 @@ echo -e '\033[70G[ \033[1;3'${1:-1mFailed}'\033[0;39m ]'
 quit()
 {
 [ -d /mnt$4/etc ] || return
-mount /mnt -o remount,ro
+[ -n "$4" ] || mount /mnt -o remount,ro
 mount --move /run /mnt/${1:-run}
 cat>/run/init<<EOT
 $2
@@ -36,7 +36,7 @@ echo "Switching / to $1 ..."
 
 use()
 {
-got $1 && echo msg "$1 $root"
+got $1 && msg "$1 $root"
 }
 
 mnt()
@@ -140,7 +140,8 @@ fi
 trylvm
 if got mount
 then	dev=$root
-	root=$(blkid|grep $root|sed 's/:.*//;q')
+	x=$(blkid|grep $dev|sed 's/:.*//;q')
+	root=${x:-$dev}
 	[ "$dev" = "$root" ] || dev="$root ($dev)"
 	echo "Mount $dev..."
 	mnt /mnt
@@ -156,7 +157,7 @@ then	cp $(LD_TRACE_LOADED_OBJECTS=1 /lib/ld*.so /usr/sbin/chroot | sed\
 		's|.*=> \(/lib/l[^ ]*\).*|\1|;/^\//!d') /usr/sbin/chroot /run
 	r=$root/run
 	quit $r "export LD_LIBRARY_PATH=$r:/lib"\
-		"$(cd /mnt; ls $r/ld-*) $r/chroot $root" "/$root"
+		"$root$(ls /run/ld-*) $r/chroot $root" "/$root"
 fi
 msg tmpfs
 root=100
