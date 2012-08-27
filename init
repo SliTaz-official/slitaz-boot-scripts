@@ -31,7 +31,7 @@ arg $1= && root="$(sed "s/.*$1=\([^ ]*\).*/\1/" </proc/cmdline)"
 
 msg()
 {
-echo "Switching / to $1 ..."
+echo "Switching / to $1..."
 }
 
 use()
@@ -118,7 +118,7 @@ then	mount -t proc proc /proc
 	. /run/init
 	sh
 fi
-ln -s "$(sed '/name/!ds/.*:[^a-z]*//' /proc/sys/dev/cdrom/info)" /dev/cdrom
+ln -s $(sed '/name/!ds/.*:[^a-z]*//' /proc/sys/dev/cdrom/info) /dev/cdrom
 if use dmraid
 then	dmraid -s|sed '/^type/!ds/.*: *//'|ldraid
 	[ ${root:0:4} = /dev ] ||
@@ -149,7 +149,7 @@ then	dev=$root
 fi
 got loopfs && echo "Into file $root..." &&
 	losetup /dev/loop0 /mnt/$root && mount /dev/loop0 /mnt
-got bindfs && echo "Bind ${root/,/ to } ..." &&
+got bindfs && echo "Bind ${root/,/ to }..." &&
 	mount --bind /mnt/${root%,*} /mnt/${root/,//}
 arg cryptoroot= && tryinit
 if use subroot
@@ -169,7 +169,7 @@ got rootfssize
 mount -t tmpfs -o size=$root tmpfs /mnt &&
 for i in $(ls -ar /)
 do	case "$i" in
-	.*)	;;
+	.*|cdrom)	;;
 	mnt|proc|sys)	mkdir /mnt/$i;;
 	usr|var|rootfs*) mv /$i /mnt;;
 	*)	cp -a /$i /mnt 2>/dev/null && continue
