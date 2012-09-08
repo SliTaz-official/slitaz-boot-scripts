@@ -187,14 +187,13 @@ o=
 p=
 c=/mnt/.cdrom
 if [ -z "$(ls /mnt/rootfs* 2>/dev/null)" ]
-then	root=cdrom
+then	root=cdrom/fs
 	got rodev
 	mkdir -p $c /mnt$c /mnt/.rw$c
 	mnt $c
 	o="-o 124"
 	p=/.cdrom/boot
-	d=/fs
-	got rodir && c=$c$root
+	c=$c$d
 fi
 l=0
 mod squashfs
