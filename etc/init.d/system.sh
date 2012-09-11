@@ -109,7 +109,7 @@ if [ "$(fdisk -l | grep swap)" ]; then
 		if ! grep -q "$swd	" /etc/fstab; then
 			echo "Swap memory detected on: $swd"
 		cat >> /etc/fstab <<EOT
-$swd	swap	swap	default	0 0
+$swd	swap	swap	defaults	0 0
 EOT
 		fi
 	done
