@@ -159,6 +159,7 @@ then	cp $(LD_TRACE_LOADED_OBJECTS=1 /lib/ld*.so /usr/sbin/chroot | sed\
 	quit $r "export LD_LIBRARY_PATH=$r:/lib"\
 		"$root$(ls /run/ld-*) $r/chroot $root" "/$root"
 fi
+quit
 msg tmpfs
 root=100
 got tmpram
