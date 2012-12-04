@@ -22,6 +22,8 @@ boot() {
 	/sbin/ifconfig lo 127.0.0.1 up
 	/sbin/route add 127.0.0.1 lo
 	status
+
+	[ -s /etc/sysctl.conf ] && sysctl -p /etc/sysctl.conf
 }
 
 # Use ethernet
