@@ -57,7 +57,7 @@ mod()
 modprobe $1 2>/dev/null || insmod $(find /lib/modules|sed "/$1.ko/!dq") 
 }
 
-tryinit()
+try()
 {
 if [ ! -d /mnt/etc ] && got cryptoroot
 then	mod dm-mod
@@ -84,14 +84,14 @@ fi
 fail
 }
 
-trylvm()
+lvm()
 {
 use lvmroot || return
 mod dm-mod
 vgscan --ignorelockingfailure
 vgchange -ay --ignorelockingfailure
 mount /dev/mapper/$root /mnt
-tryinit /dev/mapper $1
+try /dev/mapper $1
 }
 
 ldraid()
@@ -135,9 +135,9 @@ then	mdadm -E -s -c partitions>/etc/mdadm.conf
 		mdadm -A -s
 		grep -qs ': act' /proc/mdstat && break
 	done
-	trylvm /etc/mdadm.conf
+	lvm /etc/mdadm.conf
 fi
-trylvm
+lvm
 if got mount
 then	dev=$root
 	x=$(blkid|grep $dev|sed 's/:.*//;q')
@@ -151,13 +151,13 @@ got loopfs && echo "Into file $root..." &&
 	losetup /dev/loop0 /mnt/$root && mount /dev/loop0 /mnt
 got bindfs && echo "Bind ${root/,/ to }..." &&
 	mount --bind /mnt/${root%,*} /mnt/${root/,//}
-arg cryptoroot= && tryinit
+arg cryptoroot= && try
 if use subroot
 then	cp $(LD_TRACE_LOADED_OBJECTS=1 /lib/ld*.so /usr/sbin/chroot | sed\
 		's|.*=> \(/lib/l[^ ]*\).*|\1|;/^\//!d') /usr/sbin/chroot /run
 	r=$root/run
 	quit $r "export LD_LIBRARY_PATH=$r:/lib"\
-		"$root$(ls /run/ld-*) $r/chroot $root" "/$root"
+		"$root$(ls /run/ld-*so) $r/chroot $root" "/$root"
 fi
 quit
 msg tmpfs
@@ -180,6 +180,7 @@ do	case "$i" in
 	esac
 done || fail 3mSkipped
 quit
+mod squashfs 2>/dev/null || exit
 msg aufs
 br=/mnt/.rw
 mkdir $br
@@ -197,7 +198,6 @@ then	root=cdrom/fs
 	c=$c$d
 fi
 l=0
-mod squashfs
 r=
 got isofs || for i in /mnt$p/rootfs?*.gz
 do	fs=${i#*root}
