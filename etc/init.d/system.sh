@@ -131,6 +131,9 @@ fi
 if [ "$SCREEN" != "text" ] && [ "$LOGIN_MANAGER" ]; then
 	echo -n "Starting X environment..."
 	/etc/init.d/dbus start >/dev/null
+	if [ $(/bin/hostname) == '(none)' ];then
+		/bin/hostname -F /etc/hostname
+	fi
 	/etc/init.d/$LOGIN_MANAGER start >/dev/null &
 	status
 fi
