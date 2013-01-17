@@ -163,8 +163,22 @@ dhcp() {
 static_ip() {
 	if [ "$STATIC" = "yes" ] ; then
 		echo "Configuring static IP on $INTERFACE: $IP..."
-		/sbin/ifconfig $INTERFACE $IP netmask $NETMASK up
-		/sbin/route add default gateway $GATEWAY
+		if [ ! -z $BROADCAST ]; then
+			/sbin/ifconfig $INTERFACE $IP netmask $NETMASK broadcast $BROADCAST up
+		else
+			/sbin/ifconfig $INTERFACE $IP netmask $NETMASK up
+		fi
+		
+		# Use ip to set gateways if iproute.conf exist
+		if [ -f /etc/iproute.conf ]; then
+		    while read line
+			do
+				ip route add $line
+			done < /etc/iproute.conf
+		else
+			/sbin/route add default gateway $GATEWAY
+		fi
+		
 		# wpa_supplicant waits for wpa_cli
 		[ -d /var/run/wpa_supplicant ] && wpa_cli -B
 		# Multi-DNS server in $DNS_SERVER.
@@ -173,6 +187,9 @@ static_ip() {
 		do
 			echo "nameserver $NS" >> /etc/resolv.conf
 		done
+		if [ ! -z $DOMAIN ];then
+		    echo "search $DOMAIN" >> /etc/resolv.conf
+		fi
 		for HELPER in /etc/ipup.d/*; do
 			[ -x $HELPER ] && $HELPER $INTERFACE $DNS_SERVER
 		done
