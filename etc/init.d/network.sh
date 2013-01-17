@@ -163,7 +163,7 @@ dhcp() {
 static_ip() {
 	if [ "$STATIC" = "yes" ] ; then
 		echo "Configuring static IP on $INTERFACE: $IP..."
-		if [ ! -z $BROADCAST ]; then
+		if [ -n "$BROADCAST" ]; then
 			/sbin/ifconfig $INTERFACE $IP netmask $NETMASK broadcast $BROADCAST up
 		else
 			/sbin/ifconfig $INTERFACE $IP netmask $NETMASK up
