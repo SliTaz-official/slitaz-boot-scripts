@@ -128,7 +128,7 @@ if [ ! -s /etc/X11/xorg.conf ] && [ -x /usr/bin/Xorg ]; then
 fi
 
 # Start X sesssion as soon as possible
-if [ "$SCREEN" != "text" ] && [ "$LOGIN_MANAGER" ]; then
+if [ "$SCREEN" != "text" ] && [ "$LOGIN_MANAGER" ] && [ -x /etc/init.d/$LOGIN_MANAGER ]; then
 	echo -n "Starting X environment..."
 	/etc/init.d/dbus start >/dev/null
 	if [ $(/bin/hostname) == '(none)' ];then
