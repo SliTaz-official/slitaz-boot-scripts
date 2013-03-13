@@ -145,7 +145,7 @@ then	dev=$root
 	[ "$dev" = "$root" ] || dev="$root ($dev)"
 	echo "Mount $dev..."
 	mnt /mnt
-	arg posixovl && echo "And posixovl..." && mount.posixovl /mnt
+	arg posixovl && echo "And posixovl..." && mount.posixovl -F /mnt
 fi
 got loopfs && echo "Into file $root..." &&
 	losetup /dev/loop0 /mnt/$root && mount /dev/loop0 /mnt
@@ -189,7 +189,7 @@ o=
 p=
 c=/mnt/.cdrom
 if [ -z "$(ls /mnt/rootfs* 2>/dev/null)" ]
-then	root=cdrom/fs
+then	root=/dev/cdrom/fs
 	got rodev
 	mkdir -p $c /mnt$c /mnt/.rw$c
 	mnt $c

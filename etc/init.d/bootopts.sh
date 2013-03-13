@@ -64,7 +64,7 @@ do
 				mount /dev/$DEVID /home -o uid=1000,gid=100 2>/dev/null \
 					|| mount /dev/$DEVID /home
 				case "$(/sbin/blkid | grep /dev/$DEVID:)" in
-				*\"ntfs\"*|*\"vfat\"*) mount.posixovl /home ;;
+				*\"ntfs\"*|*\"vfat\"*) mount.posixovl -F /home ;;
 				esac
 				# Check if swap file must be generated in /home: swap=size (Mb).
 				# This option is only used within home=device.
