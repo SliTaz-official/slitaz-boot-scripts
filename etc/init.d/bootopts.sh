@@ -155,7 +155,7 @@ done
 # user=name can be used, but user must be added before home= to have home dir.
 # This option is not handled by a loop and case like others and has no
 # effect on an installed system.
-if ! grep -q "100[0-9]:100[0-9]" /etc/passwd; then
+if ! grep -q "100[0-9]:100" /etc/passwd; then
 	if fgrep -q "user=" /proc/cmdline; then
 		USER=$(cat /proc/cmdline | sed 's/.*user=\([^ ]*\).*/\1/')
 		# Avoid usage of an existing system user or root.
