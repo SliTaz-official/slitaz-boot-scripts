@@ -61,11 +61,11 @@ do
 			if [ -n "$DEVID" ] && fgrep -q "$DEVID" /proc/partitions ; then
 				echo "Mounting /home on /dev/$DEVID... "
 				[ -d /home/$USER ] && mv /home/$USER /tmp/$USER-files
-				mount /dev/$DEVID /home -o uid=1000,gid=100 2>/dev/null \
-					|| mount /dev/$DEVID /home
+				mount /dev/$DEVID /home &&
 				case "$(/sbin/blkid | grep /dev/$DEVID:)" in
 				*\"ntfs\"*|*\"vfat\"*) mount.posixovl -F /home ;;
 				esac
+				mount /home -o remount,uid=1000,gid=100 2>/dev/null
 				# Check if swap file must be generated in /home: swap=size (Mb).
 				# This option is only used within home=device.
 				if grep -q "swap=[1-9]*" /proc/cmdline; then
