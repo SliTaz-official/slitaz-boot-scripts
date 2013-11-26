@@ -90,13 +90,11 @@ do
 done
 status
 
-# Clean up the system and set up tmp dirs. Since we mount /run as tmpfs
-# and have a symlink for /var/run we should have empty directories. But,
-# some packages may overwrite the link, so make sure we have it.
+# Clean up the system and set up tmp dirs.
 if [ "$CLEAN_UP_SYSTEM" = "yes" ]; then
 	echo -n "Cleaning up the system..."
-	rm -rf /tmp /var/run && ln -s /run /var/run
-	mkdir -p /tmp/.X11-unix /tmp/.ICE-unix /run/dbus
+	rm -rf /tmp /var/run /run
+	mkdir -p /tmp/.X11-unix /tmp/.ICE-unix /run/dbus /var/run
 	chmod -R 1777 /tmp
 	status
 else
@@ -208,6 +206,8 @@ echo "SliTaz boot time: ${time}s"
 	if [ ! -s /run/boot.log ]; then
 		# Mount /run as tmpfs runtime data are not written to disk
 		mount -t tmpfs tmpfs /run
+		# cp -a in tazpkg does not support /var/run symlink
+		mount --bind /run /var/run
 	fi
 	/etc/init.d/rcS readonly 2>&1 | tee -a /run/boot.log
 	# Logrotate boot.log
