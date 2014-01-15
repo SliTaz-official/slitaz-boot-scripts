@@ -20,7 +20,7 @@ boot() {
 	# Configure loopback interface.
 	echo -n "Configuring loopback..."
 	/sbin/ifconfig lo 127.0.0.1 up
-	/sbin/route add 127.0.0.1 lo
+	/sbin/route add -net 127.0.0.0 netmask 255.0.0.0 dev lo
 	status
 
 	[ -s /etc/sysctl.conf ] && sysctl -p /etc/sysctl.conf
