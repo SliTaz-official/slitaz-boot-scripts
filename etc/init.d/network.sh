@@ -96,6 +96,7 @@ EOF
 				echo "Starting wpa_supplicant for NONE/WEP..."
 				wpa_supplicant -B -W -c/tmp/wpa.conf -D$WPA_DRIVER \
 					-i$WIFI_INTERFACE ;;
+			
 			wpa|WPA)
 				# load pre-configured multiple profiles
 				cat /etc/wpa_supplicant.conf > /tmp/wpa.conf
@@ -115,6 +116,7 @@ EOF
 				echo "Starting wpa_supplicant for WPA-PSK..."
 				wpa_supplicant -B -W -c/tmp/wpa.conf \
 					-D$WPA_DRIVER -i$WIFI_INTERFACE ;;
+			
 			any|ANY) cat /etc/wpa_supplicant.conf > /tmp/wpa.conf
 			cat >> /tmp/wpa.conf <<EOF
 ctrl_interface=/var/run/wpa_supplicant
@@ -139,10 +141,9 @@ EOF
 	fi
 }
 
-wpa()
-{
-	DHCP_SCRIPT="/etc/init.d/wpa_action.sh"
-	wpa_cli -a$DHCP_SCRIPT -B
+# WPA DHCP script
+wpa() {
+	wpa_cli -a"/etc/init.d/wpa_action.sh" -B
 }
 
 # For a dynamic IP with DHCP.
