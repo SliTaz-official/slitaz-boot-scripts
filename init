@@ -1,5 +1,52 @@
 #!/bin/sh
 
+### catched kernel parameters :
+#
+# modprobe=
+#         list of modules to load, example modprobe=r8169,btrfs
+#
+### Frugal mode or live CD : using root ram disk
+#
+# tmpram= [RAMDISK]
+#         minimum % of free RAM to build the root tmpfs, default 100
+#         a lower value may work, such as 50
+# rootfssize= [RAMDISK]
+#         size of / regarding the RAM size, default 90%
+#
+### Indirect mode an initramfs is used to mount root from the hard disk.
+### Any rootfs should fit, minimum required is slitaz-base
+#
+# mount= [MOUNT]
+#         device with root loop file or sub directory
+#   posixovl [MOUNT]
+#         use posix attributes on a non posix filesystem (VFAT, NTFS...)
+#   loopfs= [MOUNT]
+#         loop file for root filesystem
+#   subroot= [MOUNT]
+#         sub directory for root filesystem
+#     bindfs= [MOUNT]
+#         bind out of root tree part
+#
+### Special disk driver mode needs extra modules/softwares form preinit flavor.
+#
+# dmraid= [RAID]
+#         root semi hardware raid device name in /dev/mapper
+# softraid= [RAID]
+#         root software device name in /dev/mapper
+# lvmroot= [LVM]
+#         root logical volume name in /dev/mapper
+# cryptoroot= [CRYPTO]
+#         encrypted root device using luks or loop-aes
+#
+### Special mode used by loram flavor with aufs & squashfs
+#
+# rodev= [LORAM][MERGE]
+#         device (+ optional path) for the read only aufs branch
+# rwdev= [LORAM][MERGE]
+#         (persitant) device for the r/w aufs branch instead of the ramfs
+# isofs [LORAM]
+#         do not use squashfs filesystem images, but the cdrom filesystem only
+
 fail()
 {
 echo -e '\033[70G[ \033[1;3'${1:-1mFailed}'\033[0;39m ]'
@@ -54,15 +101,16 @@ mount $r $1
 
 mod()
 {
-modprobe $1 2>/dev/null || insmod $(find /lib/modules|sed "/$1.ko/!dq") 
+for i in $@
+do	echo "Loading module: $i"
+	modprobe $i 2>/dev/null || insmod $(find /lib/modules|sed "/$i.ko/!dq") 
+done
 }
 
 try()
 {
 if [ ! -d /mnt/etc ] && got cryptoroot
-then	mod dm-mod
-	mod dm-crypt
-	mod aes-i586
+then	mod dm-mod dm-crypt aes-256
 	d=${root#/dev/}
 	l=crypto-$d
 	if cryptsetup isLuks $root 2>/dev/null; then
@@ -118,6 +166,7 @@ then	mount -t proc proc /proc
 	. /run/init
 	sh
 fi
+got modprobe && mod ${root//,/ }
 ln -s $(sed '/name/!ds/.*:[^a-z]*//' /proc/sys/dev/cdrom/info) /dev/cdrom
 if use dmraid
 then	dmraid -s|sed '/^type/!ds/.*: *//'|ldraid
