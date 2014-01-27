@@ -5,7 +5,7 @@
 # modprobe=
 #         list of modules to load, example modprobe=r8169,btrfs
 #
-### Frugal mode or live CD : using root ram disk
+### Frugal mode or live CD : using a root ram disk.
 #
 # tmpram= [RAMDISK]
 #         minimum % of free RAM to build the root tmpfs, default 100
@@ -13,8 +13,8 @@
 # rootfssize= [RAMDISK]
 #         size of / regarding the RAM size, default 90%
 #
-### Indirect mode an initramfs is used to mount root from the hard disk.
-### Any rootfs should fit, minimum required is slitaz-base
+### Indirect mode ; an initramfs is used to mount root from the hard disk.
+### Any rootfs should fit, minimum required is slitaz-base.
 #
 # mount= [MOUNT]
 #         device with root loop file or sub directory
@@ -24,10 +24,10 @@
 #         loop file for root filesystem
 #   subroot= [MOUNT]
 #         sub directory for root filesystem
-#     bindfs= [MOUNT]
+#     bindfs= [MOUNT] (depredicated)
 #         bind out of root tree part
 #
-### Special disk driver mode needs extra modules/softwares form preinit flavor.
+### Special disk mode ; needs extra modules/softwares from preinit flavor.
 #
 # dmraid= [RAID]
 #         root semi hardware raid device name in /dev/mapper
@@ -39,6 +39,7 @@
 #         encrypted root device using luks or loop-aes
 #
 ### Special mode used by loram flavor with aufs & squashfs
+### incremental/nested rootfs (russian dolls).
 #
 # rodev= [LORAM][MERGE]
 #         device (+ optional path) for the read only aufs branch
