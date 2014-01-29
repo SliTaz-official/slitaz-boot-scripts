@@ -89,7 +89,9 @@ got $1 && msg "$1 $root"
 
 mnt()
 {
-r=${root#/dev/}
+r=$(blkid 2> /dev/null | sed "s/\"//g;/$root/!d;s/:.*//;q")
+r={r:-$root}
+r=${r#/dev/}
 r=/dev/${r%%/*}
 d=${root#*$r}
 mount $r $1 && return
