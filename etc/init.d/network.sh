@@ -70,8 +70,8 @@ wifi() {
 			wep|WEP)
 				#
 				# NOTE (20120303) struggled to connect with WEP key in
-				# cooking but work with 3.0. Busybox/iwconfig seems buggy
-				# but connection work with wpa_supplicant and unquoted
+				# cooking but works with 3.0. Busybox/iwconfig seems buggy
+				# but connection works with wpa_supplicant and unquoted
 				# wep_key0
 				#
 				#IWCONFIG_ARGS="$IWCONFIG_ARGS key $WIFI_KEY"
@@ -170,7 +170,7 @@ static_ip() {
 			/sbin/ifconfig $INTERFACE $IP netmask $NETMASK up
 		fi
 		
-		# Use ip to set gateways if iproute.conf exist
+		# Use ip to set gateways if iproute.conf exists
 		if [ -f /etc/iproute.conf ]; then
 		    while read line
 			do

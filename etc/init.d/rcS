@@ -165,7 +165,7 @@ if [ ! -s /var/lib/detected-modules ]; then
 	tazhw init
 fi
 
-# Call udevadm trigger to ensure /dev is fully populate now that all
+# Call udevadm trigger to ensure /dev is fully populated now that all
 # modules are loaded.
 if [ "$UDEV" = "yes" ]; then
 	echo -n "Triggering udev events: --action=add"
