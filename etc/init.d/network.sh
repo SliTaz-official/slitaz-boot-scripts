@@ -56,34 +56,25 @@ wifi() {
 		fi
 		status
 
-		[ -n "$WPA_DRIVER" ] || WPA_DRIVER="wext"
 		IWCONFIG_ARGS=""
+		[ -n "$WPA_DRIVER" ] || WPA_DRIVER="wext"
 		[ -n "$WIFI_MODE" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS mode $WIFI_MODE"
 		[ -n "$WIFI_CHANNEL" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS channel $WIFI_CHANNEL"
 		[ -n "$WIFI_AP" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS ap $WIFI_AP"
-		# unencrypted network
-		if [ "$WIFI_KEY" == "" -o "$WIFI_KEY_TYPE" == "none" ]; then
+		
+		# Unencrypted network
+		if [ "$WIFI_KEY" == "" -o "$WIFI_KEY_TYPE" == "" ]; then
 			iwconfig $WIFI_INTERFACE essid "$WIFI_ESSID" $IWCONFIG_ARGS
 		fi
-		# encrypted network
+		
+		# Encrypted network
 		[ -n "$WIFI_KEY" ] && case "$WIFI_KEY_TYPE" in
 			wep|WEP)
-				#
-				# NOTE (20120303) struggled to connect with WEP key in
-				# cooking but works with 3.0. Busybox/iwconfig seems buggy
-				# but connection works with wpa_supplicant and unquoted
-				# wep_key0
-				#
-				#IWCONFIG_ARGS="$IWCONFIG_ARGS key $WIFI_KEY"
-				#iwconfig $WIFI_INTERFACE essid "$WIFI_ESSID" $IWCONFIG_ARGS
-				#
 				# wpa_supplicant can also deal with wep encryption
 				# Tip: Use unquoted strings for hexadecimal key in wep_key0
-				cat /etc/wpa_supplicant.conf > /tmp/wpa.conf
-				cat >> /tmp/wpa.conf <<EOF
-ctrl_interface=/var/run/wpa_supplicant
-ctrl_interface_group=0
-ap_scan=1
+				echo "Creating: /etc/wpa/wpa.conf"
+				cat /etc/wpa/wpa_empty.conf > /etc/wpa/wpa.conf
+				cat >> /etc/wpa/wpa.conf << EOT
 network={
 	ssid="$WIFI_ESSID"
 	scan_ssid=1
@@ -92,18 +83,27 @@ network={
 	wep_tx_keyidx=0
 	priority=5
 }
-EOF
+EOT
 				echo "Starting wpa_supplicant for NONE/WEP..."
-				wpa_supplicant -B -W -c/tmp/wpa.conf -D$WPA_DRIVER \
+				wpa_supplicant -B -W -c/etc/wpa/wpa.conf -D$WPA_DRIVER \
 					-i$WIFI_INTERFACE ;;
 			
 			wpa|WPA)
 				# load pre-configured multiple profiles
-				cat /etc/wpa_supplicant.conf > /tmp/wpa.conf
-				cat >> /tmp/wpa.conf <<EOF
-ctrl_interface=/var/run/wpa_supplicant
-ctrl_interface_group=0
-ap_scan=1
+				echo "Creating: /etc/wpa/wpa.conf"
+				cat /etc/wpa/wpa_empty.conf > /etc/wpa/wpa.conf
+				if [ "$WIFI_IDENTITY" ]; then
+					cat >> /etc/wpa/wpa.conf << EOT
+network={
+	ssid="$WIFI_ESSID"
+	key_mgmt=WPA-EAP
+	scan_ssid=1
+	identity="$WIFI_IDENTITY"
+	password="$WIFI_PASSWORD"
+}
+EOT
+				else
+					cat >> /etc/wpa/wpa.conf << EOT
 network={
 	ssid="$WIFI_ESSID"
 	scan_ssid=1
@@ -112,16 +112,16 @@ network={
 	psk="$WIFI_KEY"
 	priority=5
 }
-EOF
+EOT
+				fi
 				echo "Starting wpa_supplicant for WPA-PSK..."
-				wpa_supplicant -B -W -c/tmp/wpa.conf \
+				wpa_supplicant -B -W -c/etc/wpa/wpa.conf \
 					-D$WPA_DRIVER -i$WIFI_INTERFACE ;;
 			
-			any|ANY) cat /etc/wpa_supplicant.conf > /tmp/wpa.conf
-			cat >> /tmp/wpa.conf <<EOF
-ctrl_interface=/var/run/wpa_supplicant
-ctrl_interface_group=0
-ap_scan=1
+			any|ANY)
+				echo "Creating: /etc/wpa/wpa.conf"
+				cat /etc/wpa/wpa_empty.conf > /etc/wpa/wpa.conf
+				cat >> /etc/wpa/wpa.conf << EOT
 network={
 	ssid="$WIFI_ESSID"
 	scan_ssid=1
@@ -131,12 +131,11 @@ network={
 	psk="$WIFI_KEY"
 	priority=5
 }
-EOF
+EOT
 				echo "Starting wpa_supplicant for any key type..."
-				wpa_supplicant -B -W -c/tmp/wpa.conf \
+				wpa_supplicant -B -W -c/etc/wpa/wpa.conf \
 					-D$WPA_DRIVER -i$WIFI_INTERFACE ;;
 		esac
-		#rm -f /tmp/wpa.conf
 		INTERFACE=$WIFI_INTERFACE
 	fi
 }
@@ -182,6 +181,7 @@ static_ip() {
 		
 		# wpa_supplicant waits for wpa_cli
 		[ -d /var/run/wpa_supplicant ] && wpa_cli -B
+		
 		# Multi-DNS server in $DNS_SERVER.
 		/bin/mv /etc/resolv.conf /tmp/resolv.conf.$$
 		for NS in $DNS_SERVER
@@ -197,9 +197,9 @@ static_ip() {
 	fi
 }
 
-# Stopping everything
-Stop() {
-	echo "Stopping all interfaces"
+# stopping everything
+stop() {
+	echo "stopping all interfaces"
 	ifconfig $INTERFACE down
 	ifconfig $WIFI_INTERFACE down
 
@@ -213,30 +213,31 @@ Stop() {
 	fi
 }
 
-Start() {
-   eth
-   wifi
-   dhcp
-   static_ip
-   # change default lxpanel panel iface
-   [ -f /etc/lxpanel/default/panels/panel ] \
-		&& sed -i "s/iface=.*/iface=$INTERFACE/" \
+start() {
+	eth
+	wifi
+	dhcp
+	static_ip
+	# change default lxpanel panel iface
+	if [ -f /etc/lxpanel/default/panels/panel ]; then
+		sed -i "s/iface=.*/iface=$INTERFACE/" \
 			/etc/lxpanel/default/panels/panel
+	fi
 }
 
 # looking for arguments:
 if [ -z "$1" ]; then
 	boot
-	Start
+	start
 else
 	case $1 in
 		start)
-			Start ;;
+			start ;;
 		stop)
-			Stop ;;
+			stop ;;
 		restart)
-			Stop
-			Start ;;
+			stop
+			start ;;
 		*)
 			echo ""
 			echo -e "\033[1mUsage:\033[0m /etc/init.d/`basename $0` [start|stop|restart]"
