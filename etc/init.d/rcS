@@ -12,7 +12,6 @@
 # Set PATH, TZ and boot time.
 export PATH=/bin:/sbin:/usr/bin:/usr/sbin
 [ -s /etc/TZ ] && export TZ="$(cat /etc/TZ)"
-[ -n "$bootdate" ] || bootdate=$(date +%s)
 
 case "$1" in
 
@@ -90,11 +89,12 @@ do
 done
 status
 
-# Clean up the system and set up tmp dirs.
+# Clean up the system and set up tmp dirs */run/* are tmpfs so ther are 
+# clean up at shutdown.
 if [ "$CLEAN_UP_SYSTEM" = "yes" ]; then
 	echo -n "Cleaning up the system..."
-	rm -rf /tmp /var/run /run
-	mkdir -p /tmp/.X11-unix /tmp/.ICE-unix /run/dbus /var/run
+	rm -rf /tmp
+	mkdir -p /tmp/.X11-unix /tmp/.ICE-unix
 	chmod -R 1777 /tmp
 	status
 else
@@ -187,6 +187,14 @@ if [ "$RUN_DAEMONS" ]; then
 	done
 fi
 
+# Start X sesssion
+if [ "$SCREEN" != "text" ] && [ "$LOGIN_MANAGER" ] && [ -x /etc/init.d/$LOGIN_MANAGER ]; then
+	mkdir -p  /var/run/dbus
+	/etc/init.d/dbus start
+	colorize 36 "Starting X environment..."
+	(sleep 2 && /etc/init.d/$LOGIN_MANAGER start >/dev/null) &
+fi
+
 # Back to a verbose mode
 (sleep 6 && echo "7 4 1 7" > /proc/sys/kernel/printk) &
 
@@ -194,11 +202,6 @@ if [ "$MESSAGE" ]; then
 	newline
 	colorize 32 "$MESSAGE"
 fi
-
-# Display and log boot time
-time=$((`date +%s` - $bootdate))
-echo $time > /var/log/boot-time
-echo "SliTaz boot time: ${time}s"
 ;;
 
 *)

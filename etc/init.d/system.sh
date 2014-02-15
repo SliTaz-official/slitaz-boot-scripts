@@ -127,16 +127,5 @@ if [ ! -s /etc/X11/xorg.conf ] && [ -x /usr/bin/Xorg ]; then
 	tazx config-xorg 2>/var/log/xorg.configure.log
 fi
 
-# Start X sesssion as soon as possible
-if [ "$SCREEN" != "text" ] && [ "$LOGIN_MANAGER" ] && [ -x /etc/init.d/$LOGIN_MANAGER ]; then
-	echo -n "Starting X environment..."
-	/etc/init.d/dbus start >/dev/null
-	if [ $(/bin/hostname) == '(none)' ];then
-		/bin/hostname -F /etc/hostname
-	fi
-	/etc/init.d/$LOGIN_MANAGER start >/dev/null &
-	status
-fi
-
 # Start TazPanel
 [ -x /usr/bin/tazpanel ] && tazpanel start

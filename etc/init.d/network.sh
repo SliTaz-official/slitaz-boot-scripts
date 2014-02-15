@@ -136,7 +136,7 @@ EOF
 				wpa_supplicant -B -W -c/tmp/wpa.conf \
 					-D$WPA_DRIVER -i$WIFI_INTERFACE ;;
 		esac
-		rm -f /tmp/wpa.conf
+		#rm -f /tmp/wpa.conf
 		INTERFACE=$WIFI_INTERFACE
 	fi
 }
