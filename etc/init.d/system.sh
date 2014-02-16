@@ -21,8 +21,6 @@ do
 			DRIVER=${opt#sound=} ;;
 		xarg=*)
 			XARG="$XARG ${opt#xarg=}" ;;
-		screen=*)
-			SCREEN=${opt#screen=} ;;
 		*)
 			continue ;;
 	esac
