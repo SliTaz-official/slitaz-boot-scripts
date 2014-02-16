@@ -63,9 +63,6 @@ elif [ -d /proc/asound ]; then
 	else
 		/usr/sbin/setmixer
 	fi
-	# Start soundconf to config driver and load module for Live mode
-	# if not yet detected.
-	/usr/bin/amixer >/dev/null || /usr/sbin/soundconf
 else
 	echo "Unable to configure sound card."
 fi
