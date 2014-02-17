@@ -91,8 +91,8 @@ do
 done
 status
 
-# Clean up the system and set up tmp dirs */run/* are tmpfs so ther are 
-# clean up at shutdown.
+# Clean up the system and set up tmp dirs. */run/* are tmpfs so they are 
+# cleaned up at shutdown.
 if [ "$CLEAN_UP_SYSTEM" = "yes" ]; then
 	echo -n "Cleaning up the system..."
 	rm -rf /tmp
@@ -146,7 +146,7 @@ if [ -d /proc/bus/usb ]; then
 fi
 
 # Start syslogd and klogd
-echo -n "Starting system log deamon: syslogd..."
+echo -n "Starting system log daemon: syslogd..."
 syslogd -s $SYSLOGD_ROTATED_SIZE && status
 echo -n "Starting kernel log daemon: klogd..."
 klogd && status
@@ -189,7 +189,7 @@ if [ "$RUN_DAEMONS" ]; then
 	done
 fi
 
-# Start X sesssion
+# Start X session
 if [ "$SCREEN" != "text" ] && [ "$LOGIN_MANAGER" ] && [ -x /etc/init.d/$LOGIN_MANAGER ]; then
 	mkdir -p  /var/run/dbus
 	/etc/init.d/dbus start

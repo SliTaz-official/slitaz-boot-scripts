@@ -1,6 +1,6 @@
 #!/bin/sh
 
-### catched kernel parameters :
+### cached kernel parameters :
 #
 # modprobe=
 #         list of modules to load, example modprobe=r8169,btrfs
@@ -24,7 +24,7 @@
 #         loop file for root filesystem
 #   subroot= [MOUNT]
 #         sub directory for root filesystem
-#     bindfs= [MOUNT] (depredicated)
+#     bindfs= [MOUNT] (deprecated)
 #         bind out of root tree part
 #
 ### Special disk mode ; needs extra modules/softwares from preinit flavor.
@@ -44,7 +44,7 @@
 # rodev= [LORAM][MERGE]
 #         device (+ optional path) for the read only aufs branch
 # rwdev= [LORAM][MERGE]
-#         (persitant) device for the r/w aufs branch instead of the ramfs
+#         (persistent) device for the r/w aufs branch instead of the ramfs
 # isofs [LORAM]
 #         do not use squashfs filesystem images, but the cdrom filesystem only
 
