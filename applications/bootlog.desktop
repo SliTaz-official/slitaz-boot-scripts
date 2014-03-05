@@ -1,8 +1,8 @@
 [Desktop Entry]
-Encoding=UTF-8
+Type=Application
 Name=Boot Log Viewer
 Name[fr]=Log de démarrage
+Name[ru]=Журнал загрузки
 Exec=bootlog box
 Icon=text-plain
-Type=Application
-Categories=System;
+Categories=System;Monitor;
