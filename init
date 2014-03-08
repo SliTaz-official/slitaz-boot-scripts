@@ -197,7 +197,8 @@ then	dev=$root
 	[ "$dev" = "$root" ] || dev="$root ($dev)"
 	echo "Mount $dev..."
 	mnt /mnt
-	arg posixovl && echo "And posixovl..." && mount.posixovl -F /mnt
+	arg posixovl && echo "And posixovl..." &&
+	mount.posixovl -F /mnt -- -oallow_other -odefault_permissions
 fi
 got loopfs && echo "Into file $root..." &&
 	losetup /dev/loop0 /mnt/$root && mount /dev/loop0 /mnt
