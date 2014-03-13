@@ -5,7 +5,7 @@
 . /etc/init.d/rc.functions
 . /etc/rcS.conf
 
-log=/var/lib/shutdown.log
+log=/var/log/slitaz/shutdown.log
 
 # Clear and quiet shutdown
 clear && echo "System is going down for reboot or halt." > $log

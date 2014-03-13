@@ -36,10 +36,7 @@ if [ "$UDEV" == "yes" ]; then
 	udevadm settle --timeout=120
 	# Disable hotplug helper since udevd listen to netlink
 	echo "" > /proc/sys/kernel/hotplug
-fi
-
-# Busybox mdev is an udev alternative
-if [ "$UDEV" == "mdev" ]; then
+else
 	echo -n "Executing mdev -s to populate /dev..."
 	mdev -s && echo "mdev" > /proc/sys/kernel/hotplug
 	status
