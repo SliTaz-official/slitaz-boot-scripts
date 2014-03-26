@@ -93,7 +93,7 @@ do
 				[ -d /home/$USER ] && mv /home/$USER /tmp/$USER-files
 				mount /dev/$DEVID /home &&
 				case "$(/sbin/blkid | grep /dev/$DEVID:)" in
-				*\"ntfs\"*|*\"vfat\"*) mount.posixovl -F /home ;;
+				*\"ntfs\"*|*\"vfat\"*) mount.posixovl -F /home -- -oallow_other -odefault_permissions -osuid ;;
 				esac
 				mount /home -o remount,uid=1000,gid=100 2>/dev/null
 				# Check if swap file must be generated in /home: swap=size (Mb).
