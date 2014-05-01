@@ -178,20 +178,24 @@ for script in $RUN_SCRIPTS; do
 	/etc/init.d/$script
 done
 
+# Start X session
+if [ "$SCREEN" != "text" ] && [ "$LOGIN_MANAGER" ] && [ -x "/etc/init.d/$LOGIN_MANAGER" ]; then
+	colorize 36 "Starting X environment..."
+	# We need Xorg 40-Keyboard.conf and SliTaz applications.conf
+	if [ ! -s "/etc/X11/xorg.conf.d/40-Keyboard.conf" ]; then
+		echo "Configuring Xorg server..." && HOME="/root" 
+		tazx init
+	fi
+	#/etc/init.d/dbus start
+	(sleep 2; /etc/init.d/${LOGIN_MANAGER} start >/dev/null) &
+fi
+
 # Start all daemons specified with $RUN_DAEMONS
 if [ "$RUN_DAEMONS" ]; then
 	colorize 33 "Starting all daemons..."
 	for daemon in $RUN_DAEMONS; do
 		/etc/init.d/$daemon start
 	done
-fi
-
-# Start X session
-if [ "$SCREEN" != "text" ] && [ "$LOGIN_MANAGER" ] && [ -x /etc/init.d/$LOGIN_MANAGER ]; then
-	mkdir -p  /var/run/dbus
-	/etc/init.d/dbus start
-	colorize 36 "Starting X environment..."
-	(sleep 2 && /etc/init.d/$LOGIN_MANAGER start >/dev/null) &
 fi
 
 # Back to a verbose mode

@@ -114,13 +114,5 @@ if grep -q swap /etc/fstab; then
 	swapon -a && status
 fi
 
-# Xorg auto configuration: $HOME is not yet set. We config even if
-# screen=text so X can be started by users via 'startx'
-if [ ! -s /etc/X11/xorg.conf ] && [ -x /usr/bin/Xorg ]; then
-	echo "Configuring Xorg..."
-	HOME=/root
-	tazx config-xorg 2>/var/log/xorg.configure.log
-fi
-
 # Start TazPanel
 [ -x /usr/bin/tazpanel ] && tazpanel start
