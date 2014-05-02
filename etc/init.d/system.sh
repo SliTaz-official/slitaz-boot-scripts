@@ -116,3 +116,6 @@ fi
 
 # Start TazPanel
 [ -x /usr/bin/tazpanel ] && tazpanel start
+
+# Kernel polling for automount
+echo 5000 > /sys/module/block/parameters/events_dfl_poll_msecs 2>/dev/null
