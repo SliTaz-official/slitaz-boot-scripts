@@ -34,7 +34,7 @@ eth() {
 # For wifi. Users just have to enable it through yes and usually
 # essid any will work and the interface is autodetected.
 wifi() {
-	if [ "$WIFI" = "yes" ] || fgrep -q "wifi" /proc/cmdline; then
+	if [ "$WIFI" == "yes" ]; then
 		ifconfig $INTERFACE down
 
 		# Confirm if $WIFI_INTERFACE is the wifi interface
