@@ -51,15 +51,16 @@ if [ -n "$DRIVER" ]; then
 				/usr/sbin/soundconf -M $DRIVER
 			fi ;;
 	esac
-# Sound card may already be detected by PCI-detect.
+# Sound card may already be detected by kernel/udev
 elif [ -d /proc/asound ]; then
-	# Restore sound config for installed system.
+	# Restore sound config for installed system
 	if [ -s /var/lib/alsa/asound.state ]; then
 		echo -n "Restoring last alsa configuration..."
 		alsactl restore
 		status
 	else
-		/usr/sbin/setmixer
+		# Initialize sound card
+		alsactl init
 	fi
 else
 	echo "Unable to configure sound card."
