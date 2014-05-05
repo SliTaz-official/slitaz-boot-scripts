@@ -178,15 +178,18 @@ for script in $RUN_SCRIPTS; do
 	/etc/init.d/$script
 done
 
-# Start X session
-if [ "$SCREEN" != "text" ] && [ "$LOGIN_MANAGER" ] && [ -x "/etc/init.d/$LOGIN_MANAGER" ]; then
+# Start X session. Dbus must be started before Xorg and other daemons. 
+# We started it here because X is run before RUN_DAEMONS. Sleep, in 
+# some in live mode we boot too fast and X can't initialize.
+if [ "$SCREEN" != "text" ] && [ "$LOGIN_MANAGER" ] && \
+	[ -x "/etc/init.d/$LOGIN_MANAGER" ]; then
 	colorize 36 "Starting X environment..."
 	# We need Xorg 40-Keyboard.conf and SliTaz applications.conf
 	if [ ! -s "/etc/X11/xorg.conf.d/40-Keyboard.conf" ]; then
 		echo "Configuring Xorg server..." && HOME="/root" 
 		tazx init
 	fi
-	#/etc/init.d/dbus start
+	/etc/init.d/dbus start
 	(sleep 2; /etc/init.d/${LOGIN_MANAGER} start >/dev/null) &
 fi
 
