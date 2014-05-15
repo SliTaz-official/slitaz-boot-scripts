@@ -74,6 +74,12 @@ do
 			echo -n "Setting system keymap to: $KEYMAP..."
 			echo "$KEYMAP" > /etc/keymap.conf
 			status ;;
+		font=*)
+			# Check for a specified console font (font=*).
+			FONT=${opt#font=}
+			echo -n "Setting console font to: $FONT..."
+			for con in 1 2 3 4 5 6; do setfont $FONT -C /dev/tty$con; done
+			status ;;
 		home=*)
 			# Check for a specified home partition (home=*) and check for
 			# user home dir. Note: home=usb is a shorter and easier way to
