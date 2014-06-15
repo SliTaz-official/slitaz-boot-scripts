@@ -53,21 +53,11 @@ fail()
 echo -e '\033[70G[ \033[1;3'${1:-1mFailed}'\033[0;39m ]'
 }
 
-mnt()
-{
-busybox mount $@
-}
-
-umnt()
-{
-busybox umount $@
-}
-
 quit()
 {
 [ -d /mnt$4/etc ] || return
-[ -n "$4" ] || mnt /mnt -o remount,ro
-mnt --move /run /mnt/${1:-run}
+[ -n "$4" ] || busybox mount /mnt -o remount,ro
+busybox mount --move /run /mnt/${1:-run}
 cat>/run/init<<EOT
 $2
 x=/sbin/switch_root
@@ -104,27 +94,26 @@ r={r:-$root}
 r=${r#/dev/}
 r=/dev/${r%%/*}
 d=${root#*$r}
-mnt $r $1 && return
+busybox mount $r $1 && return
 w=$(cat /sys/module/usb_storage/parameters/delay_use)
 w=$((1+${w:-2}))
 echo -n "Sleep $w seconds..."
 sleep $w
-mnt $r $1
+busybox mount $r $1
 }
 
 mod()
 {
-for i in $@
-do	echo "Loading module: $i"
-	modprobe $i 2>/dev/null ||
-	busybox insmod $(find /lib/modules|sed "/$i.ko/!dq") 
+for i in $@; do
+	echo "Loading module: $i"
+	modprobe $i 2>/dev/null || busybox insmod $(find /lib/modules|sed "/$i.ko/!dq") 
 done
 }
 
 try()
 {
-if [ ! -d /mnt/etc ] && got cryptoroot
-then	mod dm-mod dm-crypt aes-256
+if [ ! -d /mnt/etc ] && got cryptoroot; then
+	mod dm-mod dm-crypt aes-256
 	d=${root#/dev/}
 	l=crypto-$d
 	if cryptsetup isLuks $root 2>/dev/null; then
@@ -139,8 +128,10 @@ then	mod dm-mod dm-crypt aes-256
 fi
 got subroot && return
 got loopfs && return
-if [ -d /mnt/etc ]
-then	for i in $@; do cp -a $i /mnt$(dirname $i); done
+if [ -d /mnt/etc ]; then
+	for i in $@; do
+		cp -a $i /mnt$(dirname $i)
+	done
 	quit
 fi
 fail
@@ -152,7 +143,7 @@ use lvmroot || return
 mod dm-mod
 vgscan --ignorelockingfailure
 vgchange -ay --ignorelockingfailure
-mnt /dev/mapper/$root /mnt
+busybox mount /dev/mapper/$root /mnt
 try /dev/mapper $1
 }
 
@@ -169,14 +160,14 @@ esac
 done
 }
 
-if [ "$1" != "log" ]
-then	mnt -t proc proc /proc
-	mnt -t sysfs sys /sys
-	mnt -t tmpfs tmpfs /run
+if [ "$1" != "log" ]; then
+	busybox mount -t proc proc /proc
+	busybox mount -t sysfs sys /sys
+	busybox mount -t tmpfs tmpfs /run
 	x=/sbin/init; echo "[ -x $x ] && exec $x" >/run/init
 	$0 log 2>&1 | tee /run/boot.log
-	umnt /proc
-	umnt /sys
+	busybox umount /proc
+	busybox umount /sys
 	. /run/init
 	sh
 fi
@@ -212,9 +203,9 @@ then	dev=$root
 	mount.posixovl -F /mnt -- -oallow_other -odefault_permissions -osuid
 fi
 got loopfs && echo "Into file $root..." &&
-	losetup /dev/loop0 /mnt/$root && mnt /dev/loop0 /mnt
+	losetup /dev/loop0 /mnt/$root && busybox mount /dev/loop0 /mnt
 got bindfs && echo "Bind ${root/,/ to }..." &&
-	mnt --bind /mnt/${root%,*} /mnt/${root/,//}
+	busybox mount --bind /mnt/${root%,*} /mnt/${root/,//}
 arg cryptoroot= && try
 if use subroot
 then	cp $(LD_TRACE_LOADED_OBJECTS=1 /lib/ld*.so /usr/sbin/chroot | sed\
@@ -231,7 +222,7 @@ r=$root
 root=90%
 got rootfssize
 [ $(busybox free|busybox awk '/Mem:/{print int(($4*100)/$3)}') -ge $r ] &&
-mnt -t tmpfs -o size=$root tmpfs /mnt &&
+busybox mount -t tmpfs -o size=$root tmpfs /mnt &&
 for i in $(ls -ar /)
 do	case "$i" in
 	.*|cdrom)	;;
@@ -239,7 +230,7 @@ do	case "$i" in
 	usr|var|rootfs*) mv /$i /mnt;;
 	*)	cp -a /$i /mnt 2>/dev/null && continue
 		fail
-		umnt /mnt
+		busybox umount /mnt
 		exit
 	esac
 done || fail 3mSkipped
@@ -268,8 +259,8 @@ do	fs=${i#*root}
 	r=$r:/mnt/.$fs
 	mkdir -p /mnt/.rw/mnt/.$fs /mnt/.$fs
 	losetup $o /dev/loop$l $i
-	mnt -o ro -t squashfs /dev/loop$((l++)) /mnt/.$fs
+	busybox mount -o ro -t squashfs /dev/loop$((l++)) /mnt/.$fs
 done
 mod aufs
-mnt -t aufs -o br=$br${r:-:$c} none /mnt
+busybox mount -t aufs -o br=$br${r:-:$c} none /mnt
 quit
