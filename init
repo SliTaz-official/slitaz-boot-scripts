@@ -124,7 +124,7 @@ if [ ! -d /mnt/etc ] && got cryptoroot; then
 		echo 0 $(cat $(find /sys/block|grep /$d/size))\
 		crypt aes-plain $k 0 $root 0|dmsetup create $l
 	fi
-	mnt /dev/mapper/$l /mnt
+	busybox mount /dev/mapper/$l /mnt
 fi
 got subroot && return
 got loopfs && return
