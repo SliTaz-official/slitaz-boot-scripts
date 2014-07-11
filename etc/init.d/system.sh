@@ -26,46 +26,6 @@ do
 	esac
 done
 
-# Sound configuration stuff. First check if sound=no and remove all
-# sound Kernel modules.
-if [ -n "$DRIVER" ]; then
-	case "$DRIVER" in
-		no)
-			echo -n "Removing all sound kernel modules..."
-			rm -rf /lib/modules/$(uname -r)/kernel/sound
-			status
-			echo -n "Removing all sound packages..."
-			for i in $(grep -l '^DEPENDS=.*alsa-lib' /var/lib/tazpkg/installed/*/receipt) ; do
-				pkg=${i#/var/lib/tazpkg/installed/}
-				echo 'y' | tazpkg remove ${pkg%/*} > /dev/null
-			done
-			for i in alsa-lib mhwaveedit asunder libcddb ; do
-				echo 'y' | tazpkg remove $i > /dev/null
-			done
-			status ;;
-		noconf)
-			echo "Sound configuration was disabled from cmdline..." ;;
-		*)
-			if [ -x /usr/sbin/soundconf ]; then
-				echo "Using sound kernel module $DRIVER..."
-				/usr/sbin/soundconf -M $DRIVER
-			fi ;;
-	esac
-# Sound card may already be detected by kernel/udev
-elif [ -d /proc/asound ]; then
-	# Restore sound config for installed system
-	if [ -s /var/lib/alsa/asound.state ]; then
-		echo -n "Restoring last alsa configuration..."
-		alsactl restore
-		status
-	else
-		# Initialize sound card
-		alsactl init
-	fi
-else
-	echo "Unable to configure sound card."
-fi
-
 # Locale config
 if [ ! -s "/etc/locale.conf" ]; then
 	echo "Setting system locale to: POSIX (English)"
@@ -120,3 +80,42 @@ fi
 
 # Kernel polling for automount
 echo 5000 > /sys/module/block/parameters/events_dfl_poll_msecs 2>/dev/null
+
+# Sound configuration stuff. First check if sound=no and remove all
+# sound Kernel modules.
+if [ -n "$DRIVER" ]; then
+	case "$DRIVER" in
+		no)
+			echo -n "Removing all sound kernel modules..."
+			rm -rf /lib/modules/$(uname -r)/kernel/sound
+			status
+			echo -n "Removing all sound packages..."
+			for i in $(grep -l '^DEPENDS=.*alsa-lib' /var/lib/tazpkg/installed/*/receipt) ; do
+				pkg=${i#/var/lib/tazpkg/installed/}
+				echo 'y' | tazpkg remove ${pkg%/*} > /dev/null
+			done
+			for i in alsa-lib mhwaveedit asunder libcddb ; do
+				echo 'y' | tazpkg remove $i > /dev/null
+			done
+			status ;;
+		noconf)
+			echo "Sound configuration was disabled from cmdline..." ;;
+		*)
+			if [ -x /usr/sbin/soundconf ]; then
+				echo "Using sound kernel module $DRIVER..."
+				/usr/sbin/soundconf -M $DRIVER
+			fi ;;
+	esac
+# Sound card may already be detected by kernel/udev
+elif [ -d /proc/asound ]; then
+	if [ -s /var/lib/alsa/asound.state ]; then
+		# Restore sound config for installed system
+		echo "Restoring last alsa configuration..."
+		(sleep 2; alsactl restore) &
+	else
+		# Initialize sound card
+		alsactl init
+	fi
+else
+	echo "WARNING: Unable to configure sound card"
+fi
