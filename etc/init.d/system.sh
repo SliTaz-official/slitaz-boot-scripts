@@ -60,19 +60,20 @@ if [ ! -s "/etc/TZ" ]; then
 fi
 
 # Activate an eventual swap file or partition
-if [ "$(blkid | grep 'TYPE="swap"')" ]; then
-	for swd in $(blkid | sed '/TYPE="swap"/!d;s/:.*//'); do
-		if ! grep -q "$swd	" /etc/fstab; then
-			echo "Swap memory detected on: $swd"
-		cat >> /etc/fstab <<EOT
-$swd	swap	swap	defaults	0 0
-EOT
-		fi
-	done
-fi
 if grep -q swap /etc/fstab; then
 	echo -n "Activating swap memory..."
 	swapon -a && status
+else
+	if [ "$(blkid | grep 'TYPE="swap"')" ]; then
+		for swd in $(blkid | sed '/TYPE="swap"/!d;s/:.*//'); do
+			if ! grep -q "$swd	" /etc/fstab; then
+				echo "Swap memory detected on: $swd"
+				cat >> /etc/fstab <<EOT
+$swd	swap	swap	defaults	0 0
+EOT
+			fi
+		done
+	fi
 fi
 
 # Start TazPanel
