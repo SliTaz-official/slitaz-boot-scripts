@@ -33,5 +33,5 @@ sync
 # Kill all processes.
 killall5
 
-# Umount filesystems.
-/bin/umount -a -r 2>/dev/null
+# Umount filesystems
+busybox umount -a -r 2>/dev/null
