@@ -34,4 +34,4 @@ sync
 killall5
 
 # Umount filesystems
-busybox umount -a -r 2>/dev/null
+/bin/umount -a -r 2>/dev/null
