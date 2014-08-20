@@ -56,6 +56,7 @@ fi
 # Remount rootfs rw.
 echo "Remounting rootfs read/write..."
 mount -o remount,rw /
+sync	# ensure rw state
 
 # Mount filesystems in /etc/fstab.
 echo "Mounting filesystems in fstab..."
