@@ -172,7 +172,7 @@ if [ "$1" != "log" ]; then
 	sh
 fi
 got modprobe && mod ${root//,/ }
-[ /proc/sys/dev/cdrom ] &&
+[ -d /proc/sys/dev/cdrom ] &&
 ln -s $(sed '/name/!d;s/.*:[^a-z]*//' /proc/sys/dev/cdrom/info) /dev/cdrom
 if use dmraid
 then	dmraid -s|sed '/^type/!ds/.*: *//'|ldraid
