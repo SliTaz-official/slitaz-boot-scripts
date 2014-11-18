@@ -89,8 +89,8 @@ got $1 && msg "$1 $root"
 
 mnt()
 {
-r=$(blkid 2> /dev/null | sed "s/\"//g;/$root/!d;s/:.*//;q")
-r={r:-$root}
+r=$(blkid 2> /dev/null | sed "s|\"||g;|$root|!d;s|:.*||;q")
+r=${r:-$root}
 r=${r#/dev/}
 r=/dev/${r%%/*}
 d=${root#*$r}
@@ -172,7 +172,8 @@ if [ "$1" != "log" ]; then
 	sh
 fi
 got modprobe && mod ${root//,/ }
-ln -s $(sed '/name/!ds/.*:[^a-z]*//' /proc/sys/dev/cdrom/info) /dev/cdrom
+[ /proc/sys/dev/cdrom ] &&
+ln -s $(sed '/name/!d;s/.*:[^a-z]*//' /proc/sys/dev/cdrom/info) /dev/cdrom
 if use dmraid
 then	dmraid -s|sed '/^type/!ds/.*: *//'|ldraid
 	[ ${root:0:4} = /dev ] ||
