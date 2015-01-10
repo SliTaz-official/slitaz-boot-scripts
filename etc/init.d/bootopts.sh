@@ -35,7 +35,8 @@ if ! grep -q "100[0-9]:100" /etc/passwd; then
 	fi
 	
 	# Make sure we have users applications.conf
-	if [ ! -f "/etc/skel/.config/slitaz/applications.conf" ]; then
+	if [ ! -f "/etc/skel/.config/slitaz/applications.conf" -a
+	     -f cp /etc/slitaz/applications.conf ]; then
 		mkdir -p /etc/skel/.config/slitaz
 		cp /etc/slitaz/applications.conf /etc/skel/.config/slitaz
 	fi

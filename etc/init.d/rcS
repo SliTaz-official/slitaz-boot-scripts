@@ -182,7 +182,8 @@ done
 # Start X session. Dbus must be started before Xorg and other daemons. 
 # We started it here because X is run before RUN_DAEMONS. Sleep, in 
 # some in live mode we boot too fast and X can't initialize.
-if [ "$SCREEN" != "text" ] && [ "$LOGIN_MANAGER" ] && \
+if [ "$SCREEN" != "text" ] && [ "$LOGIN_MANAGER" ] &&
+	[ -x /usr/bin/tazx ] && [ -s /etc/slitaz/applications.conf ] &&
 	[ -x "/etc/init.d/$LOGIN_MANAGER" ]; then
 	colorize 36 "Starting X environment..."
 	# We need Xorg 40-Keyboard.conf and SliTaz applications.conf
@@ -198,6 +199,7 @@ fi
 if [ "$RUN_DAEMONS" ]; then
 	colorize 33 "Starting all daemons..."
 	for daemon in $RUN_DAEMONS; do
+		[ -x /etc/init.d/$daemon ] &&
 		/etc/init.d/$daemon start
 	done
 fi
