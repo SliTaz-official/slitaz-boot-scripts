@@ -42,7 +42,7 @@ LOAD_MODULES="$LOAD_MODULES"
 LOGIN_MANAGER="slim"
 
 # Initialization scripts to run at boot time. The local.sh script
-# let you quickly add some local startup commands.
+# lets you quickly add some local startup commands.
 RUN_SCRIPTS="bootopts.sh system.sh network.sh local.sh"
 
 # Daemons to start at boot time. DBUS daemon is started before the

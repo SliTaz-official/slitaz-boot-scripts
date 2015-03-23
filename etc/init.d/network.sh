@@ -107,7 +107,7 @@ wifi() {
 		else
 			if fgrep -q ssid=\"$WIFI_ESSID\" $WPA_CONF; then
 				echo "Change network settings in $WPA_CONF"
-				# Remove given existing network (it to be appended later)
+				# Remove given existing network (it's to be appended later)
 				mv -f $WPA_CONF $WPA_CONF.old
 				cat $WPA_CONF.old | tr '\n' '\a' | sed 's|[^#]\(network={\)|\n\1|g' | \
 				fgrep -v "ssid=\"$WIFI_ESSID\"" | tr '\a' '\n' > $WPA_CONF

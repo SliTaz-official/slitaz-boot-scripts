@@ -184,7 +184,7 @@ done
 
 # Start X session. Dbus must be started before Xorg and other daemons. 
 # We started it here because X is run before RUN_DAEMONS. Sleep, in 
-# some in live mode we boot too fast and X can't initialize.
+# some live modes we boot too fast and X can't initialize.
 if [ "$SCREEN" != 'text' ] && [ "$LOGIN_MANAGER" ] &&
 	[ -x /usr/bin/tazx ] && [ -s /etc/slitaz/applications.conf ] &&
 	[ -x "/etc/init.d/$LOGIN_MANAGER" ]; then

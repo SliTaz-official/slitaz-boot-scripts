@@ -73,8 +73,8 @@ WIFI_MODE="$WIFI_MODE"
 # Set the operating channel in the device. Empty by default.
 WIFI_CHANNEL="$WIFI_CHANNEL"
 
-# Force the card to register to the Access Point given by the address, if it
-#  possible. Empty by default to automatic mode.
+# Force the card to register to the Access Point given by the address, if it's
+# possible. Empty by default to automatic mode.
 WIFI_AP="$WIFI_AP"
 
 
