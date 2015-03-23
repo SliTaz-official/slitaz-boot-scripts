@@ -17,28 +17,31 @@ case "$1" in
 
 readonly)
 
-colorize 34 "Processing: /etc/init.d/rcS..."
+colorize 34 'Processing: /etc/init.d/rcS...'
 
 # Mount /proc
-echo -n "Mounting proc filesystem on /proc"
+echo -n 'Mounting proc filesystem on /proc'
 mount proc && status
 
 # Trigger Udev and handle hotplug events
 if [ "$UDEV" == "yes" ]; then
-	echo -n "Mounting devtmpfs filesystem on: /dev"
+	echo -n 'Mounting devtmpfs filesystem on: /dev'
 	mount -t devtmpfs devtmpfs /dev
 	status
-	echo "Starting udev daemon..."
+
+	echo 'Starting udev daemon...'
 	udevd --daemon 2>/dev/null
-	echo "Udevadm requesting events from the Kernel..."
+
+	echo 'Udevadm requesting events from the Kernel...'
 	udevadm trigger
-	echo "Udevadm waiting for the event queue to finish..."
+
+	echo 'Udevadm waiting for the event queue to finish...'
 	udevadm settle --timeout=120
 	# Disable hotplug helper since udevd listen to netlink
-	echo "" > /proc/sys/kernel/hotplug
+	echo '' > /proc/sys/kernel/hotplug
 else
-	echo -n "Executing mdev -s to populate /dev..."
-	mdev -s && echo "mdev" > /proc/sys/kernel/hotplug
+	echo -n 'Executing mdev -s to populate /dev...'
+	mdev -s && echo 'mdev' > /proc/sys/kernel/hotplug
 	status
 fi
 
@@ -54,31 +57,31 @@ if [ "$CHECK_FS" ]; then
 fi
 
 # Remount rootfs rw.
-echo "Remounting rootfs read/write..."
+echo 'Remounting rootfs read/write...'
 mount -o remount,rw /
 sync	# ensure rw state
 
 # Mount filesystems in /etc/fstab.
-echo "Mounting filesystems in fstab..."
+echo 'Mounting filesystems in fstab...'
 mount -a
 ;;
+
 
 readwrite)
 
 # Be quiet
-echo "0 0 0 0" > /proc/sys/kernel/printk
+echo '0 0 0 0' > /proc/sys/kernel/printk
 
 # Store boot messages to log files.
 dmesg > /var/log/dmesg.log &
 
 # Parse cmdline args for earlier boot options. All other boot options
 # are in /etc/init./bootopts.sh.
-echo -n "Searching for early boot options..."
-for opt in $(cat /proc/cmdline)
-do
+echo -n 'Searching for early boot options...'
+for opt in $(cat /proc/cmdline); do
 	case $opt in
 		modprobe=*)
-			export MODPROBE="yes" ;;
+			export MODPROBE='yes' ;;
 		config=*)
 			export CONFIG=${opt#config=} ;;
 		screen=*)
@@ -91,14 +94,14 @@ status
 
 # Clean up the system and set up tmp dirs. */run/* are tmpfs so they are 
 # cleaned up at shutdown.
-if [ "$CLEAN_UP_SYSTEM" = "yes" ]; then
-	echo -n "Cleaning up the system..."
+if [ "$CLEAN_UP_SYSTEM" == 'yes' ]; then
+	echo -n 'Cleaning up the system...'
 	rm -rf /tmp
 	mkdir -p /tmp/.X11-unix /tmp/.ICE-unix
 	chmod -R 1777 /tmp
 	status
 else
-	echo "System clean up is disabled in: /etc/rcS.conf"
+	echo 'System clean up is disabled in: /etc/rcS.conf'
 fi
 
 # Handle kernel cmdline parameter modprobe=<module_list>
@@ -118,7 +121,7 @@ if [ -n "$CONFIG" ]; then
 	SCRIPT=${CONFIG#*,}
 	echo "Probing $DEVICE... "
 	if ! mount -r $DEVICE /mnt; then
-		if echo $DEVICE | grep -Eq "/dev/sd|UUID=|LABEL="; then
+		if echo $DEVICE | grep -Eq '/dev/sd|UUID=|LABEL='; then
 			USBDELAY=$(cat /sys/module/usb_storage/parameters/delay_use)
 			USBDELAY=$((1+$USBDELAY))
 			echo "$DEVICE is potentially a USB device: sleep for $USBDELAY seconds"
@@ -138,20 +141,20 @@ fi
 
 # Mount /proc/bus/usb
 if [ -d /proc/bus/usb ]; then
-	echo -n "Mounting usbfs filesystem on: /proc/bus/usb"
+	echo -n 'Mounting usbfs filesystem on: /proc/bus/usb'
 	mount -t usbfs usbfs /proc/bus/usb
 	status
 fi
 
 # Start syslogd and klogd
-echo -n "Starting system log daemon: syslogd..."
+echo -n 'Starting system log daemon: syslogd...'
 syslogd -s $SYSLOGD_ROTATED_SIZE && status
-echo -n "Starting kernel log daemon: klogd..."
+echo -n 'Starting kernel log daemon: klogd...'
 klogd && status
 
 # Load all modules listed in config file
 if [ "$LOAD_MODULES" ]; then
-	colorize 33 "Loading Kernel modules..."
+	colorize 33 'Loading Kernel modules...'
 	for mod in $LOAD_MODULES; do
 		echo -n "Loading module: $mod"
 		modprobe $mod
@@ -167,8 +170,8 @@ fi
 
 # Call udevadm trigger to ensure /dev is fully populated now that all
 # modules are loaded.
-if [ "$UDEV" = "yes" ]; then
-	echo -n "Triggering udev events: --action=add"
+if [ "$UDEV" == 'yes' ]; then
+	echo -n 'Triggering udev events: --action=add'
 	udevadm trigger --action=add
 	status
 fi
@@ -182,13 +185,13 @@ done
 # Start X session. Dbus must be started before Xorg and other daemons. 
 # We started it here because X is run before RUN_DAEMONS. Sleep, in 
 # some in live mode we boot too fast and X can't initialize.
-if [ "$SCREEN" != "text" ] && [ "$LOGIN_MANAGER" ] &&
+if [ "$SCREEN" != 'text' ] && [ "$LOGIN_MANAGER" ] &&
 	[ -x /usr/bin/tazx ] && [ -s /etc/slitaz/applications.conf ] &&
 	[ -x "/etc/init.d/$LOGIN_MANAGER" ]; then
-	colorize 36 "Starting X environment..."
+	colorize 36 'Starting X environment...'
 	# We need Xorg 40-Keyboard.conf and SliTaz applications.conf
-	if [ ! -s "/etc/X11/xorg.conf.d/40-Keyboard.conf" ]; then
-		echo "Configuring Xorg server..." && HOME="/root" 
+	if [ ! -s '/etc/X11/xorg.conf.d/40-Keyboard.conf' ]; then
+		echo 'Configuring Xorg server...' && HOME='/root'
 		tazx init
 	fi
 	/etc/init.d/dbus start
@@ -205,7 +208,7 @@ if [ "$RUN_DAEMONS" ]; then
 fi
 
 # Back to a verbose mode
-(sleep 6 && echo "7 4 1 7" > /proc/sys/kernel/printk) &
+(sleep 6 && echo '7 4 1 7' > /proc/sys/kernel/printk) &
 
 if [ "$MESSAGE" ]; then
 	newline

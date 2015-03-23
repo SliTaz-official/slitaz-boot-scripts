@@ -8,7 +8,7 @@
 log=/var/log/slitaz/shutdown.log
 
 # Clear and quiet shutdown
-clear && echo "System is going down for reboot or halt." > $log
+clear; echo 'System is going down for reboot or halt.' > $log
 uptime >> $log
 
 # Store last alsa settings.
@@ -17,8 +17,7 @@ if [ -x /usr/sbin/alsactl ]; then
 fi
 
 # Stop all daemons started at boot time.
-for daemon in $RUN_DAEMONS
-do
+for daemon in $RUN_DAEMONS; do
 	if [ -x /etc/init.d/$daemon ]; then
 		/etc/init.d/$daemon stop >> $log
 	fi

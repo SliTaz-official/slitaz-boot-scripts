@@ -106,7 +106,7 @@ mod()
 {
 for i in $@; do
 	echo "Loading module: $i"
-	modprobe $i 2>/dev/null || busybox insmod $(find /lib/modules|sed "/$i.ko/!dq") 
+	modprobe $i 2>/dev/null || busybox insmod $(find /lib/modules|sed "/$i.ko/!dq")
 done
 }
 
@@ -149,14 +149,14 @@ try /dev/mapper $1
 
 ldraid()
 {
-while read l
-do case "$l" in
-*raid10*)	mod raid10;;
-*raid0*)	mod raid0;;
-*raid1*)	mod raid1;;
-*raid*)		mod raid456;;
-*mirror*)	mod dm-mirror
-esac
+while read l; do
+	case "$l" in
+		*raid10*)	mod raid10;;
+		*raid0*)	mod raid0;;
+		*raid1*)	mod raid1;;
+		*raid*)		mod raid456;;
+		*mirror*)	mod dm-mirror;;
+	esac
 done
 }
 
@@ -173,28 +173,28 @@ if [ "$1" != "log" ]; then
 fi
 got modprobe && mod ${root//,/ }
 [ -d /proc/sys/dev/cdrom ] &&
-ln -s $(sed '/name/!d;s/.*:[^a-z]*//' /proc/sys/dev/cdrom/info) /dev/cdrom
-if use dmraid
-then	dmraid -s|sed '/^type/!ds/.*: *//'|ldraid
+	ln -s $(sed '/name/!d;s/.*:[^a-z]*//' /proc/sys/dev/cdrom/info) /dev/cdrom
+if use dmraid; then
+	dmraid -s | sed '/^type/!ds/.*: *//' | ldraid
 	[ ${root:0:4} = /dev ] ||
-	root=/dev/mapper/$(dmraid -s|sed '/^name/!ds/.*: *//')p${root#p}
+		root=/dev/mapper/$(dmraid -s|sed '/^name/!ds/.*: *//')p${root#p}
 	dmraid -ay
 fi
-if use softraid
-then	mdadm -E -s -c partitions>/etc/mdadm.conf
+if use softraid; then
+	mdadm -E -s -c partitions > /etc/mdadm.conf
 	grep -qs " $root " /etc/mdadm.conf ||
-	root=$(awk '/dev.md/{print $2;exit}'</etc/mdadm.conf)
-	grep level=raid /etc/mdadm.conf|ldraid
-	for i in 1 2 3 4 5 6 7 8 9
-	do	sleep $i
+		root=$(awk '/dev.md/{print $2;exit}' < /etc/mdadm.conf)
+	grep level=raid /etc/mdadm.conf | ldraid
+	for i in 1 2 3 4 5 6 7 8 9; do
+		sleep $i
 		mdadm -A -s
 		grep -qs ': act' /proc/mdstat && break
 	done
 	lvm /etc/mdadm.conf
 fi
 lvm
-if got mount
-then	dev=$root
+if got mount; then
+	dev=$root
 	x=$(blkid|grep $dev|sed 's/:.*//;q')
 	root=${x:-$dev}
 	[ "$dev" = "$root" ] || dev="$root ($dev)"
@@ -208,8 +208,8 @@ got loopfs && echo "Into file $root..." &&
 got bindfs && echo "Bind ${root/,/ to }..." &&
 	busybox mount --bind /mnt/${root%,*} /mnt/${root/,//}
 arg cryptoroot= && try
-if use subroot
-then	cp $(LD_TRACE_LOADED_OBJECTS=1 /lib/ld*.so /usr/sbin/chroot | sed\
+if use subroot; then
+	cp $(LD_TRACE_LOADED_OBJECTS=1 /lib/ld*.so /usr/sbin/chroot | sed\
 		's|.*=> \(/lib/l[^ ]*\).*|\1|;/^\//!d') /usr/sbin/chroot /run
 	r=$root/run
 	quit $r "export LD_LIBRARY_PATH=$r:/lib"\
@@ -223,9 +223,9 @@ r=$root
 root=90%
 got rootfssize
 [ $(busybox free|busybox awk '/Mem:/{print int(($4*100)/$3)}') -ge $r ] &&
-busybox mount -t tmpfs -o size=$root tmpfs /mnt &&
-for i in $(ls -ar /)
-do	case "$i" in
+	busybox mount -t tmpfs -o size=$root tmpfs /mnt &&
+for i in $(ls -ar /); do
+	case "$i" in
 	.*|cdrom)	;;
 	mnt|proc|sys)	mkdir /mnt/$i;;
 	usr|var|rootfs*) mv /$i /mnt;;
@@ -244,8 +244,8 @@ got rwdev && mnt $br && br=$br$d
 o=
 p=
 c=/mnt/.cdrom
-if [ -z "$(ls /mnt/rootfs* 2>/dev/null)" ]
-then	root=/dev/cdrom/fs
+if [ -z "$(ls /mnt/rootfs* 2>/dev/null)" ]; then
+	root=/dev/cdrom/fs
 	got rodev
 	mkdir -p $c /mnt$c /mnt/.rw$c
 	mnt $c
@@ -255,8 +255,8 @@ then	root=/dev/cdrom/fs
 fi
 l=0
 r=
-got isofs || for i in /mnt$p/rootfs?*.gz
-do	fs=${i#*root}
+got isofs || for i in /mnt$p/rootfs?*.gz; do
+	fs=${i#*root}
 	r=$r:/mnt/.$fs
 	mkdir -p /mnt/.rw/mnt/.$fs /mnt/.$fs
 	losetup $o /dev/loop$l $i

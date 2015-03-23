@@ -10,13 +10,11 @@
 . /etc/rcS.conf
 
 # Parse cmdline args for boot options (See also rcS and bootopts.sh).
-XARG=""
-for opt in $(cat /proc/cmdline)
-do
+XARG=''
+for opt in $(cat /proc/cmdline); do
 	case $opt in
 		console=*)
-			sed -i "s/tty1/${opt#console=}/g;/^tty[2-9]::/d" \
-				/etc/inittab ;;
+			sed -i "s/tty1/${opt#console=}/g;/^tty[2-9]::/d" /etc/inittab ;;
 		sound=*)
 			DRIVER=${opt#sound=} ;;
 		xarg=*)
@@ -27,9 +25,9 @@ do
 done
 
 # Locale config
-if [ ! -s "/etc/locale.conf" ]; then
-	echo "Setting system locale to: POSIX (English)"
-	echo -e "LANG=POSIX\nLC_ALL=POSIX" > /etc/locale.conf
+if [ ! -s '/etc/locale.conf' ]; then
+	echo 'Setting system locale to: POSIX (English)'
+	echo -e 'LANG=POSIX\nLC_ALL=POSIX' > /etc/locale.conf
 fi
 . /etc/locale.conf
 echo -n "Setting system locale: $LANG"
@@ -37,9 +35,9 @@ export LC_ALL=$LANG
 . /lib/libtaz.sh && status
 
 # Keymap config: Default to us in live mode if kmap= was not used.
-if [ ! -s "/etc/keymap.conf" ]; then
-	echo "Setting system keymap to: us (USA)"
-	echo "us" > /etc/keymap.conf
+if [ ! -s '/etc/keymap.conf' ]; then
+	echo 'Setting system keymap to: us (USA)'
+	echo 'us' > /etc/keymap.conf
 fi
 kmap=$(cat /etc/keymap.conf)
 echo -n "Loading console keymap: $kmap"
@@ -48,14 +46,14 @@ status
 
 # Timezone config: Set timezone using the keymap config for fr, be, fr_CH
 # and ca with Montreal.
-if [ ! -s "/etc/TZ" ]; then
+if [ ! -s '/etc/TZ' ]; then
 	case "$kmap" in
 		fr-latin1|be-latin1)
-			echo "Europe/Paris" > /etc/TZ ;;
+			echo 'Europe/Paris' > /etc/TZ ;;
 		fr_CH-latin1|de_CH-latin1)
-			echo "Europe/Zurich" > /etc/TZ ;;
-		cf) echo "America/Montreal" > /etc/TZ ;;
-		*) echo "UTC" > /etc/TZ ;;
+			echo 'Europe/Zurich' > /etc/TZ ;;
+		cf) echo 'America/Montreal' > /etc/TZ ;;
+		*) echo 'UTC' > /etc/TZ ;;
 	esac
 fi
 
@@ -71,7 +69,7 @@ EOT
 	done
 fi
 if grep -q swap /etc/fstab; then
-	echo -n "Activating swap memory..."
+	echo -n 'Activating swap memory...'
 	swapon -a && status
 fi
 
@@ -86,10 +84,10 @@ echo 5000 > /sys/module/block/parameters/events_dfl_poll_msecs 2>/dev/null
 if [ -n "$DRIVER" ]; then
 	case "$DRIVER" in
 		no)
-			echo -n "Removing all sound kernel modules..."
+			echo -n 'Removing all sound kernel modules...'
 			rm -rf /lib/modules/$(uname -r)/kernel/sound
 			status
-			echo -n "Removing all sound packages..."
+			echo -n 'Removing all sound packages...'
 			for i in $(grep -l '^DEPENDS=.*alsa-lib' /var/lib/tazpkg/installed/*/receipt) ; do
 				pkg=${i#/var/lib/tazpkg/installed/}
 				echo 'y' | tazpkg remove ${pkg%/*} > /dev/null
@@ -99,7 +97,7 @@ if [ -n "$DRIVER" ]; then
 			done
 			status ;;
 		noconf)
-			echo "Sound configuration was disabled from cmdline..." ;;
+			echo 'Sound configuration was disabled from cmdline...' ;;
 		*)
 			if [ -x /usr/sbin/soundconf ]; then
 				echo "Using sound kernel module $DRIVER..."
@@ -110,12 +108,12 @@ if [ -n "$DRIVER" ]; then
 elif [ -d /proc/asound ]; then
 	if [ -s /var/lib/alsa/asound.state ]; then
 		# Restore sound config for installed system
-		echo "Restoring last alsa configuration..."
+		echo 'Restoring last alsa configuration...'
 		(sleep 2; alsactl restore) &
 	else
 		# Initialize sound card
 		alsactl init
 	fi
 else
-	echo "WARNING: Unable to configure sound card"
+	echo 'WARNING: Unable to configure sound card'
 fi
