@@ -12,7 +12,6 @@ echo "Loading network settings from $CONF"
 
 WPA_CONF='/etc/wpa/wpa.conf'
 
-
 # Migrate existing settings to a new format file
 
 . /usr/share/slitaz/network.conf_migration
@@ -39,7 +38,7 @@ boot() {
 # Use ethernet
 
 eth() {
-	[ "$WIFI" != 'yes' ] && ifconfig $INTERFACE up
+	[ "$WIFI" != 'yes' ] && ifconfig $INTERFACE up & sleep 5
 }
 
 
@@ -126,9 +125,12 @@ network={
 	ssid="$WIFI_ESSID"
 EOT
 
-		# For networks with hidden SSID: write its BSSID and allow probe requests
+		# For networks with hidden SSID: write its BSSID
 		[ -n "$WIFI_BSSID" ] && cat >> $WPA_CONF <<EOT
 	bssid=$WIFI_BSSID
+EOT
+		# Allow probe requests (for all networks)
+		cat >> $WPA_CONF <<EOT
 	scan_ssid=1
 EOT
 
@@ -269,7 +271,9 @@ static_ip() {
 
 stop() {
 	echo 'Stopping all interfaces'
-	ifconfig $INTERFACE down
+	for iface in $(ifconfig | sed -e '/^[^ ]/!d' -e 's|^\([^ ]*\) .*|\1|' -e '/lo/d'); do
+		ifconfig $iface down
+	done
 	ifconfig $WIFI_INTERFACE down
 
 	echo 'Killing all daemons'
@@ -284,10 +288,9 @@ stop() {
 
 
 start() {
-	eth
-	wifi
-	dhcp
-	static_ip
+	stop
+	eth; wifi
+	dhcp; static_ip
 	reconnect_wifi_network
 
 	# change default LXPanel panel iface
