@@ -11,6 +11,7 @@ echo "Loading network settings from $CONF"
 . "$CONF"
 
 WPA_CONF='/etc/wpa/wpa.conf'
+[ ! -e "$WPA_CONF" ] && cp /etc/wpa/wpa_empty.conf $WPA_CONF
 
 # Migrate existing settings to a new format file
 
@@ -59,7 +60,7 @@ reconnect_wifi_network() {
 		current_ssid="$(wpa_cli list_networks 2>/dev/null | fgrep '[CURRENT]' | cut -f2)"
 		if [ "$current_ssid" != "$WIFI_ESSID" ]; then
 			echo "Connecting to $WIFI_ESSID..."
-			for i in $(seq 20); do
+			for i in $(seq 5); do
 				index=$(wpa_cli list_networks 2>/dev/null | \
 					grep -m1 -F $'\t'$WIFI_ESSID$'\t' | head -n1 | cut -f1)
 				[ -z "$index" ] && echo -n '.' && sleep 1
@@ -67,6 +68,15 @@ reconnect_wifi_network() {
 			wpa_cli select_network $index >/dev/null; status
 		fi
 	fi
+}
+
+
+# Remove selected network settings from wpa.conf
+
+remove_network() {
+	mv -f $WPA_CONF $WPA_CONF.old
+	cat $WPA_CONF.old | tr '\n' '\a' | sed 's|[^#]\(network={\)|\n\1|g' | \
+		fgrep -v "ssid=\"$1\"" | tr '\a' '\n' > $WPA_CONF
 }
 
 
@@ -99,6 +109,9 @@ wifi() {
 		[ -n "$WIFI_CHANNEL" ] && IWCONFIG_ARGS="$IWCONFIG_ARGS channel $WIFI_CHANNEL"
 		[ -n "$WIFI_AP" ]      && IWCONFIG_ARGS="$IWCONFIG_ARGS ap $WIFI_AP"
 
+		# Use "any" network only when it is needed
+		[ "$WIFI_ESSID" != 'any' ] && remove_network 'any'
+
 		# Clean all / add / change stored networks settings
 		if [ "$WIFI_BLANK_NETWORKS" == 'yes' ]; then
 			echo "Creating new $WPA_CONF"
@@ -107,9 +120,7 @@ wifi() {
 			if fgrep -q ssid=\"$WIFI_ESSID\" $WPA_CONF; then
 				echo "Change network settings in $WPA_CONF"
 				# Remove given existing network (it's to be appended later)
-				mv -f $WPA_CONF $WPA_CONF.old
-				cat $WPA_CONF.old | tr '\n' '\a' | sed 's|[^#]\(network={\)|\n\1|g' | \
-				fgrep -v "ssid=\"$WIFI_ESSID\"" | tr '\a' '\n' > $WPA_CONF
+				remove_network "$WIFI_ESSID"
 			else
 				echo "Append existing $WPA_CONF"
 			fi
