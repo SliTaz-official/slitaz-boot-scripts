@@ -180,8 +180,12 @@ if use dmraid; then
 		root=/dev/mapper/$(dmraid -s|sed '/^name/!ds/.*: *//')p${root#p}
 	dmraid -ay
 fi
+use raiddev && raiddev="DEVICE ${root//,/ }"
+use raidmail && raidmail="MAILADDR $root"
 if use softraid; then
 	mdadm -E -s -c partitions > /etc/mdadm.conf
+	[ "$raiddev" ] && echo "$raiddev" >> /etc/mdadm.conf
+	[ "$raidmail" ] && echo "$raidmail" >> /etc/mdadm.conf
 	grep -qs " $root " /etc/mdadm.conf ||
 		root=$(awk '/dev.md/{print $2;exit}' < /etc/mdadm.conf)
 	grep level=raid /etc/mdadm.conf | ldraid
