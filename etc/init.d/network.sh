@@ -39,7 +39,7 @@ boot() {
 # Use ethernet
 
 eth() {
-	[ "$WIFI" != 'yes' ] && ifconfig $INTERFACE up & sleep 5
+	[ "$WIFI" != 'yes' ] && ifconfig $INTERFACE up && sleep 5
 }
 
 
