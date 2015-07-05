@@ -299,7 +299,16 @@ stop() {
 
 
 start() {
-	stop
+	# stopping only unspecified interfaces
+	interfaces="$(ifconfig | sed -e '/^[^ ]/!d' -e 's|^\([^ ]*\) .*|\1|' -e '/lo/d')"
+	case $WIFI in
+		# don't stop Wi-Fi Interface if Wi-Fi selected
+		yes) interfaces="$(echo "$interfaces" | sed -e "/^$WIFI_INTERFACE$/d")";;
+	esac
+	for iface in $interfaces; do
+		ifconfig $iface down
+	done
+
 	eth; wifi
 	dhcp; static_ip
 	reconnect_wifi_network
