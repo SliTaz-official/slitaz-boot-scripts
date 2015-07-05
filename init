@@ -243,7 +243,7 @@ quit
 mod squashfs 2>/dev/null || exit
 msg aufs
 br=/mnt/.rw
-mkdir $br
+mkdir $br /mnt/.wd
 got rwdev && mnt $br && br=$br$d
 o=
 p=
@@ -259,13 +259,17 @@ if [ -z "$(ls /mnt/rootfs* 2>/dev/null)" ]; then
 fi
 l=0
 r=
-got isofs || for i in /mnt$p/rootfs?*.gz; do
+got isofs && r=:$c || for i in /mnt$p/rootfs?*.gz; do
 	fs=${i#*root}
 	r=$r:/mnt/.$fs
 	mkdir -p /mnt/.rw/mnt/.$fs /mnt/.$fs
 	losetup $o /dev/loop$l $i
 	busybox mount -o ro -t squashfs /dev/loop$((l++)) /mnt/.$fs
 done
-mod aufs
-busybox mount -t aufs -o br=$br${r:-:$c} none /mnt
+while read type opt; do
+	mod $type && busybox mount -t $type -o $opt none /mnt && break
+done <<EOT
+aufs		br=$br$r
+overlayfs	workdir=/mnt/.wd${r/:/,lowerdir=},upperdir=$br
+EOT
 quit
