@@ -224,10 +224,12 @@ msg tmpfs
 root=100
 got tmpram
 r=$root
+inodes=90%
+got rootfsinodes && inodes=$root
 root=90%
 got rootfssize
 [ $(busybox free|busybox awk '/Mem:/{print int(($4*100)/$3)}') -ge $r ] &&
-	busybox mount -t tmpfs -o size=$root tmpfs /mnt &&
+	busybox mount -t tmpfs -o size=$root,nr_inodes=$inodes tmpfs /mnt &&
 for i in $(ls -ar /); do
 	case "$i" in
 	.*|cdrom)	;;
