@@ -12,6 +12,8 @@
 #         a lower value may work, such as 50
 # rootfssize= [RAMDISK]
 #         size of / regarding the RAM size, default 90%
+# rootfsinodes= [RAMDISK]
+#         files count of / regarding the RAM size, 0 (unlimited)
 #
 ### Indirect mode ; an initramfs is used to mount root from the hard disk.
 ### Any rootfs should fit, minimum required is slitaz-base.
@@ -224,7 +226,7 @@ msg tmpfs
 root=100
 got tmpram
 r=$root
-inodes=90%
+inodes=0
 got rootfsinodes && inodes=$root
 root=90%
 got rootfssize
