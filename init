@@ -13,7 +13,7 @@
 # rootfssize= [RAMDISK]
 #         size of / regarding the RAM size, default 90%
 # rootfsinodes= [RAMDISK]
-#         files count of / regarding the RAM size, 0 (unlimited)
+#         files count of / regarding the RAM size, default 0 (unlimited)
 #
 ### Indirect mode ; an initramfs is used to mount root from the hard disk.
 ### Any rootfs should fit, minimum required is slitaz-base.
@@ -166,6 +166,10 @@ if [ "$1" != "log" ]; then
 	busybox mount -t proc proc /proc
 	busybox mount -t sysfs sys /sys
 	busybox mount -t tmpfs tmpfs /run
+	for i in /sys/block/*/dev /sys/block/*/*/dev ; do
+		n=/dev/$(basename ${i%/dev})
+		[ -e $n ] || mknod $n b $(sed 's/:/ /' < $i)
+	done
 	x=/sbin/init; echo "[ -x $x ] && exec $x" >/run/init
 	$0 log 2>&1 | tee /run/boot.log
 	busybox umount /proc
