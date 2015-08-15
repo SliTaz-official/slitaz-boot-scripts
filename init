@@ -91,10 +91,12 @@ got $1 && msg "$1 $root"
 
 mnt()
 {
-r=$(blkid 2> /dev/null | sed "s|\"||g;/$(echo $root | tr / .)/!d;s|:.*||;q")
+r=$(busybox blkid 2> /dev/null | sed "s|\"||g;/$(echo $root | tr / .)/!d;s|:.*||;q")
 r=${r:-$root}
-r=${r#/dev/}
-r=/dev/${r%%/*}
+if [ ! -b $r ]; then
+	r=${r#/dev/}
+	r=/dev/${r%%/*}
+fi
 d=${root#*$r}
 busybox mount $r $1 && return
 w=$(cat /sys/module/usb_storage/parameters/delay_use)
@@ -205,7 +207,7 @@ fi
 lvm
 if got mount; then
 	dev=$root
-	x=$(blkid|grep $dev|sed 's/:.*//;q')
+	x=$(busybox blkid|grep $dev|sed 's/:.*//;q')
 	root=${x:-$dev}
 	[ "$dev" = "$root" ] || dev="$root ($dev)"
 	echo "Mount $dev..."
