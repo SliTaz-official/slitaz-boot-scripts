@@ -91,7 +91,7 @@ got $1 && msg "$1 $root"
 
 mnt()
 {
-r=$(busybox blkid 2> /dev/null | sed "s|\"||g;/$(echo $root | tr / .)/!d;s|:.*||;q")
+r=$(busybox blkid 2> /dev/null | sed "s|\"||g;/$(echo $root | sed 's|/|.|g')/!d;s|:.*||;q")
 r=${r:-$root}
 if [ ! -b $r ]; then
 	r=${r#/dev/}
@@ -168,17 +168,21 @@ if [ "$1" != "log" ]; then
 	busybox mount -t proc proc /proc
 	busybox mount -t sysfs sys /sys
 	busybox mount -t tmpfs tmpfs /run
-	for i in /sys/block/*/dev /sys/block/*/*/dev ; do
-		n=/dev/$(basename ${i%/dev})
-		[ -e $n ] || mknod $n b $(sed 's/:/ /' < $i)
-	done
 	x=/sbin/init; echo "[ -x $x ] && exec $x" >/run/init
 	$0 log 2>&1 | tee /run/boot.log
-	busybox umount /proc
+	busybox umount /run
 	busybox umount /sys
+	busybox umount /proc
 	. /run/init
 	sh
 fi
+for i in /sys/block/*/dev /sys/block/*/*/dev ; do
+	n=${i%/dev}
+	n=/dev/${n##*/}
+	[ -e $n ] && continue
+	echo "Create $n "
+	mknod $n b $(sed 's/:/ /' < $i)
+done
 got modprobe && mod ${root//,/ }
 [ -d /proc/sys/dev/cdrom ] &&
 	ln -s $(sed '/name/!d;s/.*:[^a-z]*//' /proc/sys/dev/cdrom/info) /dev/cdrom
