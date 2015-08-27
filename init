@@ -170,7 +170,6 @@ if [ "$1" != "log" ]; then
 	busybox mount -t tmpfs tmpfs /run
 	x=/sbin/init; echo "[ -x $x ] && exec $x" >/run/init
 	$0 log 2>&1 | tee /run/boot.log
-	busybox umount /run
 	busybox umount /sys
 	busybox umount /proc
 	. /run/init
