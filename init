@@ -91,7 +91,7 @@ got $1 && msg "$1 $root"
 
 mnt()
 {
-r=$(busybox blkid 2> /dev/null | sed "s|\"||g;/$(echo $root | sed 's|/|.|g')/!d;s|:.*||;q")
+r=$(busybox blkid 2> /dev/null | sed "s|\"||g;/${root//[^a-zA-Z0-9]/.}/!d;s|:.*||;q")
 r=${r:-$root}
 if [ ! -b $r ]; then
 	r=${r#/dev/}
@@ -177,6 +177,7 @@ if [ "$1" != "log" ]; then
 	sh
 fi
 for i in /sys/block/*/dev /sys/block/*/*/dev ; do
+	[ -s "$i" ] || continue
 	n=${i%/dev}
 	n=/dev/${n##*/}
 	[ -e $n ] && continue
