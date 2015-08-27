@@ -62,8 +62,10 @@ for opt in $(cat /proc/cmdline); do
 			eject /dev/cdrom ;;
 		autologin)
 			# Autologin option to skip first graphic login prompt.
-			sed -i '/auto_login .*/d' /etc/slim.conf
-			echo 'auto_login        yes' >> /etc/slim.conf ;;
+			if [ -f /etc/slim.conf ]; then
+				sed -i '/auto_login .*/d' /etc/slim.conf
+				echo 'auto_login        yes' >> /etc/slim.confi
+			fi ;;
 		lang=*)
 			# Check for a specified locale (lang=*).
 			LANG=${opt#lang=}

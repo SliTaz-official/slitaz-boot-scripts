@@ -11,7 +11,7 @@ echo "Loading network settings from $CONF"
 . "$CONF"
 
 WPA_CONF='/etc/wpa/wpa.conf'
-[ ! -e "$WPA_CONF" ] && cp /etc/wpa/wpa_empty.conf $WPA_CONF
+[ ! -e "$WPA_CONF" ] && cp /etc/wpa/wpa_empty.conf $WPA_CONF 2> /dev/null
 
 # Migrate existing settings to a new format file
 
