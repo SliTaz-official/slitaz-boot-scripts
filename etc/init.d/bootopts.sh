@@ -64,7 +64,7 @@ for opt in $(cat /proc/cmdline); do
 			# Autologin option to skip first graphic login prompt.
 			if [ -f /etc/slim.conf ]; then
 				sed -i '/auto_login .*/d' /etc/slim.conf
-				echo 'auto_login        yes' >> /etc/slim.confi
+				echo 'auto_login        yes' >> /etc/slim.conf
 			fi ;;
 		lang=*)
 			# Check for a specified locale (lang=*).
