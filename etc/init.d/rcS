@@ -20,12 +20,13 @@ readonly)
 colorize 34 'Processing: /etc/init.d/rcS...'
 
 # Mount /proc
-echo -n 'Mounting proc filesystem on /proc'
-mount proc && status
+action 'Mounting proc filesystem on /proc'
+mount proc
+status
 
 # Trigger Udev and handle hotplug events
 if [ "$UDEV" == "yes" ]; then
-	echo -n 'Mounting devtmpfs filesystem on: /dev'
+	action 'Mounting devtmpfs filesystem on: /dev'
 	mount -t devtmpfs devtmpfs /dev
 	status
 
@@ -40,7 +41,7 @@ if [ "$UDEV" == "yes" ]; then
 	# Disable hotplug helper since udevd listen to netlink
 	echo '' > /proc/sys/kernel/hotplug
 else
-	echo -n 'Executing mdev -s to populate /dev...'
+	action 'Executing mdev -s to populate /dev...'
 	mdev -s && echo 'mdev' > /proc/sys/kernel/hotplug
 	status
 fi
@@ -77,7 +78,7 @@ dmesg > /var/log/dmesg.log &
 
 # Parse cmdline args for earlier boot options. All other boot options
 # are in /etc/init./bootopts.sh.
-echo -n 'Searching for early boot options...'
+action 'Searching for early boot options...'
 for opt in $(cat /proc/cmdline); do
 	case $opt in
 		modprobe=*)
@@ -95,7 +96,7 @@ status
 # Clean up the system and set up tmp dirs. */run/* are tmpfs so they are 
 # cleaned up at shutdown.
 if [ "$CLEAN_UP_SYSTEM" == 'yes' ]; then
-	echo -n 'Cleaning up the system...'
+	action 'Cleaning up the system...'
 	rm -rf /tmp
 	mkdir -p /tmp/.X11-unix /tmp/.ICE-unix
 	chmod -R 1777 /tmp
@@ -108,7 +109,7 @@ fi
 if [ "$MODPROBE" ]; then
 	mods=$(sed -e 's/.* modprobe=\([^ ]*\).*/\1/' -e 's/,/\n/g' < /proc/cmdline)
 	for i in $mods; do
-		echo -n "Loading kernel module: $i"
+		action 'Loading kernel module: $i'
 		modprobe $i
 		status
 	done
@@ -131,7 +132,7 @@ if [ -n "$CONFIG" ]; then
 			CONFIG=""
 		fi
 	fi
-	echo -n "Source $SCRIPT from $DEVICE..."
+	action 'Source $SCRIPT from $DEVICE...'
 	if [ -n "$CONFIG" ]; then
 		. /mnt/$SCRIPT
 		umount /mnt 2> /dev/null || true
@@ -141,22 +142,22 @@ fi
 
 # Mount /proc/bus/usb
 if [ -d /proc/bus/usb ]; then
-	echo -n 'Mounting usbfs filesystem on: /proc/bus/usb'
+	action 'Mounting usbfs filesystem on: /proc/bus/usb'
 	mount -t usbfs usbfs /proc/bus/usb
 	status
 fi
 
 # Start syslogd and klogd
-echo -n 'Starting system log daemon: syslogd...'
-syslogd -s $SYSLOGD_ROTATED_SIZE && status
-echo -n 'Starting kernel log daemon: klogd...'
-klogd && status
+action 'Starting system log daemon: syslogd...'
+syslogd -s $SYSLOGD_ROTATED_SIZE; status
+action 'Starting kernel log daemon: klogd...'
+klogd; status
 
 # Load all modules listed in config file
 if [ "$LOAD_MODULES" ]; then
 	colorize 33 'Loading Kernel modules...'
 	for mod in $LOAD_MODULES; do
-		echo -n "Loading module: $mod"
+		action 'Loading module: $mod'
 		modprobe $mod
 		status
 	done
@@ -171,7 +172,7 @@ fi
 # Call udevadm trigger to ensure /dev is fully populated now that all
 # modules are loaded.
 if [ "$UDEV" == 'yes' ]; then
-	echo -n 'Triggering udev events: --action=add'
+	action 'Triggering udev events: --action=add'
 	udevadm trigger --action=add
 	status
 fi

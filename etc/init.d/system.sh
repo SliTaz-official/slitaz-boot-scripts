@@ -30,9 +30,10 @@ if [ ! -s '/etc/locale.conf' ]; then
 	echo -e 'LANG=POSIX\nLC_ALL=POSIX' > /etc/locale.conf
 fi
 . /etc/locale.conf
-echo -n "Setting system locale: $LANG"
+action 'Setting system locale: $LANG'
 export LC_ALL=$LANG
-. /lib/libtaz.sh && status
+. /lib/libtaz.sh
+status
 
 # Keymap config: Default to us in live mode if kmap= was not used.
 if [ ! -s '/etc/keymap.conf' ]; then
@@ -40,7 +41,7 @@ if [ ! -s '/etc/keymap.conf' ]; then
 	echo 'us' > /etc/keymap.conf
 fi
 kmap=$(cat /etc/keymap.conf)
-echo -n "Loading console keymap: $kmap"
+action 'Loading console keymap: $kmap'
 /sbin/tazkeymap $kmap >/dev/null
 status
 
@@ -69,8 +70,9 @@ EOT
 	done
 fi
 if grep -q swap /etc/fstab; then
-	echo -n 'Activating swap memory...'
-	swapon -a && status
+	action 'Activating swap memory...'
+	swapon -a
+	status
 fi
 
 # Start TazPanel
@@ -84,10 +86,10 @@ echo 5000 > /sys/module/block/parameters/events_dfl_poll_msecs 2>/dev/null
 if [ -n "$DRIVER" ]; then
 	case "$DRIVER" in
 		no)
-			echo -n 'Removing all sound kernel modules...'
+			action 'Removing all sound kernel modules...'
 			rm -rf /lib/modules/$(uname -r)/kernel/sound
 			status
-			echo -n 'Removing all sound packages...'
+			action 'Removing all sound packages...'
 			for i in $(grep -l '^DEPENDS=.*alsa-lib' /var/lib/tazpkg/installed/*/receipt) ; do
 				pkg=${i#/var/lib/tazpkg/installed/}
 				echo 'y' | tazpkg remove ${pkg%/*} > /dev/null

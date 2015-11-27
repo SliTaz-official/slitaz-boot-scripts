@@ -22,12 +22,12 @@ WPA_CONF='/etc/wpa/wpa.conf'
 
 boot() {
 	# Set hostname
-	echo -n "Setting hostname to: $(cat /etc/hostname)"
+	action "Setting hostname to: $(cat /etc/hostname)"
 	/bin/hostname -F /etc/hostname
 	status
 
 	# Configure loopback interface
-	echo -n 'Configuring loopback...'
+	action 'Configuring loopback...'
 	/sbin/ifconfig lo 127.0.0.1 up
 	/sbin/route add -net 127.0.0.0 netmask 255.0.0.0 dev lo
 	status
@@ -59,7 +59,7 @@ reconnect_wifi_network() {
 		# notwithstanding to priority when scan_ssid=1
 		current_ssid="$(wpa_cli list_networks 2>/dev/null | fgrep '[CURRENT]' | cut -f2)"
 		if [ "$current_ssid" != "$WIFI_ESSID" ]; then
-			echo "Connecting to $WIFI_ESSID..."
+			action 'Connecting to $WIFI_ESSID...'
 			for i in $(seq 5); do
 				index=$(wpa_cli list_networks 2>/dev/null | \
 					grep -m1 -F $'\t'$WIFI_ESSID$'\t' | head -n1 | cut -f1)
@@ -96,7 +96,7 @@ wifi() {
 				/etc/network.conf
 		fi
 
-		echo -n "Configuring Wi-Fi interface $WIFI_INTERFACE..."
+		action 'Configuring Wi-Fi interface $WIFI_INTERFACE...'
 		ifconfig $WIFI_INTERFACE up 2>/dev/null
 		if iwconfig $WIFI_INTERFACE | fgrep -q 'Tx-Power'; then
 			iwconfig $WIFI_INTERFACE txpower on
