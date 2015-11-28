@@ -32,7 +32,6 @@ fi
 . /etc/locale.conf
 action 'Setting system locale: $LANG'
 export LC_ALL=$LANG
-. /lib/libtaz.sh
 status
 
 # Keymap config: Default to us in live mode if kmap= was not used.
@@ -45,17 +44,20 @@ action 'Loading console keymap: $kmap'
 /sbin/tazkeymap $kmap >/dev/null
 status
 
-# Timezone config: Set timezone using the keymap config for fr, be, fr_CH
-# and ca with Montreal.
+# Timezone config: Set timezone using the keymap config
+# https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 if [ ! -s '/etc/TZ' ]; then
 	case "$kmap" in
-		fr-latin1|be-latin1)
-			echo 'Europe/Paris' > /etc/TZ ;;
-		fr_CH-latin1|de_CH-latin1)
-			echo 'Europe/Zurich' > /etc/TZ ;;
-		cf) echo 'America/Montreal' > /etc/TZ ;;
-		*) echo 'UTC' > /etc/TZ ;;
+		dk-*)	tz='Europe/Copenhagen';;
+		de-*)	tz='Europe/Berlin';;
+		es)		tz='Europe/Madrid';;
+		fr-*)	tz='Europe/Paris';;
+		be-*)	tz='Europe/Brussels';;
+		*_CH-*)	tz='Europe/Zurich';;
+		cf)		tz='America/Toronto';;
+		*)		tz='UTC';;
 	esac
+	echo "$tz" > /etc/TZ
 fi
 
 # Activate an eventual swap file or partition
@@ -92,10 +94,10 @@ if [ -n "$DRIVER" ]; then
 			action 'Removing all sound packages...'
 			for i in $(grep -l '^DEPENDS=.*alsa-lib' /var/lib/tazpkg/installed/*/receipt) ; do
 				pkg=${i#/var/lib/tazpkg/installed/}
-				echo 'y' | tazpkg remove ${pkg%/*} > /dev/null
+				yes y | tazpkg remove ${pkg%/*} >/dev/null
 			done
 			for i in alsa-lib mhwaveedit asunder libcddb ; do
-				echo 'y' | tazpkg remove $i > /dev/null
+				yes y | tazpkg remove $i >/dev/null
 			done
 			status ;;
 		noconf)
