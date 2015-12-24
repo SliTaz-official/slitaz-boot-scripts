@@ -40,7 +40,7 @@
 # cryptoroot= [CRYPTO]
 #         encrypted root device using luks or loop-aes
 #
-### Special mode used by loram flavor with aufs & squashfs
+### Special mode used by loram flavor with aufs/overlayfs & squashfs
 ### incremental/nested rootfs (russian dolls).
 #
 # rodev= [LORAM][MERGE]
@@ -202,17 +202,21 @@ fi
 use raiddev && raiddev="DEVICE ${root//,/ }"
 use raidmail && raidmail="MAILADDR $root"
 if use softraid; then
-	mdadm -E -s -c partitions > /etc/mdadm.conf
+	for i in 1 2 3 4 5 6 7 8 9; do
+		mdadm -E -s -c partitions > /etc/mdadm.conf
+		grep -qs " $root " /etc/mdadm.conf && break
+		sleep $i
+	done
 	[ "$raiddev" ] && echo "$raiddev" >> /etc/mdadm.conf
 	[ "$raidmail" ] && echo "$raidmail" >> /etc/mdadm.conf
-	grep -qs " $root " /etc/mdadm.conf ||
-		root=$(awk '/dev.md/{print $2;exit}' < /etc/mdadm.conf)
 	grep level=raid /etc/mdadm.conf | ldraid
 	for i in 1 2 3 4 5 6 7 8 9; do
 		sleep $i
 		mdadm -A -s
-		grep -qs ': act' /proc/mdstat && break
+		grep -qs "^$(basename $root): act" /proc/mdstat && break
 	done
+	grep -qs "^$(basename $root): act" /proc/mdstat ||
+		root=$(awk '/^md/ { print "/dev/" $1; exit }' < /proc/mdstat)
 	lvm /etc/mdadm.conf
 fi
 lvm
