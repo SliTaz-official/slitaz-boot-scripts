@@ -213,9 +213,9 @@ if use softraid; then
 	for i in 1 2 3 4 5 6 7 8 9; do
 		sleep $i
 		mdadm -A -s
-		grep -qs "^$(basename $root): act" /proc/mdstat && break
+		grep -qs "^$(basename $root) : act" /proc/mdstat && break
 	done
-	grep -qs "^$(basename $root): act" /proc/mdstat ||
+	grep -qs "^$(basename $root) : act" /proc/mdstat ||
 		root=$(awk '/^md/ { print "/dev/" $1; exit }' < /proc/mdstat)
 	lvm /etc/mdadm.conf
 fi
