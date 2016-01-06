@@ -61,6 +61,7 @@ if [ ! -s '/etc/TZ' ]; then
 fi
 
 # Activate an eventual swap file or partition
+if ! grep -q 'noswap' /proc/cmdline; then
 if [ "$(blkid | grep 'TYPE="swap"')" ]; then
 	for swd in $(blkid | sed '/TYPE="swap"/!d;s/:.*//'); do
 		if ! grep -q "$swd	" /etc/fstab; then
@@ -75,6 +76,7 @@ if grep -q swap /etc/fstab; then
 	action 'Activating swap memory...'
 	swapon -a
 	status
+fi
 fi
 
 # Start TazPanel
