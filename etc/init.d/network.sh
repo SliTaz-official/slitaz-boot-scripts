@@ -197,6 +197,7 @@ EOT
 					[ -n "$WIFI_ANONYMOUS_IDENTITY" ] && echo -e "\tanonymous_identity=\"$WIFI_ANONYMOUS_IDENTITY\""
 					[ -n "$WIFI_KEY" ] && echo -e "\tpassword=\"$WIFI-KEY\""
 					[ -n "$WIFI_PHASE2" ] && echo -e "\tphase2=\"auth=$WIFI_PHASE2\""
+					echo }
 				} >> $WPA_CONF
 				start_wpa_supplicant '802.1x EAP' ;;
 
