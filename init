@@ -193,7 +193,7 @@ got modprobe && mod ${root//,/ }
 [ -d /proc/sys/dev/cdrom ] &&
 	ln -s $(sed '/name/!d;s/.*:[^a-z]*//' /proc/sys/dev/cdrom/info) /dev/cdrom
 
-grep -s serial /proc/ioports &&
+grep -q serial /proc/ioports &&
 echo "ttyS0::respawn:/sbin/getty 115200 ttyS0" >> /etc/inittab
 
 if use dmraid; then
