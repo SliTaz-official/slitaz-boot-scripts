@@ -22,18 +22,17 @@ echo 'Checking for SliTaz cmdline options...'
 # user=name can be used, but user must be added before home= to have home dir.
 # This option is not handled by a loop and case like others and has no
 # effect on an installed system.
-if ! grep -q '100[0-9]:100' /etc/passwd; then
-
-	if fgrep -q 'user=' /proc/cmdline; then
-		USER=$(cat /proc/cmdline | sed 's/.*user=\([^ ]*\).*/\1/')
-		# Avoid usage of an existing system user or root.
-		if grep -q ^$USER /etc/passwd; then
-			USER=tux
-		fi
-	else
+if fgrep -q 'user=' /proc/cmdline; then
+	USER=$(cat /proc/cmdline | sed 's/.*user=\([^ ]*\).*/\1/')
+	# Avoid usage of an existing system user or root.
+	if grep -q ^$USER /etc/passwd; then
 		USER=tux
 	fi
+else
+	USER=tux
+fi
 
+if ! grep -q '100[0-9]:100' /etc/passwd; then
 	# Make sure we have users applications.conf
 	if [ ! -f '/etc/skel/.config/slitaz/applications.conf' -a \
 		-f '/etc/slitaz/applications.conf' ]; then
@@ -53,6 +52,12 @@ if ! grep -q '100[0-9]:100' /etc/passwd; then
 	if [ -f /etc/slim.conf ]; then
 		sed -i "s|default_user .*|default_user    $USER|" /etc/slim.conf
 	fi
+fi
+
+# Make sure selected user has home
+if [ ! -d /home/$USER ]; then
+	cp -a /etc/skel /home/$USER
+	chown -R $USER:users /home/$USER
 fi
 
 for opt in $(cat /proc/cmdline); do
