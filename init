@@ -58,7 +58,8 @@ fail() {
 
 quit() {
 	[ -d /mnt$4/etc ] || return
-	[ -n "$4" ] || busybox mount /mnt -o remount,ro
+	[ -n "$4" ] || grep -q 'tmpfs /mnt tmpfs' /proc/mounts || 
+		busybox mount /mnt -o remount,ro
 	busybox mount --move /run /mnt/${1:-run}
 	cat > /run/init <<EOT
 $2
