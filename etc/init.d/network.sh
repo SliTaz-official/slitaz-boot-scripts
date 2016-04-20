@@ -4,14 +4,33 @@
 # /etc/network.conf      : Main SliTaz network configuration file
 # /etc/wpa/wpa.conf      : Wi-Fi networks configuration file
 
+
 . /etc/init.d/rc.functions
 
 CONF="${2:-/etc/network.conf}"
 echo "Loading network settings from $CONF"
 . "$CONF"
 
+
+# Change LXPanel Network applet settings
+
+if [ "$1" == 'netapplet' ]; then
+	if [ "$WIFI" == 'yes' ]; then
+		interface="$WIFI_INTERFACE"
+	else
+		interface="$INTERFACE"
+	fi
+
+	for i in $(find ${XDG_CONFIG_HOME:-$HOME/.config}/lxpanel -name panel); do
+		fgrep -q netstatus "$i" || continue
+		sed -i '/iface/s|=.*$|='$interface'|' "$i"
+	done
+	exit 0
+fi
+
 WPA_CONF='/etc/wpa/wpa.conf'
-[ ! -e "$WPA_CONF" ] && cp /etc/wpa/wpa_empty.conf $WPA_CONF 2> /dev/null
+[ ! -e "$WPA_CONF" ] && cp /etc/wpa/wpa_empty.conf $WPA_CONF 2>/dev/null
+npid='/tmp/notify_pid'
 
 # Migrate existing settings to a new format file
 
@@ -36,10 +55,37 @@ boot() {
 }
 
 
+# Freedesktop notification
+
+notification() {
+	# FIXME: this valid only for lxde-session
+	local user="$(ps aux | grep [l]xde-session | awk 'END{print $2}')"
+	local icon="$1" rpid=''
+	[ -s "$npid" ] && rpid="-r $(cat $npid)"
+	su -c "notify-send $rpid -p -i $icon 'Network' \"$2\"" - $user > $npid
+}
+
+
+# Change LXPanel Network applet interface
+
+ch_netapplet() {
+	for user in $(awk -F: '$6 ~ "/home/" {print $1}' /etc/passwd); do
+		# need to be executed as user, due to different XDG variables
+		su -l -c "$0 netapplet" - "$user"
+	done
+	# restart if LXPanel running
+	lxpanelctl restart
+}
+
+
 # Use ethernet
 
 eth() {
-	[ "$WIFI" != 'yes' ] && ifconfig $INTERFACE up && sleep 5
+	if [ "$WIFI" != 'yes' ]; then
+		notification network-wired "$(_ 'Starting Ethernet interface %s...' "$INTERFACE")"
+		ifconfig $INTERFACE up
+		sleep 5
+	fi
 }
 
 
@@ -59,6 +105,7 @@ reconnect_wifi_network() {
 		# notwithstanding to priority when scan_ssid=1
 		current_ssid="$(wpa_cli list_networks 2>/dev/null | fgrep '[CURRENT]' | cut -f2)"
 		if [ "$current_ssid" != "$WIFI_ESSID" ]; then
+			notification network-wireless "$(_ 'Connecting to %s...' "$WIFI_ESSID")"
 			action 'Connecting to $WIFI_ESSID...'
 			for i in $(seq 5); do
 				index=$(wpa_cli list_networks 2>/dev/null | \
@@ -96,6 +143,7 @@ wifi() {
 				/etc/network.conf
 		fi
 
+		notification network-wireless "$(_ 'Starting Wi-Fi interface %s...' "$WIFI_INTERFACE")"
 		action 'Configuring Wi-Fi interface $WIFI_INTERFACE...'
 		ifconfig $WIFI_INTERFACE up 2>/dev/null
 		if iwconfig $WIFI_INTERFACE | fgrep -q 'Tx-Power'; then
@@ -282,6 +330,8 @@ static_ip() {
 # Stopping everything
 
 stop() {
+	ch_netapplet
+	notification network-offline "$(_ 'Stopping all interfaces')"
 	echo 'Stopping all interfaces'
 	for iface in $(ifconfig | sed -e '/^[^ ]/!d' -e 's|^\([^ ]*\) .*|\1|' -e '/lo/d'); do
 		ifconfig $iface down
@@ -300,6 +350,7 @@ stop() {
 
 
 start() {
+	ch_netapplet
 	# stopping only unspecified interfaces
 	interfaces="$(ifconfig | sed -e '/^[^ ]/!d' -e 's|^\([^ ]*\) .*|\1|' -e '/lo/d')"
 	case $WIFI in
@@ -344,3 +395,5 @@ You can specify another configuration file in the second argument:
 EOT
 		;;
 esac
+
+[ -f "$npid" ] && rm "$npid"
