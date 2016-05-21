@@ -58,6 +58,9 @@ fail() {
 
 quit() {
 	[ -d /mnt$4/etc ] || return
+	grep -q serial /proc/ioports && ! grep -q ttyS /mnt$4/etc/inittab &&
+	echo "ttyS0::respawn:/sbin/getty 115200,38400,9600,4800,2400 ttyS0" \
+		>> /mnt$4/etc/inittab
 	[ -n "$4" ] || grep -q 'tmpfs /mnt tmpfs' /proc/mounts || 
 		busybox mount /mnt -o remount,ro
 	busybox mount --move /run /mnt/${1:-run}
@@ -193,9 +196,6 @@ got modprobe && mod ${root//,/ }
 
 [ -d /proc/sys/dev/cdrom ] &&
 	ln -s $(sed '/name/!d;s/.*:[^a-z]*//' /proc/sys/dev/cdrom/info) /dev/cdrom
-
-grep -q serial /proc/ioports &&
-echo "ttyS0::respawn:/sbin/getty 115200,38400,9600,4800,2400 ttyS0" >> /etc/inittab
 
 if use dmraid; then
 	dmraid -s | sed '/^type/!ds/.*: *//' | ldraid

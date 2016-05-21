@@ -21,7 +21,7 @@ if [ "$1" == 'netapplet' ]; then
 		interface="$INTERFACE"
 	fi
 
-	for i in $(find ${XDG_CONFIG_HOME:-$HOME/.config}/lxpanel -name panel); do
+	for i in $(find ${XDG_CONFIG_HOME:-$HOME/.config}/lxpanel -name panel 2> /dev/null); do
 		fgrep -q netstatus "$i" || continue
 		sed -i '/iface/s|=.*$|='$interface'|' "$i"
 	done
@@ -62,6 +62,7 @@ notification() {
 	local user="$(ps aux | grep [l]xde-session | awk 'END{print $2}')"
 	local icon="$1" rpid=''
 	[ -s "$npid" ] && rpid="-r $(cat $npid)"
+	which notify-send > /dev/null &&
 	su -c "notify-send $rpid -p -i $icon 'Network' \"$2\"" - $user | tail -n1 > $npid
 }
 
@@ -74,7 +75,7 @@ ch_netapplet() {
 		su -l -c "$0 netapplet" - "$user"
 	done
 	# restart if LXPanel running
-	lxpanelctl restart
+	which lxpanelctl > /dev/null && lxpanelctl restart
 }
 
 
