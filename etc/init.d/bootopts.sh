@@ -74,7 +74,7 @@ for opt in $(cat /proc/cmdline); do
 		lang=*)
 			# Check for a specified locale (lang=*).
 			LANG=${opt#lang=}
-			/sbin/tazlocale $LANG ;;
+			/sbin/tazlocale ${LANG%.UTF-8} ;;
 		kmap=*)
 			# Check for a specified keymap (kmap=*).
 			KEYMAP=${opt#kmap=}
