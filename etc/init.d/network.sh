@@ -8,7 +8,7 @@
 . /etc/init.d/rc.functions
 
 CONF="${2:-/etc/network.conf}"
-echo "Loading network settings from $CONF"
+[ "$1" != 'netapplet' ] && echo "Loading network settings from $CONF"
 . "$CONF"
 
 
@@ -21,7 +21,7 @@ if [ "$1" == 'netapplet' ]; then
 		interface="$INTERFACE"
 	fi
 
-	for i in $(find ${XDG_CONFIG_HOME:-$HOME/.config}/lxpanel -name panel 2> /dev/null); do
+	for i in $(find ${XDG_CONFIG_HOME:-$HOME/.config}/lxpanel -name panel 2>/dev/null); do
 		fgrep -q netstatus "$i" || continue
 		sed -i '/iface/s|=.*$|='$interface'|' "$i"
 	done
@@ -58,11 +58,12 @@ boot() {
 # Freedesktop notification
 
 notification() {
+	ps aux 2>/dev/null | grep -q [X]org || return
 	# FIXME: this valid only for lxde-session
-	local user="$(ps aux | grep [l]xde-session | awk 'END{print $2}')"
+	local user="$(ps aux 2>/dev/null | grep [l]xde-session | awk 'END{print $2}')"
 	local icon="$1" rpid=''
 	[ -s "$npid" ] && rpid="-r $(cat $npid)"
-	which notify-send > /dev/null &&
+	which notify-send >/dev/null &&
 	su -c "notify-send $rpid -p -i $icon 'Network' \"$2\"" - $user | tail -n1 > $npid
 }
 
