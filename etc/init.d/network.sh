@@ -59,12 +59,17 @@ boot() {
 
 notification() {
 	ps aux 2>/dev/null | grep -q [X]org || return
+	[ -n "$DISPLAY" ] || return
+	which notify-send >/dev/null || return
+
+	icon=$(echo $1 | awk -vw=$WIFI '{printf("notification-network-%s%s\n",
+		w=="yes"?"wireless":"wired", /start/?"":"-disconnected");}')
+
 	# FIXME: this valid only for lxde-session
 	local user="$(ps aux 2>/dev/null | grep [l]xde-session | awk 'END{print $2}')"
-	local icon="$1" rpid=''
+	local rpid=''
 	[ -s "$npid" ] && rpid="-r $(cat $npid)"
-	which notify-send >/dev/null &&
-	su -c "notify-send $rpid -p -i $icon 'Network' \"$2\"" - $user | tail -n1 > $npid
+	su -c "notify-send $rpid -p -i $icon 'Network' \"$2\"" - $user | tr -c 0-9 '\n' | tail -n1 > $npid
 }
 
 
@@ -76,7 +81,9 @@ ch_netapplet() {
 		su -l -c "$0 netapplet" - "$user"
 	done
 	# restart if LXPanel running
-	which lxpanelctl > /dev/null && lxpanelctl restart
+	if [ -n "$DISPLAY" -a -n "$(which lxpanelctl)" ]; then
+		lxpanelctl restart
+	fi
 }
 
 
@@ -84,7 +91,7 @@ ch_netapplet() {
 
 eth() {
 	if [ "$WIFI" != 'yes' ]; then
-		notification network-wired "$(_ 'Starting Ethernet interface %s...' "$INTERFACE")"
+		notification start "$(_ 'Starting Ethernet interface %s...' "$INTERFACE")"
 		ifconfig $INTERFACE up
 		sleep 5
 	fi
@@ -107,7 +114,7 @@ reconnect_wifi_network() {
 		# notwithstanding to priority when scan_ssid=1
 		current_ssid="$(wpa_cli list_networks 2>/dev/null | fgrep '[CURRENT]' | cut -f2)"
 		if [ "$current_ssid" != "$WIFI_ESSID" ]; then
-			notification network-wireless "$(_ 'Connecting to %s...' "$WIFI_ESSID")"
+			notification start "$(_ 'Connecting to %s...' "$WIFI_ESSID")"
 			action 'Connecting to $WIFI_ESSID...'
 			for i in $(seq 5); do
 				index=$(wpa_cli list_networks 2>/dev/null | \
@@ -145,7 +152,7 @@ wifi() {
 				/etc/network.conf
 		fi
 
-		notification network-wireless "$(_ 'Starting Wi-Fi interface %s...' "$WIFI_INTERFACE")"
+		notification start "$(_ 'Starting Wi-Fi interface %s...' "$WIFI_INTERFACE")"
 		action 'Configuring Wi-Fi interface $WIFI_INTERFACE...'
 		ifconfig $WIFI_INTERFACE up 2>/dev/null
 		if iwconfig $WIFI_INTERFACE | fgrep -q 'Tx-Power'; then
@@ -333,7 +340,7 @@ static_ip() {
 
 stop() {
 	ch_netapplet
-	notification network-offline "$(_ 'Stopping all interfaces')"
+	notification stop "$(_ 'Stopping all interfaces')"
 	echo 'Stopping all interfaces'
 	for iface in $(ifconfig | sed -e '/^[^ ]/!d' -e 's|^\([^ ]*\) .*|\1|' -e '/lo/d'); do
 		ifconfig $iface down
