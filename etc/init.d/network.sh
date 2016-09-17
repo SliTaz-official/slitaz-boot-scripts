@@ -174,7 +174,7 @@ wifi() {
 			echo "Creating new $WPA_CONF"
 			cat /etc/wpa/wpa_empty.conf > $WPA_CONF
 		else
-			if fgrep -q ssid=\"$WIFI_ESSID\" $WPA_CONF; then
+			if fgrep -q "ssid=\"$WIFI_ESSID\"" $WPA_CONF; then
 				echo "Change network settings in $WPA_CONF"
 				# Remove given existing network (it's to be appended later)
 				remove_network "$WIFI_ESSID"
