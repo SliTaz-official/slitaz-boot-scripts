@@ -235,3 +235,4 @@ fi
 	mv -f /run/boot.log /var/log/boot.log
 	/etc/init.d/rcS readwrite 2>&1 | tee -a /var/log/boot.log ;;
 esac
+busybox ps | sed '/tee -a .*boot.log/!d;s/ root.*//' | xargs kill 2> /dev/null
