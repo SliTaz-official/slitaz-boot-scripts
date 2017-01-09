@@ -40,7 +40,7 @@ if ! grep -q '100[0-9]:100' /etc/passwd; then
 		cp /etc/slitaz/applications.conf /etc/skel/.config/slitaz
 	fi
 
-	action 'Configuring user and group: $USER...'
+	action 'Configuring user and group: %s...' "$USER"
 	adduser -D -s /bin/sh -g 'SliTaz User' -G users -h /home/$USER $USER
 	passwd -d $USER >/dev/null
 	for group in audio cdrom video tty plugdev disk; do
@@ -78,13 +78,13 @@ for opt in $(cat /proc/cmdline); do
 		kmap=*)
 			# Check for a specified keymap (kmap=*).
 			KEYMAP=${opt#kmap=}
-			action 'Setting system keymap to: $KEYMAP...'
+			action 'Setting system keymap to: %s...' "$KEYMAP"
 			echo "$KEYMAP" > /etc/keymap.conf
 			status ;;
 		font=*)
 			# Check for a specified console font (font=*).
 			FONT=${opt#font=}
-			action 'Setting console font to: $FONT...'
+			action 'Setting console font to: %s...' "$FONT"
 			for con in 1 2 3 4 5 6; do
 				setfont $FONT -C /dev/tty$con
 			done
@@ -187,7 +187,7 @@ for opt in $(cat /proc/cmdline); do
 			[ -z "$PKGDEV" -a -L /dev/cdrom ] && \
 				PKGDEV=$(blkid /dev/cdrom | grep "$PKGSIGN" | cut -d: -f1)
 			if [ -n "$PKGDEV" ]; then
-				action 'Mounting packages archive from $PKGDEV...'
+				action 'Mounting packages archive from %s...' "$PKGDEV"
 				mkdir -p /packages; mount -t iso9660 -o ro $PKGDEV /packages
 				status
 				/packages/install.sh

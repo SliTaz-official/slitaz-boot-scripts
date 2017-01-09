@@ -109,7 +109,7 @@ fi
 if [ "$MODPROBE" ]; then
 	mods=$(sed -e 's/.* modprobe=\([^ ]*\).*/\1/' -e 's/,/\n/g' < /proc/cmdline)
 	for i in $mods; do
-		action 'Loading kernel module: $i'
+		action 'Loading kernel module: %s' "$i"
 		modprobe $i
 		status
 	done
@@ -132,7 +132,7 @@ if [ -n "$CONFIG" ]; then
 			CONFIG=""
 		fi
 	fi
-	action 'Source $SCRIPT from $DEVICE...'
+	action 'Source %s from %s...' "$SCRIPT" "$DEVICE"
 	if [ -n "$CONFIG" ]; then
 		. /mnt/$SCRIPT
 		umount /mnt 2> /dev/null || true
@@ -157,7 +157,7 @@ klogd; status
 if [ "$LOAD_MODULES" ]; then
 	colorize 33 'Loading Kernel modules...'
 	for mod in $LOAD_MODULES; do
-		action 'Loading module: $mod'
+		action 'Loading module: %s' "$mod"
 		modprobe $mod
 		status
 	done

@@ -41,7 +41,7 @@ npid='/tmp/notify_pid'
 
 boot() {
 	# Set hostname
-	action "Setting hostname to: $(cat /etc/hostname)"
+	action 'Setting hostname to: %s' "$(cat /etc/hostname)"
 	/bin/hostname -F /etc/hostname
 	status
 
@@ -115,7 +115,7 @@ reconnect_wifi_network() {
 		current_ssid="$(wpa_cli list_networks 2>/dev/null | fgrep '[CURRENT]' | cut -f2)"
 		if [ "$current_ssid" != "$WIFI_ESSID" ]; then
 			notification start "$(_ 'Connecting to %s...' "$WIFI_ESSID")"
-			action 'Connecting to $WIFI_ESSID...'
+			action 'Connecting to %s...' "$WIFI_ESSID"
 			for i in $(seq 5); do
 				index=$(wpa_cli list_networks 2>/dev/null | \
 					grep -m1 -F $'\t'$WIFI_ESSID$'\t' | head -n1 | cut -f1)
@@ -153,7 +153,7 @@ wifi() {
 		fi
 
 		notification start "$(_ 'Starting Wi-Fi interface %s...' "$WIFI_INTERFACE")"
-		action 'Configuring Wi-Fi interface $WIFI_INTERFACE...'
+		action 'Configuring Wi-Fi interface %s...' "$WIFI_INTERFACE"
 		ifconfig $WIFI_INTERFACE up 2>/dev/null
 		if iwconfig $WIFI_INTERFACE | fgrep -q 'Tx-Power'; then
 			iwconfig $WIFI_INTERFACE txpower on
