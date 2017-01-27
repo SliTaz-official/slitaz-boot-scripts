@@ -30,7 +30,7 @@ if [ ! -s '/etc/locale.conf' ]; then
 	echo -e 'LANG=POSIX\nLC_ALL=POSIX' > /etc/locale.conf
 fi
 . /etc/locale.conf
-action 'Setting system locale: $LANG'
+action 'Setting system locale: %s' "$LANG"
 export LC_ALL=$LANG
 status
 
@@ -40,7 +40,7 @@ if [ ! -s '/etc/keymap.conf' ]; then
 	echo 'us' > /etc/keymap.conf
 fi
 kmap=$(cat /etc/keymap.conf)
-action 'Loading console keymap: $kmap'
+action 'Loading console keymap: %s' "$kmap"
 /sbin/tazkeymap $kmap >/dev/null
 status
 
