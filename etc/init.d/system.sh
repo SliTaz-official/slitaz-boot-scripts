@@ -26,7 +26,7 @@ done
 
 # Locale config
 if [ ! -s '/etc/locale.conf' ]; then
-	echo 'Setting system locale to: POSIX (English)'
+	# Setting system locale to: POSIX (English)
 	echo -e 'LANG=POSIX\nLC_ALL=POSIX' > /etc/locale.conf
 fi
 . /etc/locale.conf
@@ -36,7 +36,7 @@ status
 
 # Keymap config: Default to us in live mode if kmap= was not used.
 if [ ! -s '/etc/keymap.conf' ]; then
-	echo 'Setting system keymap to: us (USA)'
+	# Setting system keymap to: us (USA)
 	echo 'us' > /etc/keymap.conf
 fi
 kmap=$(cat /etc/keymap.conf)
