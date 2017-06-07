@@ -121,7 +121,7 @@ reconnect_wifi_network() {
 					grep -m1 -F $'\t'$WIFI_ESSID$'\t' | head -n1 | cut -f1)
 				[ -z "$index" ] && echo -n '.' && sleep 1
 			done
-			wpa_cli select_network $index >/dev/null; status
+			wpa_cli select_network $index 2>/dev/null; status
 		fi
 	fi
 }
