@@ -29,6 +29,7 @@ if [ "$UDEV" == "yes" ]; then
 	action 'Mounting devtmpfs filesystem on: /dev'
 	mount -t devtmpfs devtmpfs /dev
 	status
+	[ -d '/lib/udev/devices' ] && cp -af /lib/udev/devices/* /dev/
 
 	echo 'Starting udev daemon...'
 	udevd --daemon 2>/dev/null
@@ -47,9 +48,9 @@ else
 fi
 
 # Before mounting filesystems we check fs specified in the file
-# /etc/rcS.conf and variable $CHECK_FS. WE need udev started to
+# /etc/rcS.conf and variable $CHECK_FS. We need udev started to
 # have /dev/* populated
-if [ "$CHECK_FS" ]; then
+if [ -n "$CHECK_FS" ]; then
 	mount -o remount,ro /
 	for i in $CHECK_FS; do
 		colorize 36 "Checking filesystem: $i"
