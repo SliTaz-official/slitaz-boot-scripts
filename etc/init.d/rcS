@@ -14,225 +14,223 @@ export PATH=/bin:/sbin:/usr/bin:/usr/sbin
 [ -s /etc/TZ ] && export TZ="$(cat /etc/TZ)"
 
 case "$1" in
+	readonly)
+		colorize 34 'Processing /etc/init.d/rcS...'
 
-readonly)
-
-colorize 34 'Processing: /etc/init.d/rcS...'
-
-# Mount /proc
-action 'Mounting proc filesystem on /proc'
-mount proc
-status
-
-# Trigger Udev and handle hotplug events
-if [ "$UDEV" == "yes" ]; then
-	action 'Mounting devtmpfs filesystem on: /dev'
-	mount -t devtmpfs devtmpfs /dev
-	status
-	[ -d '/lib/udev/devices' ] && cp -af /lib/udev/devices/* /dev/
-
-	echo 'Starting udev daemon...'
-	udevd --daemon 2>/dev/null
-
-	echo 'Udevadm requesting events from the Kernel...'
-	udevadm trigger
-
-	echo 'Udevadm waiting for the event queue to finish...'
-	udevadm settle --timeout=120
-	# Disable hotplug helper since udevd listen to netlink
-	echo '' > /proc/sys/kernel/hotplug
-else
-	action 'Executing mdev -s to populate /dev...'
-	mdev -s && echo 'mdev' > /proc/sys/kernel/hotplug
-	status
-fi
-
-# Before mounting filesystems we check fs specified in the file
-# /etc/rcS.conf and variable $CHECK_FS. We need udev started to
-# have /dev/* populated
-if [ -n "$CHECK_FS" ]; then
-	mount -o remount,ro /
-	for i in $CHECK_FS; do
-		colorize 36 "Checking filesystem: $i"
-		e2fsck -p $i
-	done
-fi
-
-# Remount rootfs rw.
-echo 'Remounting rootfs read/write...'
-mount -o remount,rw /
-sync	# ensure rw state
-
-# Mount filesystems in /etc/fstab.
-echo 'Mounting filesystems in fstab...'
-mount -a
-;;
-
-
-readwrite)
-
-# Be quiet
-echo '0 0 0 0' > /proc/sys/kernel/printk
-
-# Store boot messages to log files.
-dmesg > /var/log/dmesg.log &
-
-# Parse cmdline args for earlier boot options. All other boot options
-# are in /etc/init./bootopts.sh.
-action 'Searching for early boot options...'
-for opt in $(cat /proc/cmdline); do
-	case $opt in
-		modprobe=*)
-			export MODPROBE='yes' ;;
-		config=*)
-			export CONFIG=${opt#config=} ;;
-		screen=*)
-			export SCREEN=${opt#screen=} ;;
-		*)
-			continue ;;
-	esac
-done
-status
-
-# Clean up the system and set up tmp dirs. */run/* are tmpfs so they are 
-# cleaned up at shutdown.
-if [ "$CLEAN_UP_SYSTEM" == 'yes' ]; then
-	action 'Cleaning up the system...'
-	rm -rf /tmp
-	mkdir -p /tmp/.X11-unix /tmp/.ICE-unix
-	chmod -R 1777 /tmp
-	status
-else
-	echo 'System clean up is disabled in: /etc/rcS.conf'
-fi
-
-# Handle kernel cmdline parameter modprobe=<module_list>
-if [ "$MODPROBE" ]; then
-	mods=$(sed -e 's/.* modprobe=\([^ ]*\).*/\1/' -e 's/,/\n/g' < /proc/cmdline)
-	for i in $mods; do
-		action 'Loading kernel module: %s' "$i"
-		modprobe $i
+		# Mount /proc
+		action 'Mounting proc filesystem on /proc'
+		mount proc
 		status
-	done
-fi
 
-# Handle kernel cmdline parameter config=<device>,<path> to source a
-# disk init script
-if [ -n "$CONFIG" ]; then
-	DEVICE=${CONFIG%,*}
-	SCRIPT=${CONFIG#*,}
-	echo "Probing $DEVICE... "
-	if ! mount -r $DEVICE /mnt; then
-		if echo $DEVICE | grep -Eq '/dev/sd|UUID=|LABEL='; then
-			USBDELAY=$(cat /sys/module/usb_storage/parameters/delay_use)
-			USBDELAY=$((1+$USBDELAY))
-			echo "$DEVICE is potentially a USB device: sleep for $USBDELAY seconds"
-			sleep $USBDELAY
+		# Trigger udev and handle hotplug events
+		if [ "$UDEV" == 'yes' ]; then
+			action 'Mounting devtmpfs filesystem on /dev'
+			mount -t devtmpfs devtmpfs /dev
+			status
+			[ -d '/lib/udev/devices' ] && cp -af /lib/udev/devices/* /dev/
+
+			if [ -d '/etc/udev/hwdb.d' ]; then
+				echo 'Creating the udev hardware database...'
+				udevadm hwdb --update
+			fi
+
+			echo 'Starting udev daemon...'
+			udevd --daemon 2>/dev/null
+
+			echo 'Udevadm requesting events from the Kernel...'
+			udevadm trigger
+
+			echo 'Udevadm waiting for the event queue to finish...'
+			udevadm settle --timeout=120
+			# Disable hotplug helper since udevd listen to netlink
+			echo '' > /proc/sys/kernel/hotplug
+		else
+			action 'Executing mdev -s to populate /dev...'
+			mdev -s && echo 'mdev' > /proc/sys/kernel/hotplug
+			status
 		fi
-		if ! mount -r $DEVICE /mnt; then
-			CONFIG=""
+
+		# Before mounting filesystems we check FS specified in the file
+		# /etc/rcS.conf and variable $CHECK_FS. We need udev started to
+		# have /dev/* populated
+		if [ -n "$CHECK_FS" ]; then
+			mount -o remount,ro /
+			for i in $CHECK_FS; do
+				colorize 36 "Checking filesystem: $i"
+				e2fsck -p $i
+			done
 		fi
-	fi
-	action 'Source %s from %s...' "$SCRIPT" "$DEVICE"
-	if [ -n "$CONFIG" ]; then
-		. /mnt/$SCRIPT
-		umount /mnt 2> /dev/null || true
-	fi
-	status
-fi
 
-# Mount /proc/bus/usb
-if [ -d /proc/bus/usb ]; then
-	action 'Mounting usbfs filesystem on: /proc/bus/usb'
-	mount -t usbfs usbfs /proc/bus/usb
-	status
-fi
+		# Remount rootfs rw.
+		echo 'Remounting rootfs read/write...'
+		mount -o remount,rw /
+		sync	# ensure rw state
 
-# Start syslogd and klogd
-action 'Starting system log daemon: syslogd...'
-syslogd -s $SYSLOGD_ROTATED_SIZE; status
-action 'Starting kernel log daemon: klogd...'
-klogd; status
+		# Mount filesystems in /etc/fstab.
+		echo 'Mounting filesystems in fstab...'
+		mount -a
+		;;
 
-# Load all modules listed in config file
-if [ "$LOAD_MODULES" ]; then
-	colorize 33 'Loading Kernel modules...'
-	for mod in $LOAD_MODULES; do
-		action 'Loading module: %s' "$mod"
-		modprobe $mod
+	readwrite)
+		# Be quiet
+		echo '0 0 0 0' > /proc/sys/kernel/printk
+
+		# Store boot messages to log files.
+		dmesg > /var/log/dmesg.log &
+
+		# Parse cmdline args for earlier boot options. All other boot options
+		# are in /etc/init./bootopts.sh.
+		action 'Searching for early boot options...'
+		opt=$(cmdline_option modprobe); [ -n "$opt" ] && export MODPROBE='yes'
+		opt=$(cmdline_option config);   [ -n "$opt" ] && export CONFIG="$opt"
+		opt=$(cmdline_option screen);   [ -n "$opt" ] && export SCREEN="$opt"
 		status
-	done
-fi
 
-# Detect PCI and USB devices with Tazhw from slitaz-tools. We load
-# kernel modules only at first boot or in LiveCD mode.
-if [ ! -s /var/lib/detected-modules ]; then
-	tazhw init
-fi
+		# Clean up the system and set up tmp dirs.
+		# */run/* are tmpfs so they are cleaned up at shutdown.
+		if [ "$CLEAN_UP_SYSTEM" == 'yes' ]; then
+			action 'Cleaning up the system...'
+			rm -rf /tmp
+			mkdir -p /tmp/.X11-unix /tmp/.ICE-unix
+			chmod -R 1777 /tmp
+			status
+		else
+			echo 'System clean up is disabled in /etc/rcS.conf'
+		fi
 
-# Call udevadm trigger to ensure /dev is fully populated now that all
-# modules are loaded.
-if [ "$UDEV" == 'yes' ]; then
-	action 'Triggering udev events: --action=add'
-	udevadm trigger --action=add
-	status
-fi
+		# Handle kernel cmdline parameter modprobe=<module_list>
+		if [ -n "$MODPROBE" ]; then
+			for i in $(cmdline_option modprobe | tr ',' '\n'); do
+				action 'Loading kernel module: %s' "$i"
+				modprobe $i
+				status
+			done
+		fi
 
-# Start all scripts specified with $RUN_SCRIPTS
-for script in $RUN_SCRIPTS; do
-	echo $(colorize 34 "Processing: /etc/init.d/$script")
-	/etc/init.d/$script
-done
+		# Handle kernel cmdline parameter config=<device>,<path> to source a
+		# disk init script
+		if [ -n "$CONFIG" ]; then
+			DEVICE=${CONFIG%,*}
+			SCRIPT=${CONFIG#*,}
+			echo "Probing $DEVICE..."
+			if ! mount -r $DEVICE /mnt; then
+				if echo $DEVICE | grep -Eq '/dev/sd|UUID=|LABEL='; then
+					USBDELAY=$(cat /sys/module/usb_storage/parameters/delay_use)
+					USBDELAY=$((1+$USBDELAY))
+					echo "$DEVICE is potentially a USB device: sleep for $USBDELAY seconds"
+					sleep $USBDELAY
+				fi
+				if ! mount -r $DEVICE /mnt; then
+					CONFIG=''
+				fi
+			fi
+			action 'Source %s from %s...' "$SCRIPT" "$DEVICE"
+			if [ -n "$CONFIG" ]; then
+				. /mnt/$SCRIPT
+				umount /mnt 2>/dev/null || true
+			fi
+			status
+		fi
 
-# Start X session. Dbus must be started before Xorg and other daemons. 
-# We started it here because X is run before RUN_DAEMONS. Sleep, in 
-# some live modes we boot too fast and X can't initialize.
-if [ "$SCREEN" != 'text' ] && [ "$LOGIN_MANAGER" ] &&
-	[ -x /usr/bin/tazx ] && [ -s /etc/slitaz/applications.conf ] &&
-	[ -x "/etc/init.d/$LOGIN_MANAGER" ]; then
-	colorize 36 'Starting X environment...'
-	# We need Xorg 40-Keyboard.conf and SliTaz applications.conf
-	if [ ! -s '/etc/X11/xorg.conf.d/40-Keyboard.conf' ]; then
-		echo 'Configuring Xorg server...' && HOME='/root'
-		tazx init
-	fi
-	/etc/init.d/dbus start
-	(sleep 2; /etc/init.d/${LOGIN_MANAGER} start >/dev/null) &
-fi
+		# Mount /proc/bus/usb
+		if [ -d '/proc/bus/usb' ]; then
+			action 'Mounting usbfs filesystem on /proc/bus/usb'
+			mount -t usbfs usbfs /proc/bus/usb
+			status
+		fi
 
-# Start all daemons specified with $RUN_DAEMONS
-if [ "$RUN_DAEMONS" ]; then
-	colorize 33 "Starting all daemons..."
-	for daemon in $RUN_DAEMONS; do
-		[ -x /etc/init.d/$daemon ] &&
-		/etc/init.d/$daemon start
-	done
-fi
+		# Start syslogd and klogd
+		action 'Starting system log daemon: syslogd...'
+		syslogd -s $SYSLOGD_ROTATED_SIZE; status
+		action 'Starting kernel log daemon: klogd...'
+		klogd; status
 
-# Back to a verbose mode
-(sleep 6 && echo '7 4 1 7' > /proc/sys/kernel/printk) &
+		# Load all modules listed in config file
+		if [ -n "$LOAD_MODULES" ]; then
+			colorize 33 'Loading Kernel modules...'
+			for mod in $LOAD_MODULES; do
+				action 'Loading module: %s' "$mod"
+				modprobe $mod
+				status
+			done
+		fi
 
-if [ "$MESSAGE" ]; then
-	newline
-	colorize 32 "$MESSAGE"
-fi
-;;
+		# Detect PCI and USB devices with Tazhw from slitaz-tools. We load
+		# kernel modules only at first boot or in Live CD mode.
+		if [ ! -s '/var/lib/detected-modules' ]; then
+			tazhw init
+		fi
 
-*)
-	# --> readonly --> readwrite
-	if [ ! -s /run/boot.log ]; then
-		# Mount /run as tmpfs runtime data are not written to disk
-		mount -t tmpfs tmpfs /run
-		# cp -a in tazpkg does not support /var/run symlink
-		mount --bind /run /var/run
-	fi
-	/etc/init.d/rcS readonly 2>&1 | tee -a /run/boot.log
-	# Logrotate boot.log
-	last=.9
-	for i in .8 .7 .6 .5 .4 .3 .2 .1 .0 '' ; do
-		mv -f /var/log/boot.log${i} /var/log/boot.log${last} 2>/dev/null
-		last=$i
-	done
-	mv -f /run/boot.log /var/log/boot.log
-	/etc/init.d/rcS readwrite 2>&1 | tee -a /var/log/boot.log ;;
+		# Call udevadm trigger to ensure /dev is fully populated now that all
+		# modules are loaded.
+		if [ "$UDEV" == 'yes' ]; then
+			action 'Triggering udev events: --action=add'
+			udevadm trigger --action=add
+			status
+		fi
+
+		# Start all scripts specified with $RUN_SCRIPTS
+		for script in $RUN_SCRIPTS; do
+			colorize 34 "Processing /etc/init.d/$script"
+			/etc/init.d/$script
+		done
+
+		# Start X session. Dbus must be started before Xorg and other daemons.
+		# We started it here because X is run before RUN_DAEMONS. Sleep, in
+		# some live modes we boot too fast and X can't initialize.
+		if [ "$SCREEN" != 'text' -a \
+			-n "$LOGIN_MANAGER" -a \
+			-x '/usr/bin/tazx' -a \
+			-s '/etc/slitaz/applications.conf' -a \
+			-x "/etc/init.d/$LOGIN_MANAGER" ]; then
+			colorize 36 'Starting X environment...'
+			# We need Xorg 40-Keyboard.conf and SliTaz applications.conf
+			if [ ! -s '/etc/X11/xorg.conf.d/40-Keyboard.conf' ]; then
+				echo 'Configuring Xorg server...'
+				HOME='/root'
+				tazx init
+			fi
+			/etc/init.d/dbus start
+			(sleep 2; /etc/init.d/$LOGIN_MANAGER start >/dev/null) &
+		fi
+
+		# Start all daemons specified with $RUN_DAEMONS
+		if [ -n "$RUN_DAEMONS" ]; then
+			colorize 33 "Starting all daemons..."
+			for daemon in $RUN_DAEMONS; do
+				[ -x "/etc/init.d/$daemon" ] && /etc/init.d/$daemon start
+			done
+		fi
+
+		# Back to a verbose mode
+		(sleep 6; echo '7 4 1 7' > /proc/sys/kernel/printk) &
+
+		if [ -n "$MESSAGE" ]; then
+			newline
+			colorize 32 "$MESSAGE"
+		fi
+		;;
+
+	*)
+		# Main entry point.
+		# --> readonly --> readwrite
+		if [ ! -s '/run/boot.log' ]; then
+			# Mount /run as tmpfs runtime data are not written to disk
+			mount -t tmpfs tmpfs /run
+			# cp -a in tazpkg does not support /var/run symlink
+			mount --bind /run /var/run
+		fi
+
+		/etc/init.d/rcS readonly 2>&1 | tee -a /run/boot.log
+
+		# Logrotate boot.log
+		last='.9'
+		for i in .8 .7 .6 .5 .4 .3 .2 .1 .0 ''; do
+			mv -f "/var/log/boot.log$i" "/var/log/boot.log$last" 2>/dev/null
+			last="$i"
+		done
+		mv -f /run/boot.log /var/log/boot.log
+
+		/etc/init.d/rcS readwrite 2>&1 | tee -a /var/log/boot.log
+		;;
 esac
