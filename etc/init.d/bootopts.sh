@@ -81,6 +81,12 @@ for opt in $(cat /proc/cmdline); do
 			action 'Setting system keymap to: %s...' "$KEYMAP"
 			echo "$KEYMAP" > /etc/keymap.conf
 			status ;;
+		tz=*)
+			# Check for a specified timezone (tz=*).
+			TZ=${opt#tz=}
+			action 'Setting timezone to: %s...' "$TZ"
+			echo "$TZ" > /etc/TZ
+			status ;;
 		font=*)
 			# Check for a specified console font (font=*).
 			FONT=${opt#font=}
