@@ -81,9 +81,9 @@ case "$1" in
 		# Parse cmdline args for earlier boot options. All other boot options
 		# are in /etc/init./bootopts.sh.
 		action 'Searching for early boot options...'
-		opt=$(cmdline_option modprobe); [ -n "$opt" ] && export MODPROBE='yes'
-		opt=$(cmdline_option config);   [ -n "$opt" ] && export CONFIG="$opt"
-		opt=$(cmdline_option screen);   [ -n "$opt" ] && export SCREEN="$opt"
+		opt=$(cmdline_option modprobe); [ -z "$opt" ] || export MODPROBE='yes'
+		opt=$(cmdline_option config);   [ -z "$opt" ] || export CONFIG="$opt"
+		opt=$(cmdline_option screen);   [ -z "$opt" ] || export SCREEN="$opt"
 		status
 
 		# Clean up the system and set up tmp dirs.
