@@ -5,6 +5,6 @@ Name[fr]=Log de démarrage
 Name[pt]=Visualizar log de boot
 Name[pt_BR]=Visualizar log de boot
 Name[ru]=Журнал загрузки
-Exec=bootlog box
+Exec=tazpanel boot#log=boot
 Icon=utilities-log-viewer
 Categories=System;Monitor;
