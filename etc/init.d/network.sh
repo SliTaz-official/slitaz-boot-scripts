@@ -321,7 +321,7 @@ static_ip() {
 		fi
 
 		# wpa_supplicant waits for wpa_cli
-		[ -d /var/run/wpa_supplicant ] && wpa_cli -B
+		[ -d /var/run/wpa_supplicant ] && wpa_cli -a"/etc/init.d/wpa_cli_static.sh" -B
 
 		# Multi-DNS server in $DNS_SERVER
 		/bin/mv /etc/resolv.conf /tmp/resolv.conf.$$
