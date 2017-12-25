@@ -95,7 +95,7 @@ use() {
 
 
 mnt() {
-	r=$(busybox blkid 2> /dev/null | sed "s|\"||g;/${root//[^a-zA-Z0-9]/.}/!d;s|:.*||;q")
+	r=$(busybox blkid 2> /dev/null | grep $root | sed "s|\"||g;s|:.*||;q")
 	r=${r:-$root}
 	if [ ! -b $r ]; then
 		r=${r#/dev/}
