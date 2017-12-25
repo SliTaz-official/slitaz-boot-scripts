@@ -80,7 +80,7 @@ arg() {
 
 
 got() {
-	arg $1= && root="$(sed "s/.*$1=\([^ ]*\).*/\1/" </proc/cmdline)"
+	arg $1= && root="$(sed "s/.*$1=\\([^ ]*\\).*/\\1/" </proc/cmdline)"
 }
 
 
