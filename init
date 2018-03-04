@@ -94,7 +94,7 @@ use() {
 }
 
 
-mnt() {
+bbmnt() {
 	r=$(busybox blkid 2> /dev/null | grep "$root[:\"]" | sed 's|:.*||;q')
 	r=${r:-$root}
 	if [ ! -b $r ]; then
@@ -102,12 +102,17 @@ mnt() {
 		r=/dev/${r%%/*}
 	fi
 	d=${root#*$r}
-	busybox mount $r $1 && return
+	busybox mount $r $1
+}
+
+
+mnt() {
+	bbmnt $1 && return
 	w=$(cat /sys/module/usb_storage/parameters/delay_use)
 	w=$((1+${w:-2}))
-	echo -n "Sleep $w seconds..."
+	echo "Sleep $w seconds..."
 	sleep $w
-	busybox mount $r $1
+	bbmnt $1
 }
 
 
