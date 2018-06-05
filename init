@@ -119,7 +119,10 @@ mnt() {
 mod() {
 	for i in $@; do
 		echo "Loading module: $i"
-		modprobe $i 2>/dev/null || busybox insmod $(find /lib/modules|sed "/$i.ko/!dq")
+		modprobe $i 2>/dev/null ||
+		for j in $(find /lib/modules|sed "/\/$i.ko/!d"); do
+			busybox insmod $j && break
+		done
 	done
 }
 
