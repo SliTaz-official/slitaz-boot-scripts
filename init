@@ -222,10 +222,17 @@ if use softraid; then
 	[ "$raiddev" ] && echo "$raiddev" >> /etc/mdadm.conf
 	[ "$raidmail" ] && echo "$raidmail" >> /etc/mdadm.conf
 	grep level=raid /etc/mdadm.conf | ldraid
+	udevd --daemon
+	udevadm trigger
+	udevadm settle
 	for i in 1 2 3 4 5 6 7 8 9; do
 		sleep $i
 		mdadm -A -s
-		grep -qs "^$(basename $root) : act" /proc/mdstat && break
+		for j in $(sed '/\/md/!d;s|.*md/*\([0-9]*\).*|md\1|' \
+				/etc/mdadm.conf); do
+			grep -qs "$j : act" /proc/mdstat || continue 2
+		done
+		break
 	done
 	grep -qs "^$(basename $root) : act" /proc/mdstat ||
 		root=$(awk '/^md/ { print "/dev/" $1; exit }' < /proc/mdstat)
