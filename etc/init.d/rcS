@@ -23,7 +23,7 @@ case "$1" in
 		status
 
 		# Trigger udev and handle hotplug events
-		if [ "$UDEV" == 'yes' ]; then
+		if [ "$UDEV" = 'yes' ]; then
 			action 'Mounting devtmpfs filesystem on /dev'
 			mount -t devtmpfs devtmpfs /dev
 			status
@@ -90,7 +90,7 @@ case "$1" in
 
 		# Clean up the system and set up tmp dirs.
 		# */run/* are tmpfs so they are cleaned up at shutdown.
-		if [ "$CLEAN_UP_SYSTEM" == 'yes' ]; then
+		if [ "$CLEAN_UP_SYSTEM" = 'yes' ]; then
 			action 'Cleaning up the system...'
 			rm -rf /tmp
 			mkdir -p /tmp/.X11-unix /tmp/.ICE-unix
@@ -165,7 +165,7 @@ case "$1" in
 
 		# Call udevadm trigger to ensure /dev is fully populated now that all
 		# modules are loaded.
-		if [ "$UDEV" == 'yes' ]; then
+		if [ "$UDEV" = 'yes' ]; then
 			action 'Triggering udev events: --action=add'
 			udevadm trigger --action=add
 			status

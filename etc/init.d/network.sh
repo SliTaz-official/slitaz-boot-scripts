@@ -14,8 +14,8 @@ CONF="${2:-/etc/network.conf}"
 
 # Change LXPanel Network applet settings
 
-if [ "$1" == 'netapplet' ]; then
-	if [ "$WIFI" == 'yes' ]; then
+if [ "$1" = 'netapplet' ]; then
+	if [ "$WIFI" = 'yes' ]; then
 		interface="$WIFI_INTERFACE"
 	else
 		interface="$INTERFACE"
@@ -109,7 +109,7 @@ start_wpa_supplicant() {
 # Reconnect to the given network
 
 reconnect_wifi_network() {
-	if [ "$WIFI" == 'yes' ]; then
+	if [ "$WIFI" = 'yes' ]; then
 		# Wpa_supplicant will auto-connect to the first network
 		# notwithstanding to priority when scan_ssid=1
 		current_ssid="$(wpa_cli list_networks 2>/dev/null | fgrep '[CURRENT]' | cut -f2)"
@@ -140,7 +140,7 @@ remove_network() {
 # ESSID="any" will work and the interface is autodetected.
 
 wifi() {
-	if [ "$WIFI" == 'yes' ]; then
+	if [ "$WIFI" = 'yes' ]; then
 		ifconfig $INTERFACE down
 
 		# Confirm if $WIFI_INTERFACE is the Wi-Fi interface
@@ -170,7 +170,7 @@ wifi() {
 		[ "$WIFI_ESSID" != 'any' ] && remove_network 'any'
 
 		# Clean all / add / change stored networks settings
-		if [ "$WIFI_BLANK_NETWORKS" == 'yes' ]; then
+		if [ "$WIFI_BLANK_NETWORKS" = 'yes' ]; then
 			echo "Creating new $WPA_CONF"
 			cat /etc/wpa/wpa_empty.conf > $WPA_CONF
 		else
@@ -245,7 +245,7 @@ EOT
 	key_mgmt=WPA-EAP IEEE8021X
 	eap=$WIFI_EAP_METHOD
 EOT
-					if [ "$WIFI_EAP_METHOD" == 'PWD' ]; then
+					if [ "$WIFI_EAP_METHOD" = 'PWD' ]; then
 						WIFI_PHASE2=''; WIFI_CA_CERT=''; WIFI_USER_CERT=''; WIFI_ANONYMOUS_IDENTITY=''
 					fi
 					[ -n "$WIFI_CA_CERT" ] && echo -e "\tca_cert=\"$WIFI_CA_CERT\""
@@ -286,10 +286,10 @@ wpa() {
 # For a dynamic IP with DHCP
 
 dhcp() {
-	if [ "$DHCP" == 'yes' ]; then
+	if [ "$DHCP" = 'yes' ]; then
 		echo "Starting udhcpc client on: $INTERFACE..."
 		# Is wpa wireless && wpa_ctrl_open interface up?
-		if [ -d /var/run/wpa_supplicant ] && [ "$WIFI" == 'yes' ]; then
+		if [ -d /var/run/wpa_supplicant ] && [ "$WIFI" = 'yes' ]; then
 			wpa
 		else
 			# fallback on udhcpc: wep, eth
@@ -303,7 +303,7 @@ dhcp() {
 # For a static IP
 
 static_ip() {
-	if [ "$STATIC" == 'yes' ]; then
+	if [ "$STATIC" = 'yes' ]; then
 		echo "Configuring static IP on $INTERFACE: $IP..."
 		if [ -n "$BROADCAST" ]; then
 			/sbin/ifconfig $INTERFACE $IP netmask $NETMASK broadcast $BROADCAST up
