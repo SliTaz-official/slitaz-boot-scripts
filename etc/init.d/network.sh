@@ -69,7 +69,7 @@ notification() {
 	local user="$(ps aux 2>/dev/null | grep [l]xde-session | awk 'END{print $2}')"
 	local rpid=''
 	[ -s "$npid" ] && rpid="-r $(cat $npid)"
-	su -c "notify-send $rpid -p -i $icon 'Network' \"$2\"" - $user | tr -c 0-9 '\n' | tail -n1 > $npid
+	su -c "notify-send $rpid -i $icon 'Network' \"$2\"" - $user | tr -c 0-9 '\n' | tail -n1 > $npid
 }
 
 
