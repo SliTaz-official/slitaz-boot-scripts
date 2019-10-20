@@ -23,7 +23,7 @@ echo 'Checking for SliTaz cmdline options...'
 # This option is not handled by a loop and case like others and has no
 # effect on an installed system.
 if fgrep -q 'user=' /proc/cmdline; then
-	USER=$(cat /proc/cmdline | sed 's/.*user=\([^ ]*\).*/\1/')
+	USER=$(sed 's/.*user=\([^ ]*\).*/\1/' /proc/cmdline)
 	# Avoid usage of an existing system user or root.
 	if grep -q ^$USER /etc/passwd; then
 		USER=tux
@@ -111,7 +111,7 @@ for opt in $(cat /proc/cmdline); do
 				sleep $USBDELAY
 			fi
 
-			USER=$(cat /etc/passwd | sed '/:1000:/!d;s/:.*//;q')
+			USER=$(sed '/:1000:/!d;s/:.*//;q' /etc/passwd)
 			DEVID=$DEVICE
 			if [ -x /sbin/blkid ]; then
 				# Can be a label, uuid, type or devname. DEVID gives us first: /dev/name.
