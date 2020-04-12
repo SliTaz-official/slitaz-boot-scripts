@@ -143,7 +143,7 @@ case "$1" in
 
 		# Start syslogd and klogd
 		action 'Starting system log daemon: syslogd...'
-		syslogd -s $SYSLOGD_ROTATED_SIZE; status
+		syslogd -s ${SYSLOGD_ROTATED_SIZE:-60}; status
 		action 'Starting kernel log daemon: klogd...'
 		klogd; status
 
