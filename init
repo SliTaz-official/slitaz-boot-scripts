@@ -191,6 +191,7 @@ if [ "$1" != 'log' ]; then
 	sh
 fi
 
+mdev -s 2> /dev/null ||
 for i in /sys/block/*/dev /sys/block/*/*/dev ; do
 	[ -s "$i" ] || continue
 	n=${i%/dev}
