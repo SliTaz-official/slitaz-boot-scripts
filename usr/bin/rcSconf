@@ -53,9 +53,11 @@ RUN_DAEMONS="$(up_daemons)"
 MESSAGE="Welcome to your box"
 EOT
 		diff /etc/slitaz/rcS.conf.bak /etc/rcS.conf > \
-			/etc/slitaz/rcS.conf.diff ;;
+			/etc/slitaz/rcS.conf.diff
+		[ -s /etc/slitaz/rcS.conf.diff ] ||
+			rm -f /etc/slitaz/rcS.conf* ;;
 	show) less -E /etc/rcS.conf ;;
-	show-diff) less -E /etc/slitaz/rcS.conf.diff ;;
+	show-diff) less -E /etc/slitaz/rcS.conf.diff 2> /dev/null ;;
 	clean) rm -f /etc/slitaz/rcS.conf* ;;
 	*) echo "Usage: $(basename $0) [up|show|show-diff|clean]" ;;
 esac
