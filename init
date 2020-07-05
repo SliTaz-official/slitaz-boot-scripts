@@ -279,7 +279,7 @@ got rootfssize
 		case "$i" in
 			.*|cdrom)	;;
 			mnt|proc|sys)	mkdir /mnt/$i;;
-			usr|var|rootfs*) mv /$i /mnt;;
+			var|rootfs*) mv /$i /mnt;;
 			*)	cp -a /$i /mnt 2>/dev/null && continue
 				fail
 				busybox umount /mnt
