@@ -275,15 +275,13 @@ root=90%
 got rootfssize
 [ $(busybox free|busybox awk '/Mem:/{print int(($4*100)/$3)}') -ge $r ] &&
 	busybox mount -t tmpfs -o size=$root,nr_inodes=$inodes tmpfs /mnt &&
-	for i in $(ls -ar /); do
+	export PATH=/mnt/bin:$PATH &&
+	for i in $(ls -a /); do
 		case "$i" in
 			.*|cdrom)	;;
-			mnt|proc|sys)	mkdir /mnt/$i;;
-			var|rootfs*) mv /$i /mnt;;
-			*)	cp -a /$i /mnt 2>/dev/null && continue
-				fail
-				busybox umount /mnt
-				exit
+			mnt|proc|sys)	mkdir /mnt/$i ;;
+			lib)	mkdir /mnt/$i && mv /$i/[fmu]* /mnt/$i && cp -dpu /$i/* /mnt/$i && cp -dp /usr/$i/lib* /$i ;;
+			*)	mv /$i /mnt && ln -s /mnt/$i / || fail
 		esac
 	done || fail 3mSkipped
 quit
