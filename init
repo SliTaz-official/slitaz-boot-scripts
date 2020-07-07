@@ -279,9 +279,11 @@ got rootfssize
 	for i in $(ls -a /); do
 		case "$i" in
 			.*|cdrom)	;;
-			mnt|proc|sys)	mkdir /mnt/$i ;;
-			lib)	mkdir /mnt/$i && mv /$i/[fmu]* /mnt/$i && cp -dpu /$i/* /mnt/$i && cp -dp /usr/$i/lib* /$i ;;
-			*)	mv /$i /mnt && ln -s /mnt/$i / || fail
+			mnt|proc|run|sys)	mkdir /mnt/$i;;
+			dev)	cp -a /$i /mnt;;
+			*) mv /$i /mnt; ln -s /mnt/$i / 2> /dev/null ||
+			  LD_LIBRARY_PATH=/mnt/lib:/mnt/usr/lib:/lib:/usr/lib \
+			  /mnt/lib/ld-linux.so.2 /mnt/bin/ln -s /mnt/$i /;;
 		esac
 	done || fail 3mSkipped
 quit
