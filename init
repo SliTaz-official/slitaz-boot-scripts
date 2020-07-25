@@ -13,7 +13,7 @@
 # rootfssize= [RAMDISK]
 #         size of / regarding the RAM size, default 90%
 # rootfsinodes= [RAMDISK]
-#         files count of / regarding the RAM size, default 0 (unlimited)
+#         files count of / regarding the RAM size
 #
 ### Indirect mode ; an initramfs is used to mount root from the hard disk.
 ### Any rootfs should fit, minimum required is slitaz-base.
@@ -120,7 +120,7 @@ mod() {
 	for i in $@; do
 		echo "Loading module: $i"
 		modprobe $i 2>/dev/null ||
-		for j in $(find /lib/modules|sed "/\/$i.ko/!d"); do
+		for j in $(find /lib/modules /mnt/.fs*/lib/modules|sed "/\/$i.ko/!d" 2> /dev/null); do
 			busybox insmod $j && break
 		done
 	done
@@ -269,12 +269,11 @@ msg tmpfs
 root=100
 got tmpram
 r=$root
-inodes=0
-got rootfsinodes && inodes=$root
+got rootfsinodes && inodes=",nr_inodes=$root"
 root=90%
 got rootfssize
 [ $(busybox free|busybox awk '/Mem:/{print int(($4*100)/$3)}') -ge $r ] &&
-	busybox mount -t tmpfs -o size=$root,nr_inodes=$inodes tmpfs /mnt &&
+	busybox mount -t tmpfs -o size=$root$inodes tmpfs /mnt &&
 	export PATH=/mnt/bin:$PATH &&
 	for i in $(ls -a /); do
 		case "$i" in
@@ -287,7 +286,7 @@ got rootfssize
 		esac
 	done || fail 3mSkipped
 quit
-mod squashfs 2>/dev/null || exit
+grep -q squashfs /proc/filesystems || mod squashfs 2>/dev/null || exit
 msg aufs
 br=/mnt/.rw
 mkdir $br /mnt/.wd
@@ -314,7 +313,8 @@ got isofs && r=:$c || for i in /mnt$p/rootfs?*.gz; do
 	busybox mount -o ro -t squashfs /dev/loop$((l++)) /mnt/.$fs
 done
 while read type opt; do
-	mod $type && busybox mount -t $type -o $opt none /mnt && break
+	grep -q $type /proc/filesystems || mod $type || continue
+	busybox mount -t $type -o $opt none /mnt && break
 done <<EOT
 aufs		br=$br$r
 overlayfs	workdir=/mnt/.wd${r/:/,lowerdir=},upperdir=$br
