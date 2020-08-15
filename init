@@ -118,6 +118,8 @@ mnt() {
 
 mod() {
 	for i in $@; do
+		grep -q "^$i\\W" /proc/modules && continue
+		grep -q "\\W$i\$" /proc/filesystems && continue
 		echo "Loading module: $i"
 		modprobe $i 2>/dev/null ||
 		for j in $(find /lib/modules /mnt/.fs*/lib/modules|sed "/\/$i.ko/!d" 2> /dev/null); do
@@ -286,7 +288,7 @@ got rootfssize
 		esac
 	done || fail 3mSkipped
 quit
-grep -q squashfs /proc/filesystems || mod squashfs 2>/dev/null || exit
+mod squashfs 2>/dev/null || exit
 msg aufs
 br=/mnt/.rw
 mkdir $br /mnt/.wd
@@ -313,7 +315,7 @@ got isofs && r=:$c || for i in /mnt$p/rootfs?*.gz; do
 	busybox mount -o ro -t squashfs /dev/loop$((l++)) /mnt/.$fs
 done
 while read type opt; do
-	grep -q $type /proc/filesystems || mod $type || continue
+	mod $type || continue
 	busybox mount -t $type -o $opt none /mnt && break
 done <<EOT
 aufs		br=$br$r
