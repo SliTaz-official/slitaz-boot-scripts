@@ -216,3 +216,7 @@ for opt in $(cat /proc/cmdline); do
 			continue ;;
 	esac
 done
+if [ ! -s /etc/keymap.conf ]; then
+	[ -z "$KEYMAP" ] && tazkeymap
+	[ -z "$LANG" ] && tazlocale
+fi > /dev/tty1
