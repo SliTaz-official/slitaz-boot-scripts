@@ -31,8 +31,6 @@ if [ ! -s '/etc/locale.conf' ]; then
 fi
 . /etc/locale.conf
 action 'Setting system locale: %s' "$LANG"
-[ -d /usr/lib/locale/${LANG%.*} ] ||
-localdef -i ${LANG%.*} -c -f UTF-8 /usr/lib/locale/${LANG%.*}
 export LC_ALL=$LANG
 status
 
