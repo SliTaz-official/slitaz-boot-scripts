@@ -29,6 +29,9 @@
 #     bindfs= [MOUNT] (deprecated)
 #         bind out of root tree part
 #
+# extra= [MOUNT]
+#	  extra initrd files list to load
+#
 ### Special disk mode ; needs extra modules/softwares from preinit flavor.
 #
 # dmraid= [RAID]
@@ -102,7 +105,8 @@ bbmnt() {
 		r=/dev/${r%%/*}
 	fi
 	d=${root#*$r}
-	busybox mount $r $1
+	t=$(busybox blkid 2> /dev/null | grep "$root[:\"]" | sed '/ TYPE=/!d;s/.* TYPE="//;s/".*//')
+	busybox mount $r $1 ${t:+-t $t}
 }
 
 
@@ -179,6 +183,27 @@ ldraid() {
 }
 
 
+mntiso() {
+	umnt=
+	if got mount; then
+		dev=$root
+		x=$(busybox blkid|grep $dev|sed 's/:.*//;q')
+		root=${x:-$dev}
+		[ "$dev" = "$root" ] || dev="$root ($dev)"
+		echo "Mount $dev..."
+		mnt $1
+		umnt=" $umnt $1"
+		arg posixovl && echo "And posixovl..." && umnt=" $umnt $1" &&
+		mount.posixovl -F $1 -- -oallow_other -odefault_permissions -osuid
+	fi
+	got loopfs && echo "Into file $root..." && umnt=" $umnt $1" &&
+		losetup /dev/loop0 $1/$root && root=/dev/loop0 && mnt $1
+	[ -z "$umnt" ] && mnt $1
+	got bindfs && echo "Bind ${root/,/ to }..." &&
+		busybox mount --bind $1/${root%,*} $1/${root/,//}
+	true
+}
+
 
 
 if [ "$1" != 'log' ]; then
@@ -243,21 +268,9 @@ if use softraid; then
 fi
 lvm
 
-if got mount; then
-	dev=$root
-	x=$(busybox blkid|grep $dev|sed 's/:.*//;q')
-	root=${x:-$dev}
-	[ "$dev" = "$root" ] || dev="$root ($dev)"
-	echo "Mount $dev..."
-	mnt /mnt
-	arg posixovl && echo "And posixovl..." &&
-	mount.posixovl -F /mnt -- -oallow_other -odefault_permissions -osuid
-fi
-
-got loopfs && echo "Into file $root..." &&
-	losetup /dev/loop0 /mnt/$root && busybox mount /dev/loop0 /mnt
-got bindfs && echo "Bind ${root/,/ to }..." &&
-	busybox mount --bind /mnt/${root%,*} /mnt/${root/,//}
+got extra && extra=$root && mntiso /mnt && for i in ${extra//,/ }; do
+	 (unlzma < /mnt/$i 2>/dev/null || zcat /mnt/$i) | cpio -idmu
+done && for i in $umnt; do umount -l $i; done
 arg cryptoroot= && try
 if use subroot; then
 	cp $(LD_TRACE_LOADED_OBJECTS=1 /lib/ld*.so /usr/sbin/chroot | sed\
@@ -300,7 +313,7 @@ if [ -z "$(ls /mnt/rootfs* 2>/dev/null)" ]; then
 	root=/dev/cdrom/fs
 	got rodev
 	mkdir -p $c /mnt$c /mnt/.rw$c
-	mnt $c
+	mntiso $c
 	o="-o 124"
 	p=/.cdrom/boot
 	c=$c$d
@@ -311,8 +324,8 @@ got isofs && r=:$c || for i in /mnt$p/rootfs?*.gz; do
 	fs=${i#*root}
 	r=$r:/mnt/.$fs
 	mkdir -p /mnt/.rw/mnt/.$fs /mnt/.$fs
-	losetup $o /dev/loop$l $i
-	busybox mount -o ro -t squashfs /dev/loop$((l++)) /mnt/.$fs
+	losetup $o /dev/loop$((++l)) $i
+	busybox mount -o ro -t squashfs /dev/loop$l /mnt/.$fs
 done
 while read type opt; do
 	mod $type || continue
