@@ -99,13 +99,14 @@ use() {
 
 bbmnt() {
 	r=$(busybox blkid 2> /dev/null | grep "$root[:\"]" | sed 's|:.*||;q')
+	r=${r:-$(busybox blkid $root 2> /dev/null | sed 's|:.*||;q')}
 	r=${r:-$root}
 	if [ ! -b $r ]; then
 		r=${r#/dev/}
 		r=/dev/${r%%/*}
 	fi
 	d=${root#*$r}
-	t=$(busybox blkid 2> /dev/null | grep "$root[:\"]" | sed '/ TYPE=/!d;s/.* TYPE="//;s/".*//')
+	t=$(busybox blkid $r 2> /dev/null | sed '/ TYPE=/!d;s/.* TYPE="//;s/".*//')
 	busybox mount $r $1 ${t:+-t $t}
 }
 
