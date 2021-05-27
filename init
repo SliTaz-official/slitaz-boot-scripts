@@ -98,7 +98,7 @@ use() {
 
 
 bbmnt() {
-	r=$(busybox blkid 2> /dev/null | grep "$root[:\"]" | sed 's|:.*||;q')
+	r=$(blkid 2> /dev/null | grep "$root[:\"]" | sed 's|:.*||;q')
 	r=${r:-$(busybox blkid $root 2> /dev/null | sed 's|:.*||;q')}
 	r=${r:-$root}
 	if [ ! -b $r ]; then
@@ -270,7 +270,8 @@ fi
 lvm
 
 got extra && extra=$root && mntiso /mnt && for i in ${extra//,/ }; do
-	 (unlzma < /mnt/$i 2>/dev/null || zcat /mnt/$i) | cpio -idmu
+	grep -q ' lm ' /proc/cpuinfo && [ -s /mnt/${i}64 ] && i=${i}64
+	(unlzma < /mnt/$i 2>/dev/null || zcat /mnt/$i 2>/dev/null || cat /mnt/$i) | cpio -idmu
 done && for i in $umnt; do umount -l $i; done
 arg cryptoroot= && try
 if use subroot; then
