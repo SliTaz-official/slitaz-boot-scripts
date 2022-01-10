@@ -98,7 +98,7 @@ use() {
 
 
 bbmnt() {
-	r=$(blkid 2> /dev/null | grep "$root[:\"]" | sed 's|:.*||;q')
+	r=$(busybox blkid 2> /dev/null | grep "$root[:\"]" | sed 's|:.*||;q')
 	r=${r:-$(busybox blkid $root 2> /dev/null | sed 's|:.*||;q')}
 	r=${r:-$root}
 	if [ ! -b $r ]; then
@@ -233,6 +233,17 @@ got modprobe && mod ${root//,/ }
 
 [ -d /proc/sys/dev/cdrom ] &&
 	ln -s $(sed '/name/!d;s/.*:[^a-z]*//' /proc/sys/dev/cdrom/info) /dev/cdrom
+
+dev=$(busybox fdisk -l|awk '/sectors/{d=$2}/SliTaz persistent \/home/{print d $1;quit}'|sed 's|:||')
+if got root && [ "$dev" -a "$root" == "/dev/null" ]; then
+	busybox blkid $dev | grep -q TYPE= || mkfs.vfat $dev
+	mount $dev /home && case $(busybox blkid $dev) in
+	*vfat*|*exfat*|*ntfs*)
+		mount.posixovl -F /home -- -oallow_other -odefault_permissions -osuid
+	esac
+	fs=/home/boot/rootfs.gz; [ -s $fs ] && (zcat $fs || unlzma < $fs || cat $fs) | cpio -idmu
+	[ -d /init.d ] && for i in /init.d/* ; do [ -x $i ] && . $i ; done
+fi 2>&1 >/dev/null
 
 if use dmraid; then
 	dmraid -s | sed '/^type/!ds/.*: *//' | ldraid

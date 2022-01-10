@@ -124,7 +124,7 @@ for opt in $(cat /proc/cmdline); do
 				[ -d /home/$USER ] && mv /home/$USER /tmp/$USER-files
 				mount /dev/$DEVID /home &&
 				case "$(/sbin/blkid | grep /dev/$DEVID:)" in
-				*\"ntfs\"*|*\"vfat\"*)
+				*\"ntfs\"*|*\"vfat\"*|*\"exfat\"*)
 					mount.posixovl -F /home -- -oallow_other -odefault_permissions -osuid ;;
 				esac
 				mount /home -o remount,uid=1000,gid=100 2>/dev/null
@@ -140,6 +140,9 @@ for opt in $(cat /proc/cmdline); do
 					mkswap /home/swap
 					add_swap_in_fstab /home/swap
 				fi
+
+				fs=/home/boot/rootfs.gz
+				[ -s $fs ] && ( zcat $fs || unlzma < $fs || cat $fs ) | ( cd / ; cpio -idmu )
 			else
 				echo "Unable to find $DEVICE... "
 			fi

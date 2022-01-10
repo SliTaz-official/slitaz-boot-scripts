@@ -81,7 +81,7 @@ ch_netapplet() {
 		su -l -c "$0 netapplet" - "$user"
 	done
 	# restart if LXPanel running
-	if [ -n "$DISPLAY" -a -n "$(which lxpanelctl)" ]; then
+	if [ -n "$DISPLAY" ] && [ -n "$(which lxpanelctl)" ]; then
 		lxpanelctl restart
 	fi
 }
@@ -131,7 +131,7 @@ reconnect_wifi_network() {
 
 remove_network() {
 	mv -f $WPA_CONF $WPA_CONF.old
-	cat $WPA_CONF.old | tr '\n' '\a' | sed 's|[^#]\(network={\)|\n\1|g' | \
+	tr '\n' '\a' < $WPA_CONF.old | sed 's|[^#]\(network={\)|\n\1|g' | \
 		fgrep -v "ssid=\"$1\"" | tr '\a' '\n' > $WPA_CONF
 }
 
@@ -254,7 +254,7 @@ EOT
 					[ -n "$WIFI_ANONYMOUS_IDENTITY" ] && echo -e "\tanonymous_identity=\"$WIFI_ANONYMOUS_IDENTITY\""
 					[ -n "$WIFI_KEY" ] && echo -e "\tpassword=\"$WIFI-KEY\""
 					[ -n "$WIFI_PHASE2" ] && echo -e "\tphase2=\"auth=$WIFI_PHASE2\""
-					echo }
+					echo '}'
 				} >> $WPA_CONF
 				start_wpa_supplicant '802.1x EAP' ;;
 
