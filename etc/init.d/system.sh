@@ -62,7 +62,7 @@ fi
 
 # Activate an eventual swap file or partition
 if ! grep -q 'noswap' /proc/cmdline; then
-if blkid | grepi -q 'TYPE="swap"'; then
+if blkid | grep -q 'TYPE="swap"'; then
 	for swd in $(blkid | sed '/TYPE="swap"/!d;s/:.*//'); do
 		if ! grep -q "$swd	" /etc/fstab; then
 			echo "Swap memory detected on: $swd"
